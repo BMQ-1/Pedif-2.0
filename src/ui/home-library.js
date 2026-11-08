@@ -14,6 +14,7 @@ export class HomeLibrary {
     this.fileInput = options.fileInput || (typeof document !== 'undefined' ? document.getElementById('file-input') : null);
     this.onOpenFile = options.onOpenFile || null;
     this.onOpenDocument = options.onOpenDocument || null;
+    this.onOpenSample = options.onOpenSample || null;
 
     if (typeof document !== 'undefined') {
       this.init();
@@ -22,7 +23,18 @@ export class HomeLibrary {
 
   async init() {
     this.setupDropzone();
+    this.setupSampleButton();
     await this.renderLibrary();
+  }
+
+  setupSampleButton() {
+    const btn = document.getElementById('btn-sample-doc');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (this.onOpenSample) this.onOpenSample();
+      });
+    }
   }
 
   setupDropzone() {
@@ -75,8 +87,22 @@ export class HomeLibrary {
         <div class="sect">
           <h2>Recents</h2>
         </div>
-        <div class="empty">No documents in your library yet. Tap above to open a PDF.</div>
+        <div class="empty">
+          <p>No documents in your library yet. Tap above to open a PDF, or experience the demo right now:</p>
+          <button class="btn-sample rip" id="btn-empty-sample" style="margin-top: 14px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--accent);">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Launch Interactive Showcase Document</span>
+          </button>
+        </div>
       `;
+      const emptyBtn = this.container.querySelector('#btn-empty-sample');
+      if (emptyBtn) {
+        emptyBtn.addEventListener('click', () => {
+          if (this.onOpenSample) this.onOpenSample();
+        });
+      }
       return;
     }
 

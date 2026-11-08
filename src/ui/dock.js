@@ -3,6 +3,8 @@
  * Provides page jumping pill, previous/next buttons, and zoom controls.
  */
 
+import { showToast } from './toast.js';
+
 export class Dock {
   constructor(options = {}) {
     this.viewer = options.viewer;
@@ -47,13 +49,35 @@ export class Dock {
     }
 
     if (pagePill) {
-      pagePill.addEventListener('click', () => {
-        const input = prompt(`Go to page (1 - ${this.totalPages}):`, this.currentPage);
-        if (input !== null) {
-          const target = parseInt(input, 10);
-          if (!isNaN(target) && target >= 1 && target <= this.totalPages && this.onJumpPage) {
-            this.onJumpPage(target);
-          }
+      pagePill.addEventListener('click', (e) => {
+        if (pagePill.querySelector('.dock-page-input')) return;
+        const cur = this.currentPage;
+        pagePill.innerHTML = `<input type="number" class="dock-page-input" min="1" max="${this.totalPages}" value="${cur}"><i>/</i><span id="dock-total-pages">${this.totalPages}</span>`;
+        const inp = pagePill.querySelector('.dock-page-input');
+        if (inp) {
+          inp.focus();
+          inp.select();
+
+          const commitJump = () => {
+            const val = parseInt(inp.value, 10);
+            if (!isNaN(val) && val >= 1 && val <= this.totalPages && this.onJumpPage) {
+              this.onJumpPage(val);
+            }
+            this.updatePage(this.currentPage, this.totalPages);
+          };
+
+          inp.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+              ev.preventDefault();
+              commitJump();
+            } else if (ev.key === 'Escape') {
+              this.updatePage(this.currentPage, this.totalPages);
+            }
+          });
+
+          inp.addEventListener('blur', () => {
+            commitJump();
+          });
         }
       });
     }
@@ -71,8 +95,22 @@ export class Dock {
     if (this.zoomResetBtn) {
       this.zoomResetBtn.addEventListener('click', () => {
         if (this.viewer) {
-          this.viewer.setScale(1.25);
-          this.updateZoom(1.25);
+          const curScale = this.viewer.scale;
+          // Toggle between 100% (1.25) and Fit Width
+          if (Math.abs(curScale - 1.25) < 0.08) {
+            if (typeof this.viewer.fitWidth === 'function') {
+              const fitScale = this.viewer.fitWidth();
+              this.updateZoom(fitScale || this.viewer.scale);
+              showToast('Fit Width', 'check');
+            } else {
+              this.viewer.setScale(1.25);
+              this.updateZoom(1.25);
+            }
+          } else {
+            this.viewer.setScale(1.25);
+            this.updateZoom(1.25);
+            showToast('100%', 'check');
+          }
         }
       });
     }
@@ -91,8 +129,13 @@ export class Dock {
   updatePage(cur, total) {
     this.currentPage = cur;
     this.totalPages = total;
-    if (this.curPageEl) this.curPageEl.textContent = cur;
-    if (this.totalPagesEl) this.totalPagesEl.textContent = total;
+    if (typeof document === 'undefined') return;
+    const pagePill = document.getElementById('btn-dock-page');
+    if (pagePill && !pagePill.querySelector('.dock-page-input')) {
+      pagePill.innerHTML = `<span id="dock-cur-page">${cur}</span><i>/</i><span id="dock-total-pages">${total}</span>`;
+      this.curPageEl = document.getElementById('dock-cur-page');
+      this.totalPagesEl = document.getElementById('dock-total-pages');
+    }
   }
 
   updateZoom(scale) {

@@ -222,6 +222,42 @@ body.drag .drop {
   font-size: 14px;
 }
 
+/* Instant Sample Showcase Bar */
+.sample-bar {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: var(--card-bg, rgba(255, 255, 255, 0.7));
+  border: 0.5px solid var(--ln);
+  border-radius: 20px;
+  color: var(--tx);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s var(--spring);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-sample:hover {
+  background: var(--bg2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-sample:active {
+  transform: scale(0.97);
+}
+
 /* Library Grid */
 .sect {
   display: flex;
@@ -579,6 +615,38 @@ body.drag .drop {
 .zt:hover {
   background-color: var(--fill);
   color: var(--tx);
+}
+
+.dock-page-input {
+  width: 42px;
+  height: 24px;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--tx);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+  margin-right: 2px;
+  padding: 0;
+}
+
+.ink-badge-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 1.5px var(--bg);
+  transition: transform 0.2s var(--spring), background-color 0.2s;
+}
+
+.b {
+  position: relative;
 }
 
 /* Toast Notification */

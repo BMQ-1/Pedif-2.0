@@ -547,13 +547,35 @@ export class VirtualViewer {
   }
 
   setScale(newScale) {
-    if (newScale < 0.5 || newScale > 4.0 || Math.abs(this.scale - newScale) < 0.01) return;
+    if (newScale < 0.4 || newScale > 4.0 || Math.abs(this.scale - newScale) < 0.01) return;
     this.scale = newScale;
 
     this.renderedPages.forEach((record, pageNum) => {
       this.unmountPage(pageNum, record.container);
       this.mountPage(pageNum, record.container);
     });
+  }
+
+  fitWidth() {
+    if (!this.container || !this.pageMetrics.size) return this.scale;
+    const m = this.pageMetrics.get(1);
+    if (!m) return this.scale;
+    const unscaledW = m.width / m.scale;
+    const availW = Math.max(300, this.container.clientWidth - 48);
+    const targetScale = Math.max(0.4, Math.min(3.5, availW / unscaledW));
+    this.setScale(targetScale);
+    return targetScale;
+  }
+
+  fitPage() {
+    if (!this.container || !this.pageMetrics.size) return this.scale;
+    const m = this.pageMetrics.get(1);
+    if (!m) return this.scale;
+    const unscaledH = m.height / m.scale;
+    const availH = Math.max(300, this.container.clientHeight - 64);
+    const targetScale = Math.max(0.4, Math.min(3.5, availH / unscaledH));
+    this.setScale(targetScale);
+    return targetScale;
   }
 
   setMode(mode) {

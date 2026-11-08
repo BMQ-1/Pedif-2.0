@@ -38,6 +38,34 @@ export class InkToolbar {
     this.container.style.display = 'none';
 
     (document.getElementById('rd') || document.body).appendChild(this.container);
+    this.updateToolBadges();
+  }
+
+  updateToolBadges() {
+    if (typeof document === 'undefined') return;
+
+    const penBtn = document.getElementById('tool-pen');
+    if (penBtn) {
+      let dot = penBtn.querySelector('.ink-badge-dot');
+      if (!dot) {
+        dot = document.createElement('span');
+        dot.className = 'ink-badge-dot';
+        penBtn.appendChild(dot);
+      }
+      dot.style.backgroundColor = this.activePenColor;
+    }
+
+    const hlBtn = document.getElementById('tool-highlighter');
+    if (hlBtn) {
+      let dot = hlBtn.querySelector('.ink-badge-dot');
+      if (!dot) {
+        dot = document.createElement('span');
+        dot.className = 'ink-badge-dot';
+        hlBtn.appendChild(dot);
+      }
+      const p = HIGHLIGHTER_PRESETS.find(item => item.color === this.activeHighlighterColor);
+      dot.style.backgroundColor = (p && p.hex) || '#facc15';
+    }
   }
 
   setMode(mode) {
@@ -72,6 +100,8 @@ export class InkToolbar {
     const presets = isPen ? PEN_PRESETS : HIGHLIGHTER_PRESETS;
     const activeColor = isPen ? this.activePenColor : this.activeHighlighterColor;
     const activeWidth = isPen ? this.activePenWidth : this.activeHighlighterWidth;
+
+    this.updateToolBadges();
 
     const widths = isPen 
       ? [{ val: 2, label: 'Fine' }, { val: 4, label: 'Med' }, { val: 7, label: 'Bold' }]

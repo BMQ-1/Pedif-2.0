@@ -21,6 +21,7 @@ import { HomeLibrary } from './ui/home-library.js';
 import { Dock } from './ui/dock.js';
 import { Scrubber } from './ui/scrubber.js';
 import { showToast } from './ui/toast.js';
+import { createShowcasePdf } from './core/sample-document.js';
 
 class PedifApp {
   constructor() {
@@ -55,6 +56,17 @@ class PedifApp {
       fileInput: document.getElementById('file-input'),
       onOpenFile: (file) => this.handleFileOpen(file),
       onOpenDocument: (docRecord) => this.loadPdfBuffer(docRecord.buffer, docRecord.name, docRecord.state),
+      onOpenSample: async () => {
+        try {
+          showToast('Generating interactive showcase PDF...', 'info');
+          const sampleBuf = await createShowcasePdf();
+          await this.loadPdfBuffer(sampleBuf, 'Pedif-2.0-Showcase.pdf');
+          showToast('Showcase loaded! Enjoy testing text highlights & inking.', 'check');
+        } catch (err) {
+          console.error('[Pedif] Error opening sample PDF:', err);
+          showToast('Failed to open sample: ' + err.message, 'alert');
+        }
+      },
     });
 
     // 4. Initialize Selection Bubble & Shortcuts Modal
@@ -434,6 +446,15 @@ class PedifApp {
         this.setToolMode('eraser');
       } else if (e.key === 'o') {
         this.setToolMode('ocr');
+      } else if (e.key === 'w' || e.key === 'W') {
+        if (this.viewer) {
+          const newScale = this.viewer.fitWidth();
+          if (this.dock) this.dock.updateZoom(newScale);
+        }
+      } else if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        const pageBtn = document.getElementById('btn-dock-page');
+        if (pageBtn) pageBtn.click();
       } else if (e.key === 'd') {
         this.toggleTheme();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
