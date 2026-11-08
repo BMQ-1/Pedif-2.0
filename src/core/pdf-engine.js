@@ -96,6 +96,27 @@ export class PdfEngine {
       disableCombineTextItems: false,
     });
   }
+
+  /**
+   * Render native PDF.js text layer into a container element
+   */
+  async renderTextLayerToContainer(page, container, viewport) {
+    const textContent = await page.getTextContent({
+      normalizeWhitespace: true,
+      disableCombineTextItems: false,
+    });
+
+    container.innerHTML = '';
+    const textLayerTask = pdfjsLib.renderTextLayer({
+      textContentSource: textContent,
+      container,
+      viewport,
+      textDivs: [],
+    });
+
+    await textLayerTask.promise;
+    return textContent;
+  }
 }
 
 export const pdfEngine = new PdfEngine();

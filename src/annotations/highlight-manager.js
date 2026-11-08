@@ -78,6 +78,38 @@ export class HighlightManager {
     return ann;
   }
 
+  /**
+   * Creates an undoable highlight directly from normalized quads
+   */
+  createHighlightFromQuads(pageNum, quads, text = '', colorKey = 'yellow', note = '') {
+    if (!quads || !quads.length) return null;
+    const paletteItem = PALETTE[colorKey] || PALETTE.yellow;
+
+    const ann = new Annotation({
+      type: 'highlight',
+      page: pageNum,
+      color: paletteItem.color,
+      opacity: 0.35,
+      quads,
+      text: text || '',
+      note,
+    });
+
+    commandStack.execute({
+      description: `Highlight "${(text || 'text').slice(0, 15)}..."`,
+      execute: () => {
+        this.annotations.set(ann.id, ann);
+        this._notify(pageNum);
+      },
+      undo: () => {
+        this.annotations.delete(ann.id);
+        this._notify(pageNum);
+      },
+    });
+
+    return ann;
+  }
+
   removeHighlight(id) {
     const ann = this.annotations.get(id);
     if (!ann) return;

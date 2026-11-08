@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/verify-phase2.js && node tests/verify-phase3.js && node tests/verify-phase4.js && node tests/verify-phase5.js && node tests/verify-phase6.js && node tests/verify-phase7.js && node tests/verify-phase8.js && node tests/verify-phase9-ocr-e2e.js && node tests/verify-phase10-coordinate-invariance.js"
+    "test": "node tests/verify-phase2.js && node tests/verify-phase3.js && node tests/verify-phase4.js && node tests/verify-phase5.js && node tests/verify-phase6.js && node tests/verify-phase7.js && node tests/verify-phase8.js && node tests/verify-phase9-ocr-e2e.js && node tests/verify-phase10-coordinate-invariance.js && node tests/verify-phase11-overhaul.js"
   },
   "dependencies": {
     "onnxruntime-web": "^1.21.0",

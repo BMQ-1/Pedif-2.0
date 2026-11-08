@@ -17,6 +17,10 @@ import { PdfExporter } from './annotations/pdf-exporter.js';
 import { Sidebar } from './ui/sidebar.js';
 import { ShortcutsModal } from './ui/shortcuts-modal.js';
 import { InkToolbar } from './ui/ink-toolbar.js';
+import { HomeLibrary } from './ui/home-library.js';
+import { Dock } from './ui/dock.js';
+import { Scrubber } from './ui/scrubber.js';
+import { showToast } from './ui/toast.js';
 
 class PedifApp {
   constructor() {
@@ -32,6 +36,9 @@ class PedifApp {
     this.inkEngine = null;
     this.inkToolbar = null;
     this.snippetTool = null;
+    this.homeLibrary = null;
+    this.dock = null;
+    this.scrubber = null;
 
     this.init();
   }
@@ -44,17 +51,32 @@ class PedifApp {
     // 2. Register PWA Service Worker
     this.registerServiceWorker();
 
-    // 3. Initialize Selection Bubble & Shortcuts Modal
-    this.selectionBubble = new SelectionBubble();
+    // 3. Initialize Home Library View
+    this.homeLibrary = new HomeLibrary({
+      container: document.getElementById('libwrap'),
+      dropzone: document.getElementById('drop'),
+      fileInput: document.getElementById('file-input'),
+      onOpenFile: (file) => this.handleFileOpen(file),
+      onOpenDocument: (docRecord) => this.loadPdfBuffer(docRecord.buffer, docRecord.name, docRecord.state),
+    });
+
+    // 4. Initialize Selection Bubble & Shortcuts Modal
+    this.selectionBubble = new SelectionBubble({
+      onSearchRequest: (query) => {
+        if (this.searchBar) {
+          this.searchBar.openWithQuery(query);
+        }
+      },
+    });
     this.shortcutsModal = new ShortcutsModal();
 
-    // 4. Initialize 3-Tier Virtual Viewer
+    // 5. Initialize 3-Tier Virtual Viewer
     const viewportContainer = document.getElementById('viewport-container');
     this.viewer = new VirtualViewer({
       container: viewportContainer,
       onPageChange: (current, total) => this.updatePageIndicator(current, total),
       onSelectionEnd: (sel) => {
-        if (this.currentMode === 'select' && sel && sel.chars && sel.chars.length > 0) {
+        if (this.currentMode === 'select' && sel) {
           this.selectionBubble.show(sel);
         } else {
           this.selectionBubble.hide();
@@ -62,13 +84,24 @@ class PedifApp {
       },
     });
 
-    // 5. Initialize Sidebar
+    // 6. Initialize Floating Dock & Scrubber
+    this.dock = new Dock({
+      viewer: this.viewer,
+      onJumpPage: (pNum) => this.viewer.scrollToPage(pNum),
+      onZoomChange: (scale) => this.viewer.setScale(scale),
+    });
+
+    this.scrubber = new Scrubber({
+      onJumpPage: (pNum) => this.viewer.scrollToPage(pNum),
+    });
+
+    // 7. Initialize Sidebar
     this.sidebar = new Sidebar({
       viewer: this.viewer,
       onJumpToPage: (pNum) => this.viewer.scrollToPage(pNum),
     });
 
-    // 6. Initialize Vector Inking & Ergonomics Engine
+    // 8. Initialize Vector Inking & Ergonomics Engine
     this.inkEngine = new InkEngine({
       viewer: this.viewer,
       activeTool: this.currentMode,
@@ -77,12 +110,12 @@ class PedifApp {
       inkEngine: this.inkEngine,
     });
 
-    // 7. Initialize Area OCR Snippet Tool
+    // 9. Initialize Area OCR Snippet Tool
     this.snippetTool = new SnippetTool({
       viewer: this.viewer,
     });
 
-    // 8. Initialize Unified Search Bar
+    // 10. Initialize Unified Search Bar
     this.searchBar = new SearchBar({
       onMatchSelect: (match) => {
         if (match) {
@@ -91,16 +124,17 @@ class PedifApp {
       },
     });
 
-    // 9. Setup UI interactions & CommandStack
+    // 11. Setup UI interactions, shortcuts & CommandStack
     this.setupTheme();
     this.setupEventListeners();
+    this.setupNativeSelectionHandler();
     this.setupKeyboardShortcuts();
     this.setupCommandStack();
 
-    // 10. Check for unsaved session to restore
+    // 12. Check for unsaved session to restore
     await this.checkRestoreSession();
 
-    console.log('[Pedif] App initialized with complete Desktop & Mobile UI. Cross-Origin Isolated:', window.crossOriginIsolated);
+    console.log('[Pedif] App initialized with full Cupertino Studio UI. Cross-Origin Isolated:', window.crossOriginIsolated);
   }
 
   registerServiceWorker() {
@@ -123,6 +157,7 @@ class PedifApp {
     this.activeTheme = this.themes[nextIndex];
     document.documentElement.dataset.theme = this.activeTheme;
     localStorage.setItem('pedif:theme', this.activeTheme);
+    showToast(`Theme: ${this.activeTheme.toUpperCase()}`, 'star');
   }
 
   setToolMode(mode) {
@@ -169,37 +204,85 @@ class PedifApp {
     if (btnRedo) btnRedo.addEventListener('click', () => commandStack.redo());
   }
 
+  setupNativeSelectionHandler() {
+    let selDebounce = null;
+
+    document.addEventListener('selectionchange', () => {
+      if (this.currentMode !== 'select') return;
+      clearTimeout(selDebounce);
+
+      selDebounce = setTimeout(() => {
+        try {
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed || !String(sel).trim()) {
+            this.selectionBubble.hide();
+            return;
+          }
+
+          const range = sel.getRangeAt(0);
+          const startNode = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+          const pageEl = startNode ? startNode.closest('.page-container') : null;
+          if (!pageEl) {
+            this.selectionBubble.hide();
+            return;
+          }
+
+          const pageNum = parseInt(pageEl.dataset.page, 10);
+          const rects = Array.from(range.getClientRects()).filter(r => r.width > 0 && r.height > 0);
+          if (!rects.length) {
+            this.selectionBubble.hide();
+            return;
+          }
+
+          const b = range.getBoundingClientRect();
+          this.selectionBubble.showAtRange({
+            pageNum,
+            range,
+            text: String(sel).trim(),
+            bounds: b,
+            rects,
+            pageEl,
+          });
+        } catch {
+          this.selectionBubble.hide();
+        }
+      }, 90);
+    });
+
+    const viewportContainer = document.getElementById('viewport-container');
+    if (viewportContainer) {
+      viewportContainer.addEventListener('scroll', () => {
+        if (this.selectionBubble) this.selectionBubble.hide();
+      }, { passive: true });
+    }
+  }
+
   setupEventListeners() {
-    const fileInput = document.getElementById('file-input');
-    const btnOpenFile = document.getElementById('btn-open-file');
-    const btnOpenPrompt = document.getElementById('btn-open-prompt');
+    const btnBackHome = document.getElementById('btn-back-home');
     const btnTheme = document.getElementById('btn-theme');
+    const hTheme = document.getElementById('hTheme');
     const btnSearch = document.getElementById('btn-search');
     const btnExport = document.getElementById('btn-export');
     const btnSidebar = document.getElementById('btn-sidebar');
     const btnShortcuts = document.getElementById('btn-shortcuts');
+    const hHelp = document.getElementById('hHelp');
 
-    const triggerOpen = () => fileInput.click();
-    if (btnOpenFile) btnOpenFile.addEventListener('click', triggerOpen);
-    if (btnOpenPrompt) btnOpenPrompt.addEventListener('click', triggerOpen);
-
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        await this.handleFileOpen(file);
-      }
-    });
-
-    window.addEventListener('dragover', (e) => e.preventDefault());
-    window.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-          await this.handleFileOpen(file);
+    if (btnBackHome) {
+      btnBackHome.addEventListener('click', async () => {
+        if (this.currentDoc && this.currentDoc.buffer) {
+          await libraryStore.saveDocument({
+            name: this.currentDoc.name,
+            pageCount: this.currentDoc.pageCount,
+            currentPage: this.currentDoc.currentPage || 1,
+            buffer: this.currentDoc.buffer.slice(0),
+          }).catch(() => {});
         }
-      }
-    });
+        document.body.classList.remove('open');
+        if (this.homeLibrary) {
+          await this.homeLibrary.renderLibrary();
+        }
+      });
+    }
 
     if (btnSidebar) {
       btnSidebar.addEventListener('click', () => {
@@ -209,6 +292,12 @@ class PedifApp {
 
     if (btnShortcuts) {
       btnShortcuts.addEventListener('click', () => {
+        if (this.shortcutsModal) this.shortcutsModal.toggle();
+      });
+    }
+
+    if (hHelp) {
+      hHelp.addEventListener('click', () => {
         if (this.shortcutsModal) this.shortcutsModal.toggle();
       });
     }
@@ -224,6 +313,7 @@ class PedifApp {
     }
 
     if (btnTheme) btnTheme.addEventListener('click', () => this.toggleTheme());
+    if (hTheme) hTheme.addEventListener('click', () => this.toggleTheme());
 
     const tools = ['select', 'pen', 'highlighter', 'eraser', 'ocr'];
     tools.forEach(tool => {
@@ -234,8 +324,10 @@ class PedifApp {
     window.addEventListener('wheel', (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        this.viewer.setScale(this.viewer.scale + delta);
+        const delta = e.deltaY < 0 ? 0.15 : -0.15;
+        const newScale = Math.max(0.4, Math.min(3.5, this.viewer.scale + delta));
+        this.viewer.setScale(newScale);
+        if (this.dock) this.dock.updateZoom(newScale);
       }
     }, { passive: false });
   }
@@ -254,6 +346,7 @@ class PedifApp {
     }
 
     try {
+      showToast('Exporting ISO 32000-1 PDF...', 'check');
       const modifiedBytes = await PdfExporter.exportAnnotatedPdf(
         this.currentDoc.buffer,
         this.viewer.pageStrokes,
@@ -263,6 +356,7 @@ class PedifApp {
       const baseName = (this.currentDoc.name || 'document').replace(/\.pdf$/i, '');
       const exportName = `${baseName}_annotated.pdf`;
       PdfExporter.downloadPdf(modifiedBytes, exportName);
+      showToast('PDF Saved', 'check');
 
     } catch (err) {
       console.error('[Pedif] Export PDF error:', err);
@@ -302,6 +396,13 @@ class PedifApp {
         return;
       }
 
+      // Find in document Ctrl+F
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        if (this.searchBar) this.searchBar.open();
+        return;
+      }
+
       // Navigation: J/K or Arrow keys
       if (e.key === 'j' || e.key === 'ArrowRight' || e.key === ' ') {
         e.preventDefault();
@@ -324,13 +425,18 @@ class PedifApp {
       // Zooming
       if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
         e.preventDefault();
-        this.viewer.setScale(this.viewer.scale + 0.15);
+        const newScale = Math.min(3.5, this.viewer.scale + 0.15);
+        this.viewer.setScale(newScale);
+        if (this.dock) this.dock.updateZoom(newScale);
       } else if ((e.ctrlKey || e.metaKey) && e.key === '-') {
         e.preventDefault();
-        this.viewer.setScale(this.viewer.scale - 0.15);
+        const newScale = Math.max(0.4, this.viewer.scale - 0.15);
+        this.viewer.setScale(newScale);
+        if (this.dock) this.dock.updateZoom(newScale);
       } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
         e.preventDefault();
         this.viewer.setScale(1.25);
+        if (this.dock) this.dock.updateZoom(1.25);
       } else if (e.key === 'v') {
         this.setToolMode('select');
       } else if (e.key === 'p') {
@@ -343,6 +449,8 @@ class PedifApp {
         this.setToolMode('ocr');
       } else if (e.key === 'd') {
         this.toggleTheme();
+      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        if (this.shortcutsModal) this.shortcutsModal.toggle();
       }
     });
   }
@@ -364,7 +472,15 @@ class PedifApp {
       const docBuffer = buffer.slice(0);
 
       const pdf = await pdfEngine.loadDocument(pdfJsBuffer);
-      this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages };
+      this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages, currentPage: 1 };
+
+      // Switch view to Reader Screen
+      document.body.classList.add('open');
+
+      const titleEl = document.getElementById('ti');
+      if (titleEl) titleEl.textContent = fileName.replace(/\.pdf$/i, '');
+      const subEl = document.getElementById('sub');
+      if (subEl) subEl.textContent = `PAGE 1 OF ${pdf.numPages}`;
 
       if (savedState) {
         if (savedState.annotations) {
@@ -398,6 +514,7 @@ class PedifApp {
       libraryStore.saveDocument({
         name: fileName,
         pageCount: pdf.numPages,
+        currentPage: 1,
         buffer: docBuffer.slice(0),
       }).catch(e => console.warn('[LibraryStore] Non-fatal save failure:', e));
 
@@ -408,20 +525,19 @@ class PedifApp {
   }
 
   updatePageIndicator(current, total) {
-    let hud = document.getElementById('page-indicator-hud');
-    if (!hud) {
-      hud = document.createElement('div');
-      hud.id = 'page-indicator-hud';
-      hud.className = 'page-indicator-hud';
-      document.body.appendChild(hud);
+    const sub = document.getElementById('sub');
+    if (sub) {
+      sub.textContent = `PAGE ${current} OF ${total}`;
     }
-    hud.textContent = `${current} / ${total}`;
-    hud.style.opacity = '1';
-
-    if (this._hudTimer) clearTimeout(this._hudTimer);
-    this._hudTimer = setTimeout(() => {
-      hud.style.opacity = '0';
-    }, 2500);
+    if (this.dock) {
+      this.dock.updatePage(current, total);
+    }
+    if (this.scrubber) {
+      this.scrubber.updateProgress(current, total);
+    }
+    if (this.currentDoc) {
+      this.currentDoc.currentPage = current;
+    }
   }
 
   async checkRestoreSession() {
@@ -429,6 +545,7 @@ class PedifApp {
     if (!hasSession || !metadata) return;
 
     const bannerContainer = document.getElementById('restore-banner-container');
+    if (!bannerContainer) return;
     const timeStr = new Date(metadata.updatedAt).toLocaleTimeString();
 
     const banner = document.createElement('div');

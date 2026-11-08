@@ -173,14 +173,29 @@ export class InkEngine {
 
       this.currentStroke.addPoint(normX, normY, pressure);
       this.lastPoint = { x: screenX, y: screenY };
-
-      // Redraw active page strokes + live stroke
-      this.renderLiveStroke(canvas, pageNum);
     }
+
+    if (this.activeTool !== 'eraser' && this.currentStroke) {
+      this.scheduleLiveRender(canvas, pageNum);
+    }
+  }
+
+  scheduleLiveRender(canvas, pageNum) {
+    if (this._animFrame) return;
+    this._animFrame = requestAnimationFrame(() => {
+      this._animFrame = null;
+      if (this.currentStroke && this.activeCanvas) {
+        this.renderLiveStroke(this.activeCanvas, this.activePageNum);
+      }
+    });
   }
 
   handlePointerUp(e, canvas, pageNum) {
     this.cancelHoldTimer();
+    if (this._animFrame) {
+      cancelAnimationFrame(this._animFrame);
+      this._animFrame = null;
+    }
     try {
       if (canvas.releasePointerCapture) canvas.releasePointerCapture(e.pointerId);
     } catch {}

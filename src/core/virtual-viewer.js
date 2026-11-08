@@ -235,6 +235,18 @@ export class VirtualViewer {
       }
 
       // ─────────────────────────────────────────────────────────────
+      // LAYER 1.5: Native PDF.js Text Layer (Zero-lag native browser selection)
+      // ─────────────────────────────────────────────────────────────
+      let textLayerDiv = pageEl.querySelector('.textLayer');
+      if (!textLayerDiv) {
+        textLayerDiv = document.createElement('div');
+        textLayerDiv.className = 'textLayer';
+        pageEl.appendChild(textLayerDiv);
+      }
+      textLayerDiv.style.width = `${targetWidth}px`;
+      textLayerDiv.style.height = `${targetHeight}px`;
+
+      // ─────────────────────────────────────────────────────────────
       // LAYER 2: Vector Ink & Annotation Canvas (120 FPS Inking)
       // ─────────────────────────────────────────────────────────────
       let canvas2 = pageEl.querySelector('.layer-2-ink');
@@ -279,6 +291,7 @@ export class VirtualViewer {
         container: pageEl,
         layer0: canvas0,
         layer1: svg1,
+        textLayer: textLayerDiv,
         layer2: canvas2,
         overlay,
         renderTask: null,
@@ -287,6 +300,11 @@ export class VirtualViewer {
 
       record.renderTask = pdfEngine.renderPageToCanvas(page, canvas0, targetScale);
       await record.renderTask;
+
+      // Render native text spans into textLayerDiv for seamless browser selection
+      pdfEngine.renderTextLayerToContainer(page, textLayerDiv, targetViewport).catch((err) => {
+        console.warn(`[VirtualViewer] textLayer render error on page ${pageNum}:`, err);
+      });
 
       // Lazy Scanned Page OCR: If page has no digital text, trigger OCR
       if (textData.isScanned) {
@@ -332,6 +350,10 @@ export class VirtualViewer {
       record.layer0.remove();
     }
     if (record.layer1) record.layer1.remove();
+    if (record.textLayer) {
+      record.textLayer.innerHTML = '';
+      record.textLayer.remove();
+    }
     if (record.layer2) {
       record.layer2.width = 0;
       record.layer2.height = 0;
@@ -367,16 +389,25 @@ export class VirtualViewer {
         const rtX = q.rt.x * sx, rtY = q.rt.y * sy;
         const rbX = q.rb.x * sx, rbY = q.rb.y * sy;
         const lbX = q.lb.x * sx, lbY = q.lb.y * sy;
-        pathData += ` M ${ltX} ${ltY} L ${rtX} ${rtY} L ${rbX} ${rbY} L ${lbX} ${lbY} Z`;
+
+        const minX = Math.min(ltX, lbX);
+        const maxX = Math.max(rtX, rbX);
+        const minY = Math.min(ltY, rtY);
+        const maxY = Math.max(lbY, rbY);
+        const w = Math.max(4, maxX - minX);
+        const h = Math.max(6, maxY - minY);
+        const r = Math.min(4, h / 3);
+
+        pathData += ` M ${minX + r} ${minY} h ${w - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r} v ${h - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r} h -${w - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r} v -${h - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z`;
       });
 
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', pathData.trim());
       pathEl.setAttribute('class', 'permanent-highlight');
       pathEl.setAttribute('fill', ann.color);
-      pathEl.setAttribute('fill-opacity', ann.opacity || 0.35);
+      pathEl.setAttribute('fill-opacity', ann.opacity || 0.38);
       pathEl.setAttribute('stroke', ann.color);
-      pathEl.setAttribute('stroke-width', '1.5');
+      pathEl.setAttribute('stroke-width', '1');
       pathEl.dataset.annId = ann.id;
 
       pathEl.addEventListener('click', (e) => {
