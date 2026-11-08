@@ -9,11 +9,11 @@ import { commandStack } from '../core/command-stack.js';
 import { autosave } from '../storage/autosave.js';
 
 export const PALETTE = {
-  yellow: { id: 'yellow', label: 'Yellow', color: '#ffcc00', fill: 'rgba(255, 204, 0, 0.38)', stroke: 'rgba(255, 204, 0, 0.7)' },
-  coral:  { id: 'coral',  label: 'Coral',  color: '#ff2d55', fill: 'rgba(255, 45, 85, 0.32)',  stroke: 'rgba(255, 45, 85, 0.65)' },
-  green:  { id: 'green',  label: 'Green',  color: '#34c759', fill: 'rgba(52, 199, 89, 0.32)',  stroke: 'rgba(52, 199, 89, 0.65)' },
-  blue:   { id: 'blue',   label: 'Blue',   color: '#007aff', fill: 'rgba(0, 122, 255, 0.30)',  stroke: 'rgba(0, 122, 255, 0.65)' },
-  purple: { id: 'purple', label: 'Purple', color: '#af52de', fill: 'rgba(175, 82, 222, 0.32)', stroke: 'rgba(175, 82, 222, 0.65)' },
+  yellow: { id: 'yellow', label: 'Yellow', color: '#ffcc00', fill: 'rgba(255, 204, 0, 0.38)', stroke: 'rgba(255, 204, 0, 0.75)' },
+  coral:  { id: 'coral',  label: 'Coral',  color: '#ff2d55', fill: 'rgba(255, 45, 85, 0.34)',  stroke: 'rgba(255, 45, 85, 0.70)' },
+  green:  { id: 'green',  label: 'Mint',   color: '#34c759', fill: 'rgba(52, 199, 89, 0.34)',  stroke: 'rgba(52, 199, 89, 0.70)' },
+  blue:   { id: 'blue',   label: 'Sky',    color: '#007aff', fill: 'rgba(0, 122, 255, 0.32)', stroke: 'rgba(0, 122, 255, 0.70)' },
+  purple: { id: 'purple', label: 'Violet', color: '#af52de', fill: 'rgba(175, 82, 222, 0.34)', stroke: 'rgba(175, 82, 222, 0.70)' },
 };
 
 export class HighlightManager {

@@ -487,8 +487,14 @@ export class VirtualViewer {
           const midY = minY + h / 2;
           pathData += ` M ${minX} ${midY} L ${maxX} ${midY}`;
         } else {
-          const r = Math.min(4, h / 3);
-          pathData += ` M ${minX + r} ${minY} h ${w - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r} v ${h - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r} h -${w - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r} v -${h - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z`;
+          const padY = 0.8;
+          const padX = 1.5;
+          const left = minX - padX;
+          const top = minY - padY;
+          const width = w + 2 * padX;
+          const height = h + 2 * padY;
+          const r = Math.min(4.0, height / 3.2);
+          pathData += ` M ${left + r} ${top} h ${width - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r} v ${height - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r} h -${width - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r} v -${height - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z`;
         }
       });
 
@@ -504,7 +510,8 @@ export class VirtualViewer {
         pathEl.setAttribute('fill', ann.color);
         pathEl.setAttribute('fill-opacity', ann.opacity || 0.38);
         pathEl.setAttribute('stroke', ann.color);
-        pathEl.setAttribute('stroke-width', '1');
+        pathEl.setAttribute('stroke-width', '0.75');
+        pathEl.setAttribute('stroke-opacity', '0.6');
       }
       pathEl.dataset.annId = ann.id;
 

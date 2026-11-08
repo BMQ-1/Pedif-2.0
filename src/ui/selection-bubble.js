@@ -185,13 +185,13 @@ export class SelectionBubble {
     const bounds = data.bounds;
     this.container.style.display = 'flex';
 
-    const bubbleWidth = 260;
-    const bubbleHeight = 44;
+    const bubbleWidth = this.container.offsetWidth || 330;
+    const bubbleHeight = this.container.offsetHeight || 46;
     let left = bounds.left + bounds.width / 2 - bubbleWidth / 2;
-    let top = bounds.top - bubbleHeight - 12;
+    let top = bounds.top - bubbleHeight - 14;
 
     if (top < 64) {
-      top = bounds.bottom + 12;
+      top = bounds.bottom + 14;
     }
 
     left = Math.max(16, Math.min(window.innerWidth - bubbleWidth - 16, left));

@@ -66,18 +66,34 @@ export class SelectionOverlay {
   initElements() {
     if (!this.handleGroup) return;
 
-    // Teardrop Start Handle (Top-Left Anchor Pin)
-    this.startHandle = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    if (this.svg && !this.svg.querySelector('#handle-shadow')) {
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = `
+        <filter id="handle-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.35)"/>
+        </filter>
+      `;
+      this.svg.insertBefore(defs, this.svg.firstChild);
+    }
+
+    // Top-Left Anchor Pin (Vertical stem + Circular Touch Knob)
+    this.startHandle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     this.startHandle.setAttribute('class', 'teardrop-handle start-handle');
-    this.startHandle.setAttribute('d', 'M 0 0 C -6 0 -10 -4 -10 -10 C -10 -16 0 -24 0 -24 C 0 -24 10 -16 10 -10 C 10 -4 6 0 0 0 Z');
-    this.startHandle.setAttribute('fill', '#007aff');
+    this.startHandle.innerHTML = `
+      <line x1="0" y1="-8" x2="0" y2="2" stroke="#007aff" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="0" cy="-14" r="8.5" fill="#007aff" filter="url(#handle-shadow)"/>
+      <circle cx="0" cy="-14" r="3.5" fill="#ffffff"/>
+    `;
     this.startHandle.style.display = 'none';
 
-    // Teardrop End Handle (Bottom-Right Anchor Pin)
-    this.endHandle = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    // Bottom-Right Anchor Pin (Vertical stem + Circular Touch Knob)
+    this.endHandle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     this.endHandle.setAttribute('class', 'teardrop-handle end-handle');
-    this.endHandle.setAttribute('d', 'M 0 0 C -6 0 -10 4 -10 10 C -10 16 0 24 0 24 C 0 24 10 16 10 10 C 10 4 6 0 0 0 Z');
-    this.endHandle.setAttribute('fill', '#007aff');
+    this.endHandle.innerHTML = `
+      <line x1="0" y1="-2" x2="0" y2="8" stroke="#007aff" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="0" cy="14" r="8.5" fill="#007aff" filter="url(#handle-shadow)"/>
+      <circle cx="0" cy="14" r="3.5" fill="#ffffff"/>
+    `;
     this.endHandle.style.display = 'none';
 
     this.handleGroup.appendChild(this.startHandle);
@@ -147,9 +163,9 @@ export class SelectionOverlay {
     if (!activePath && typeof document !== 'undefined') {
       activePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       activePath.setAttribute('class', 'active-selection-path');
-      activePath.setAttribute('fill', 'rgba(0, 122, 255, 0.28)'); // System highlight blue
-      activePath.setAttribute('stroke', 'rgba(0, 122, 255, 0.5)');
-      activePath.setAttribute('stroke-width', '1.5');
+      activePath.setAttribute('fill', 'rgba(10, 132, 255, 0.22)');
+      activePath.setAttribute('stroke', 'rgba(10, 132, 255, 0.65)');
+      activePath.setAttribute('stroke-width', '1.2');
       activePath.setAttribute('stroke-linejoin', 'round');
       activePath.setAttribute('stroke-linecap', 'round');
       this.highlightGroup.appendChild(activePath);
@@ -191,7 +207,13 @@ export class SelectionOverlay {
 
       const lineH = Math.max(8, maxY - minY);
       const lineW = Math.max(4, maxX - minX);
-      const r = Math.min(4, lineH / 4);
+      const padY = 1.0;
+      const padX = 2.0;
+      const left = minX - padX;
+      const top = minY - padY;
+      const width = lineW + 2 * padX;
+      const height = lineH + 2 * padY;
+      const r = Math.min(4.5, height / 3.2);
 
       if (!handleStartPt) {
         handleStartPt = { x: minX, y: minY };
@@ -199,11 +221,11 @@ export class SelectionOverlay {
       handleEndPt = { x: maxX, y: maxY };
 
       // Continuous rounded pill per text row
-      combinedPathData += ` M ${minX + r} ${minY}`
-        + ` h ${lineW - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r}`
-        + ` v ${lineH - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r}`
-        + ` h -${lineW - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r}`
-        + ` v -${lineH - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z `;
+      combinedPathData += ` M ${left + r} ${top}`
+        + ` h ${width - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r}`
+        + ` v ${height - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r}`
+        + ` h -${width - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r}`
+        + ` v -${height - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z `;
     });
 
     if (activePath) {
