@@ -82,23 +82,7 @@ svg {
 }
 
 .home-ambient {
-  position: fixed;
-  top: -40%;
-  left: 50%;
-  width: 160%;
-  height: 70%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 0%, var(--ac-soft), transparent 60%),
-              radial-gradient(ellipse at 20% 40%, rgba(88, 86, 214, .06), transparent 50%),
-              radial-gradient(ellipse at 80% 30%, rgba(255, 45, 85, .04), transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-  animation: ambientPulse 12s ease-in-out infinite alternate;
-}
-
-@keyframes ambientPulse {
-  0% { opacity: .7; transform: translateX(-50%) scale(1); }
-  100% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+  display: none;
 }
 
 #rd {
@@ -123,26 +107,27 @@ body.open #rd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: calc(var(--safe-t) + 14px) 0 12px;
+  gap: 12px;
+  padding: calc(var(--safe-t) + 16px) 0 16px;
   position: relative;
   z-index: 2;
 }
 
 .version-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  background: var(--ac);
-  color: #fff;
-  padding: 1px 6px 2px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  background: var(--card2);
+  color: var(--tx2);
+  border: 1px solid var(--ln2);
+  padding: 1px 7px;
   border-radius: 6px;
-  line-height: 1.35;
-  vertical-align: 2px;
+  line-height: 1.4;
+  vertical-align: 1px;
 }
 
-/* Home / Library Premium Design System */
+/* Home / Library Design System */
 .wrap {
   max-width: var(--maxw, 740px);
   margin: 0 auto;
@@ -153,128 +138,111 @@ body.open #rd {
 
 .topacts {
   display: flex;
-  gap: 4px;
+  gap: 8px;
 }
 
 .hero {
-  margin: var(--s4) 0 var(--s8);
+  margin: var(--s4) 0 var(--s6);
   position: relative;
   z-index: 2;
 }
 
 .hero h1 {
-  font-size: clamp(32px, 8vw, 44px);
-  line-height: 1.1;
-  margin: 0 0 14px 0;
-  font-weight: 750;
-  letter-spacing: -0.032em;
+  font-size: clamp(28px, 6vw, 38px);
+  line-height: 1.15;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--tx);
 }
 
 .hero h1 .grad {
-  color: var(--ac);
-  background: linear-gradient(135deg, var(--ac), #5856d6, #ff2d55);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientShift 6s ease infinite;
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  color: var(--tx);
 }
 
 .hero p {
   margin: 0;
   color: var(--tx2);
   font-size: var(--t-body);
-  line-height: 1.6;
-  max-width: 46ch;
+  line-height: 1.55;
+  max-width: 48ch;
 }
 
-/* Premium Dropzone Card */
+/* Dropzone Card */
 .drop {
   display: block;
   position: relative;
   width: 100%;
-  border-radius: var(--r-xl);
-  padding: 40px 24px;
+  border-radius: var(--r-m);
+  padding: 36px 24px;
   text-align: center;
   cursor: pointer;
   background: var(--card);
-  border: 1.5px solid var(--ln2);
-  overflow: hidden;
+  border: 1px dashed var(--ln);
   box-shadow: var(--sh-s);
-  transition: transform .4s var(--spring), border-color .25s, box-shadow .4s var(--e);
+  transition: border-color .15s, background-color .15s, transform .1s var(--e-press);
 }
 
 .drop-glow {
-  position: absolute;
-  inset: -60%;
-  background: radial-gradient(50% 40% at 50% 0%, var(--ac-soft), transparent 70%);
-  opacity: .8;
-  pointer-events: none;
-  transition: opacity .4s;
+  display: none;
 }
 
 @media (hover: hover) {
   .drop:hover {
     border-color: var(--ac);
-    transform: translateY(-3px);
-    box-shadow: var(--sh), 0 0 0 1px var(--ac-soft);
+    border-style: solid;
+    background: var(--card2);
   }
-  .drop:hover .drop-glow {
-    opacity: 1;
-  }
-  .drop:hover .di {
-    transform: scale(1.08);
-  }
+}
+
+.drop:active {
+  transform: scale(0.99);
 }
 
 body.drag .drop {
   border-color: var(--ac);
   border-style: solid;
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: var(--sh), 0 0 0 3px var(--ac-soft);
+  background: var(--card2);
+  box-shadow: var(--sh), 0 0 0 1px var(--ac);
 }
 
 .drop .di {
   position: relative;
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 14px;
-  border-radius: 18px;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, var(--ac), #5856d6);
+  background: var(--ac);
   color: #fff;
-  box-shadow: 0 8px 24px -6px rgba(0, 122, 255, 0.45);
-  transition: transform .35s var(--spring);
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.22);
+  transition: transform .15s var(--e);
 }
 
 .drop .di svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 
 .drop b {
   display: block;
-  font-size: 20px;
-  font-weight: 650;
-  letter-spacing: -0.018em;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--tx);
 }
 
 .drop small {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--tx3);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* Showcase Demo Button */
 .sample-bar {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
   justify-content: center;
 }
@@ -283,30 +251,26 @@ body.drag .drop {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: var(--card);
   border: 1px solid var(--ln2);
-  border-radius: 99px;
-  color: var(--tx);
-  font-size: 14px;
-  font-weight: 550;
+  border-radius: var(--r-s, 10px);
+  color: var(--tx2);
+  font-size: 13.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s var(--spring);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  transition: background-color .15s, border-color .15s, color .15s, transform .08s var(--e-press);
   box-shadow: var(--sh-s);
 }
 
 .btn-sample svg:first-child {
-  color: #ffcc00;
-  fill: #ffcc00;
-  filter: drop-shadow(0 1px 3px rgba(255, 204, 0, .35));
+  color: var(--ac);
 }
 
 .btn-sample:hover {
-  border-color: var(--ac);
-  transform: translateY(-2px);
-  box-shadow: var(--sh);
+  border-color: var(--ln);
+  background: var(--card2);
+  color: var(--tx);
 }
 
 .btn-sample:active {
@@ -503,14 +467,13 @@ body.drag .drop {
   background: var(--card);
   border: 1px solid var(--ln2);
   border-radius: var(--r-m);
-  transition: transform .3s var(--spring), box-shadow .3s, border-color .2s;
+  transition: border-color .15s, background-color .15s;
 }
 
 @media (hover: hover) {
   .cap-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--sh-s);
     border-color: var(--ln);
+    background: var(--card2);
   }
 }
 
@@ -518,35 +481,18 @@ body.drag .drop {
   width: 36px;
   height: 36px;
   min-width: 36px;
-  border-radius: 10px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
+  background: var(--card2);
+  color: var(--tx2);
+  border: 1px solid var(--ln2);
 }
 
 .cap-icon svg {
   width: 18px;
   height: 18px;
 }
-
-.cap-icon--blue  { background: rgba(0,122,255,.12); color: #007aff; }
-.cap-icon--purple { background: rgba(88,86,214,.12); color: #5856d6; }
-.cap-icon--green { background: rgba(52,199,89,.12); color: #34c759; }
-.cap-icon--orange { background: rgba(255,149,0,.12); color: #ff9500; }
-.cap-icon--teal  { background: rgba(90,200,250,.12); color: #5ac8fa; }
-.cap-icon--red   { background: rgba(255,59,48,.12); color: #ff3b30; }
-
-[data-theme=dark] .cap-icon--blue,
-[data-theme=oled] .cap-icon--blue { background: rgba(10,132,255,.18); color: #0a84ff; }
-[data-theme=dark] .cap-icon--purple,
-[data-theme=oled] .cap-icon--purple { background: rgba(94,92,230,.18); color: #5e5ce6; }
-[data-theme=dark] .cap-icon--green,
-[data-theme=oled] .cap-icon--green { background: rgba(48,209,88,.18); color: #30d158; }
-[data-theme=dark] .cap-icon--orange,
-[data-theme=oled] .cap-icon--orange { background: rgba(255,159,10,.18); color: #ff9f0a; }
-[data-theme=dark] .cap-icon--teal,
-[data-theme=oled] .cap-icon--teal { background: rgba(100,210,255,.18); color: #64d2ff; }
-[data-theme=dark] .cap-icon--red,
-[data-theme=oled] .cap-icon--red { background: rgba(255,69,58,.18); color: #ff453a; }
 
 .cap-text {
   min-width: 0;
@@ -1020,19 +966,19 @@ body.drag .drop {
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--ln);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-m, 14px);
   box-shadow: var(--sh);
-  padding: 6px 12px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 120;
-  animation: bubblePop .22s var(--spring);
+  animation: bubblePop .18s var(--e);
 }
 
 @keyframes bubblePop {
-  0% { transform: scale(0.85); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: translateY(4px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 .bubble-colors {
@@ -1042,26 +988,26 @@ body.drag .drop {
 }
 
 .color-chip {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: transform .18s var(--spring);
+  transition: transform .12s var(--e);
 }
 
 .color-chip:hover {
-  transform: scale(1.22);
+  transform: scale(1.12);
 }
 
 .color-chip:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 .bubble-divider {
   width: 1px;
-  height: 20px;
+  height: 18px;
   background: var(--ln2);
 }
 
@@ -1072,14 +1018,14 @@ body.drag .drop {
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--ln);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-m, 14px);
   box-shadow: var(--sh);
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   z-index: 125;
-  animation: bubblePop .22s var(--spring);
+  animation: bubblePop .18s var(--e);
 }
 
 .popover-main-row {
@@ -1171,12 +1117,12 @@ body.drag .drop {
 }
 
 .btn-smart-scan.scanning {
-  animation: pulseScan 1.2s infinite ease-in-out;
+  animation: pulseScan 1.4s infinite ease-in-out;
 }
 
 @keyframes pulseScan {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.12); filter: brightness(1.3); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .smart-scan-badge {

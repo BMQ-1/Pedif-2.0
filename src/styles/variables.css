@@ -8,13 +8,14 @@
   --e: cubic-bezier(.32, .72, 0, 1);
   --e2: cubic-bezier(.25, .1, .25, 1);
   --eio: cubic-bezier(.3, .9, .35, 1);
-  --spring: cubic-bezier(.34, 1.08, .64, 1);
-  --q: .22s;
-  --d: .52s;
-  --d-instant: .12s;
-  --d-quick: .2s;
-  --d-normal: .35s;
-  --d-slow: .5s;
+  --spring: cubic-bezier(.2, .9, .3, 1);
+  --e-press: cubic-bezier(.2, 0, 0, 1);
+  --q: .15s;
+  --d: .35s;
+  --d-instant: .08s;
+  --d-quick: .16s;
+  --d-normal: .26s;
+  --d-slow: .4s;
 
   /* Spacing — 8pt rhythm */
   --s1: 4px;

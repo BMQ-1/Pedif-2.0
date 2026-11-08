@@ -234,14 +234,7 @@
 .search-hit.active-hit {
   fill: rgba(255, 149, 0, 0.65);
   stroke: #ff9500;
-  stroke-width: 2.5;
-  filter: drop-shadow(0 0 6px rgba(255, 149, 0, 0.7));
-  animation: pulseHit 1.2s infinite ease-in-out;
-}
-
-@keyframes pulseHit {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  stroke-width: 2;
 }
 
 /* Teardrop Selection Pins */

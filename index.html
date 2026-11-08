@@ -61,14 +61,13 @@
 
       <!-- Hero Section -->
       <div class="hero">
-        <h1>Read any PDF,<br><span class="grad">beautifully.</span></h1>
+        <h1>Read, ink, and annotate.<br>Directly in your browser.</h1>
         <p>A fast, private, offline-first studio with on-device OCR, vector inking, and precision annotations. Your files never leave your device.</p>
       </div>
 
       <!-- Primary Action — Open PDF -->
       <label class="drop rip" id="drop" tabindex="0" role="button" aria-label="Open a PDF file">
         <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
-        <div class="drop-glow"></div>
         <span class="di">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -76,18 +75,18 @@
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
         </span>
-        <b>Open a PDF</b>
-        <small>Tap to browse · or drag and drop</small>
+        <b>Open a document</b>
+        <small>Drop a PDF here or click to browse</small>
       </label>
 
       <!-- Showcase Demo Button -->
       <div class="sample-bar">
         <button class="btn-sample rip" id="btn-sample-doc" title="Open Interactive Showcase Document">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          <span>Try Interactive Showcase</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:.5;">
+          <span>Open showcase demo</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.5;">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
@@ -98,60 +97,60 @@
 
       <!-- Capabilities Grid -->
       <section class="capabilities">
-        <h3 class="cap-heading">What you can do</h3>
+        <h3 class="cap-heading">Capabilities</h3>
         <div class="cap-grid">
           <div class="cap-card">
-            <div class="cap-icon cap-icon--blue">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
             <div class="cap-text">
-              <strong>Full-Text Search</strong>
-              <span>Instant search across all pages with highlighted matches</span>
+              <strong>Full-text search</strong>
+              <span>Instant search across all pages with jump-to-match navigation</span>
             </div>
           </div>
           <div class="cap-card">
-            <div class="cap-icon cap-icon--purple">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
             </div>
             <div class="cap-text">
-              <strong>Vector Inking</strong>
-              <span>S-Pen precision with shape recognition and lasso select</span>
+              <strong>Vector inking</strong>
+              <span>Stylus precision with shape recognition and lasso select</span>
             </div>
           </div>
           <div class="cap-card">
-            <div class="cap-icon cap-icon--green">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/><path d="M8 12h8M12 8v8"/></svg>
             </div>
             <div class="cap-text">
-              <strong>On-Device OCR</strong>
-              <span>WebGPU PP-OCRv4 text extraction — 100% offline</span>
+              <strong>On-device OCR</strong>
+              <span>WebGPU PP-OCRv4 text extraction for scanned pages</span>
             </div>
           </div>
           <div class="cap-card">
-            <div class="cap-icon cap-icon--orange">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <div class="cap-text">
-              <strong>Sovereign Privacy</strong>
+              <strong>Sovereign privacy</strong>
               <span>Zero analytics, zero telemetry — files never leave your device</span>
             </div>
           </div>
           <div class="cap-card">
-            <div class="cap-icon cap-icon--teal">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <div class="cap-text">
-              <strong>Auto-Resume</strong>
-              <span>Pick up exactly where you left off — even offline</span>
+              <strong>Offline session restore</strong>
+              <span>Pick up exactly where you left off from local storage</span>
             </div>
           </div>
           <div class="cap-card">
-            <div class="cap-icon cap-icon--red">
+            <div class="cap-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </div>
             <div class="cap-text">
-              <strong>PDF Export</strong>
-              <span>ISO 32000-1 compliant — works in Acrobat, Preview, Chrome</span>
+              <strong>ISO 32000-1 export</strong>
+              <span>Standard-compliant highlights and ink readable in all viewers</span>
             </div>
           </div>
         </div>
