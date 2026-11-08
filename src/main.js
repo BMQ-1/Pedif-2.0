@@ -428,6 +428,9 @@ class PedifApp {
 
     if (btnSearch) {
       btnSearch.addEventListener('click', () => {
+        if (popover && !popover.hidden) {
+          popover.hidden = true;
+        }
         if (this.searchBar) this.searchBar.toggle();
       });
     }
@@ -500,9 +503,36 @@ class PedifApp {
     const btnWorkbench = document.getElementById('btn-workbench');
     const popover = document.getElementById('workbench-popover');
     if (btnWorkbench && popover) {
+      const positionWorkbenchPopover = () => {
+        const rect = btnWorkbench.getBoundingClientRect();
+        const popoverW = popover.offsetWidth || 250;
+        let left = rect.right - popoverW;
+        if (left < 16) left = 16;
+        if (left + popoverW > window.innerWidth - 16) {
+          left = window.innerWidth - popoverW - 16;
+        }
+        popover.style.position = 'fixed';
+        popover.style.top = `${rect.bottom + 8}px`;
+        popover.style.left = `${left}px`;
+        popover.style.right = 'auto';
+      };
+
       btnWorkbench.addEventListener('click', (e) => {
         e.stopPropagation();
-        popover.hidden = !popover.hidden;
+        const willOpen = popover.hidden;
+        if (willOpen && this.searchBar && this.searchBar.isOpen) {
+          this.searchBar.close();
+        }
+        if (willOpen) {
+          popover.hidden = false;
+          positionWorkbenchPopover();
+        } else {
+          popover.hidden = true;
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (!popover.hidden) positionWorkbenchPopover();
       });
 
       document.addEventListener('click', (e) => {

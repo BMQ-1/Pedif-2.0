@@ -123,6 +123,19 @@ export class SearchBar {
         this.toggle();
       }
     });
+
+    // Dismiss search bar on click outside if search input is blank
+    document.addEventListener('click', (e) => {
+      if (this.isOpen && !this.container.contains(e.target)) {
+        const btnSearch = document.getElementById('btn-search');
+        if (btnSearch && (btnSearch === e.target || btnSearch.contains(e.target))) {
+          return;
+        }
+        if (!this.input.value.trim()) {
+          this.close();
+        }
+      }
+    });
   }
 
   handleMatchChange(activeMatch) {
@@ -133,6 +146,26 @@ export class SearchBar {
   }
 
   open() {
+    // Dynamic anchor positioning right beneath btn-search
+    const btnSearch = document.getElementById('btn-search');
+    if (btnSearch) {
+      const rect = btnSearch.getBoundingClientRect();
+      const pillW = this.container.offsetWidth || 340;
+      let left = rect.right - pillW;
+      if (left < 16) left = 16;
+      if (left + pillW > window.innerWidth - 16) {
+        left = window.innerWidth - pillW - 16;
+      }
+      this.container.style.position = 'fixed';
+      this.container.style.top = `${rect.bottom + 8}px`;
+      this.container.style.left = `${left}px`;
+      this.container.style.right = 'auto';
+    }
+
+    // Mutual exclusion: Close workbench popover if open
+    const popover = document.getElementById('workbench-popover');
+    if (popover) popover.hidden = true;
+
     this.container.style.display = 'flex';
     this.isOpen = true;
     this.input.focus();

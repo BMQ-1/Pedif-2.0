@@ -31,7 +31,12 @@ export class SearchEngine {
       try {
         const page = await pdfEngine.getPage(pageNum);
         const viewport = page.getViewport({ scale: 1 });
-        const textData = await GlyphExtractor.extractPageText(page, viewport);
+        let textData = await GlyphExtractor.extractPageText(page, viewport);
+
+        // Normalize text quads to [0.0, 1.0] unit coordinate space for scale-invariant search hits
+        if (viewport.width && viewport.height) {
+          textData = GlyphExtractor.normalizeTextData(textData, viewport.width, viewport.height);
+        }
 
         // Flatten words for fast searching
         const words = [];
@@ -122,19 +127,63 @@ export class SearchEngine {
           const firstQuad = matchedWords[0].quad;
           const lastQuad = matchedWords[matchedWords.length - 1].quad;
 
-          // Merge quad boundaries
-          const matchQuad = {
+          // Precise sub-character quad when searching a substring inside a single word
+          let subQuad = null;
+          if (tokenCount === 1 && matchedWords[0].chars && matchedWords[0].chars.length) {
+            const startCharIdx = matchedWords[0].text.toLowerCase().indexOf(lowerQ);
+            if (startCharIdx !== -1 && matchedWords[0].chars.length >= startCharIdx + lowerQ.length) {
+              const startChar = matchedWords[0].chars[startCharIdx];
+              const endChar = matchedWords[0].chars[startCharIdx + lowerQ.length - 1];
+              subQuad = {
+                lt: startChar.quad.lt,
+                rt: endChar.quad.rt,
+                rb: endChar.quad.rb,
+                lb: startChar.quad.lb,
+                isNormalized: startChar.quad.isNormalized !== undefined ? startChar.quad.isNormalized : (startChar.quad.lt.x <= 1.0),
+              };
+            }
+          }
+
+          const isNorm = firstQuad.isNormalized !== undefined ? firstQuad.isNormalized : (firstQuad.lt.x <= 1.0);
+          const baseQuad = subQuad || {
             lt: firstQuad.lt,
             rt: lastQuad.rt,
             rb: lastQuad.rb,
             lb: firstQuad.lb,
+            isNormalized: isNorm,
           };
+
+          // Multi-word phrase wrapping: group words by line for line-specific quads
+          const lineMap = new Map();
+          matchedWords.forEach(w => {
+            const lIdx = w.lineIdx !== undefined ? w.lineIdx : 0;
+            if (!lineMap.has(lIdx)) lineMap.set(lIdx, []);
+            lineMap.get(lIdx).push(w);
+          });
+
+          const quads = [];
+          if (subQuad) {
+            quads.push(subQuad);
+          } else {
+            lineMap.forEach((lineWords) => {
+              const fQ = lineWords[0].quad;
+              const lQ = lineWords[lineWords.length - 1].quad;
+              quads.push({
+                lt: fQ.lt,
+                rt: lQ.rt,
+                rb: lQ.rb,
+                lb: fQ.lb,
+                isNormalized: fQ.isNormalized !== undefined ? fQ.isNormalized : (fQ.lt.x <= 1.0),
+              });
+            });
+          }
 
           this.matches.push({
             id: `match_${this.matches.length}`,
             pageNum,
             text: matchedWords.map(w => w.text).join(' '),
-            quad: matchQuad,
+            quad: quads[0] || baseQuad,
+            quads: quads.length ? quads : [baseQuad],
             words: matchedWords,
           });
 
@@ -187,6 +236,16 @@ export class SearchEngine {
     this.matches = [];
     this.activeMatchIndex = -1;
     this._notify();
+  }
+
+  setActiveMatchById(id) {
+    const idx = this.matches.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      this.activeMatchIndex = idx;
+      this._notify();
+      return this.getActiveMatch();
+    }
+    return null;
   }
 
   onChange(listener) {

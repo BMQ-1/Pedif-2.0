@@ -114,9 +114,27 @@ export class VirtualViewer {
       });
 
       if (activeMatch && activeMatch.match) {
-        this.scrollToPage(activeMatch.match.pageNum);
+        this.scrollToMatch(activeMatch.match);
       }
     });
+  }
+
+  scrollToMatch(match) {
+    if (!match) return;
+    const pageNum = match.pageNum;
+    const pageEl = document.getElementById(`page-${pageNum}`);
+    if (!pageEl) return;
+
+    const record = this.renderedPages.get(pageNum);
+    if (record && record.layer1) {
+      const activeEl = record.layer1.querySelector(`.search-hit[data-match-id="${match.id}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+
+    pageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   initHighlightSync() {
@@ -541,19 +559,39 @@ export class VirtualViewer {
     const targetH = metrics ? metrics.height : (record.container.clientHeight || 1000);
 
     matches.forEach(m => {
-      const q = m.quad;
-      const isNorm = (q.isNormalized || (q.lt.x <= 1.0 && q.lt.y <= 1.0));
-      const sx = isNorm ? targetW : 1;
-      const sy = isNorm ? targetH : 1;
-      const pathData = `M ${q.lt.x * sx} ${q.lt.y * sy} L ${q.rt.x * sx} ${q.rt.y * sy} L ${q.rb.x * sx} ${q.rb.y * sy} L ${q.lb.x * sx} ${q.lb.y * sy} Z`;
-      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      pathEl.setAttribute('d', pathData);
-
+      const quads = m.quads || (m.quad ? [m.quad] : []);
       const isActive = active && active.match && active.match.id === m.id;
-      pathEl.setAttribute('class', isActive ? 'search-hit active-hit' : 'search-hit');
-      pathEl.dataset.matchId = m.id;
 
-      searchGroup.appendChild(pathEl);
+      quads.forEach(q => {
+        const isNorm = (q.isNormalized || (q.lt.x <= 1.0 && q.lt.y <= 1.0));
+        const sx = isNorm ? targetW : 1;
+        const sy = isNorm ? targetH : 1;
+
+        const x1 = Math.min(q.lt.x, q.lb.x) * sx;
+        const x2 = Math.max(q.rt.x, q.rb.x) * sx;
+        const y1 = Math.min(q.lt.y, q.rt.y) * sy;
+        const y2 = Math.max(q.lb.y, q.rb.y) * sy;
+        const w = Math.max(2, x2 - x1);
+        const h = Math.max(2, y2 - y1);
+        const r = Math.min(3.5, h / 3.2);
+
+        const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rectEl.setAttribute('x', (x1 - 1.5).toFixed(1));
+        rectEl.setAttribute('y', (y1 - 1.0).toFixed(1));
+        rectEl.setAttribute('width', (w + 3.0).toFixed(1));
+        rectEl.setAttribute('height', (h + 2.0).toFixed(1));
+        rectEl.setAttribute('rx', r.toFixed(1));
+        rectEl.setAttribute('ry', r.toFixed(1));
+        rectEl.setAttribute('class', isActive ? 'search-hit active-hit' : 'search-hit');
+        rectEl.dataset.matchId = m.id;
+
+        rectEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchEngine.setActiveMatchById(m.id);
+        });
+
+        searchGroup.appendChild(rectEl);
+      });
     });
   }
 

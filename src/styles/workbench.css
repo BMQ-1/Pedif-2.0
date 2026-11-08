@@ -558,7 +558,7 @@
 
 /* Workbench Popover Menu - Authentic Cupertino Glass */
 .workbench-popover {
-  position: absolute;
+  position: fixed;
   top: 54px;
   right: 18px;
   background: var(--gl, rgba(44, 44, 46, 0.88));

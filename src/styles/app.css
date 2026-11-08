@@ -894,21 +894,21 @@ body.drag .drop {
 
 /* Floating Search Bar Pill */
 .search-bar-pill {
-  position: absolute;
+  position: fixed;
   top: 60px;
   right: 20px;
   background: var(--gl);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--ln);
-  border-radius: var(--r-xl);
-  box-shadow: var(--sh);
-  padding: 4px 8px;
+  border-radius: 9999px;
+  box-shadow: var(--sh, 0 16px 40px rgba(0, 0, 0, 0.45));
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  z-index: 100;
-  animation: searchSlideIn .25s var(--e);
+  z-index: 2400;
+  animation: searchSlideIn .22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes searchSlideIn {
