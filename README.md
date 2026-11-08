@@ -18,13 +18,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Type-Web%20App-0A84FF?style=flat-square" alt="Web App"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Release-v2.0.0-1B4541?style=flat-square" alt="Version 2.0"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Spec-ISO%2032000--1-C87C56?style=flat-square" alt="ISO 32000-1 Compliant"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Engine-WebGPU%20%7C%20WASM-38B2AC?style=flat-square&logo=webgpu" alt="WebGPU Engine"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-276749?style=flat-square" alt="100% Local"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Languages-7%20(Full%20RTL)-0A84FF?style=flat-square" alt="7 Languages RTL"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Tests-16%2F16%20Passing-brightgreen?style=flat-square" alt="Tests 16/16"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Type-Web%20App-0A84FF?style=flat-square" alt="Web App"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Release-v2.0.0-1B4541?style=flat-square" alt="Version 2.0"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Spec-ISO%2032000--1-C87C56?style=flat-square" alt="ISO 32000-1 Compliant"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Engine-WebGPU%20%7C%20WASM-38B2AC?style=flat-square&logo=webgpu" alt="WebGPU Engine"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-276749?style=flat-square" alt="100% Local"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Languages-7_Languages_%7C_RTL-0A84FF?style=flat-square" alt="7 Languages RTL"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Tests-17_Passing-brightgreen?style=flat-square" alt="Tests 17 Passing"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-4A5568?style=flat-square" alt="MIT License"></a>
 </p>
 
@@ -191,10 +191,6 @@ Pedif 2.0 is built for a global audience with zero external dependencies for int
   <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
 </p>
 
-<p align="center">
-  <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
-</p>
-
 ## 🚀 Quick Start
 
 ### 🌐 Option A: Use the Live Web App (Primary & Recommended)
@@ -230,7 +226,7 @@ npm run dev
 Open `http://localhost:5173` in your browser.
 
 #### 3. Run Automated Verification Tests
-Pedif includes 11 automated test suites covering geometry, search, inking, selection, export, coordinate invariance, and live ONNX neural inference:
+Pedif includes 17 automated test suites covering geometry, search, inking, selection, export, coordinate invariance, studio tools, and live ONNX neural inference:
 ```bash
 npm test
 ```
@@ -245,6 +241,12 @@ npm test
 --- All Live Model Inference Tests Passed Successfully ---
 --- All Law 1: Coordinate Space Invariance Tests Passed Successfully ---
 --- All Phase 11 Overhaul Tests Passed Successfully ---
+--- All Phase 12 Production-Grade Tests Passed Successfully ---
+--- All Phase 13 Flagship Tests Passed Successfully ---
+--- All Phase 14 Tools Suite Tests Passed Successfully ---
+--- All Phase 15 Zooming & All PDFs Tests Passed Successfully ---
+--- All Phase 16 Workbench & Globalization Tests Passed Successfully ---
+--- All Phase 17 Search Precision Tests Passed Successfully ---
 ```
 
 #### 4. Production Build
