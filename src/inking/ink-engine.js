@@ -1,17 +1,18 @@
 /**
  * Dynamic Catmull-Rom Vector Inking & Ergonomics Engine
  * Implements:
- * 1. Pressure-sensitive smooth inking (PointerEvent.pressure)
- * 2. Catmull-Rom & Quadratic Spline Smoothing with getCoalescedEvents()
- * 3. 350ms Hold-to-Snap (Auto-straightens lines with haptic tick)
+ * 1. Continuous uninterrupted smooth inking with zero mid-stroke cuts
+ * 2. Catmull-Rom & Quadratic Spline live smoothing with getCoalescedEvents()
+ * 3. Gentle End-of-Stroke Hold-to-Snap (Auto-straightens only when held stationary for 700ms)
  * 4. Palm Rejection & Stylus Discrimination (e.pointerType === 'pen')
- * 5. Vector Whole-Stroke Eraser (O(1) stroke removal)
+ * 5. Unified Vector & Highlight Eraser with single-gesture Undo/Redo batching
  * 6. Bounded Undo/Redo integration with CommandStack
  */
 
 import { Stroke } from './stroke-model.js';
 import { commandStack } from '../core/command-stack.js';
 import { autosave } from '../storage/autosave.js';
+import { highlightManager } from '../annotations/highlight-manager.js';
 
 export class InkEngine {
   constructor(options = {}) {
@@ -19,15 +20,25 @@ export class InkEngine {
     this.activeTool = options.activeTool || 'pen'; // 'pen' | 'highlighter' | 'eraser'
     this.penColor = options.penColor || '#000000';
     this.penWidth = options.penWidth || 3;
-    this.highlighterColor = options.highlighterColor || 'rgba(250, 204, 21, 0.4)';
-    this.highlighterWidth = options.highlighterWidth || 18;
+    this.highlighterColor = options.highlighterColor || 'rgba(250, 204, 21, 0.45)';
+    this.highlighterWidth = options.highlighterWidth || 22;
 
     this.currentStroke = null;
     this.activeCanvas = null;
     this.activePageNum = null;
+    this.isPointerDown = false;
     this.holdTimer = null;
     this.lastPoint = null;
-    this.hasStylusPen = false; // Set to true if a 'pen' pointer is detected (for palm rejection)
+    this.hasStylusPen = false;
+    this._animFrame = null;
+
+    // Batch records for eraser gestures
+    this.erasedStrokesBatch = [];
+    this.erasedHighlightsBatch = [];
+
+    // Bound handlers for global window tracking
+    this._onWindowPointerMove = this.onWindowPointerMove.bind(this);
+    this._onWindowPointerUp = this.onWindowPointerUp.bind(this);
 
     if (typeof window !== 'undefined') {
       this.initCanvasListeners();
@@ -44,6 +55,14 @@ export class InkEngine {
 
   setPenWidth(width) {
     this.penWidth = width;
+  }
+
+  setHighlighterColor(color) {
+    this.highlighterColor = color;
+  }
+
+  setHighlighterWidth(width) {
+    this.highlighterWidth = width;
   }
 
   initCanvasListeners() {
@@ -64,10 +83,7 @@ export class InkEngine {
     if (!canvas || canvas._inkAttached) return;
     canvas._inkAttached = true;
 
-    canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e, canvas, pageNum));
-    canvas.addEventListener('pointermove', (e) => this.handlePointerMove(e, canvas, pageNum));
-    canvas.addEventListener('pointerup', (e) => this.handlePointerUp(e, canvas, pageNum));
-    canvas.addEventListener('pointercancel', (e) => this.handlePointerUp(e, canvas, pageNum));
+    canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e, canvas, pageNum), { passive: false });
   }
 
   /**
@@ -76,18 +92,16 @@ export class InkEngine {
   isPointerAllowed(e) {
     if (!e) return true;
 
-    // If a hardware stylus/pen is present and event is a touch/palm, reject touch drawing!
     if (e.pointerType === 'pen') {
       this.hasStylusPen = true;
       return true;
     }
 
     if (e.pointerType === 'touch') {
-      // If stylus mode active, reject finger drawing (palm rejection)
       if (this.hasStylusPen) {
         return false;
       }
-      return true; // Allow touch drawing on tablets without stylus
+      return true;
     }
 
     return true; // Mouse
@@ -100,7 +114,18 @@ export class InkEngine {
     }
 
     e.preventDefault();
-    if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+    if (e.button !== undefined && e.button !== 0) return; // Only primary button
+
+    this.isPointerDown = true;
+    this.activeCanvas = canvas;
+    this.activePageNum = pageNum;
+    this.activePointerId = e.pointerId;
+
+    if (canvas.setPointerCapture) {
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {}
+    }
 
     const rect = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : { left: 0, top: 0, width: canvas.width || 800, height: canvas.height || 1000 };
     const canvasW = Math.max(1, rect.width || canvas.clientWidth || 800);
@@ -112,10 +137,14 @@ export class InkEngine {
     const normY = Math.max(0, Math.min(1, screenY / canvasH));
     const pressure = e.pressure > 0 ? e.pressure : 0.5;
 
-    this.activeCanvas = canvas;
-    this.activePageNum = pageNum;
+    // Attach global tracking on window so fast drawing never loses capture
+    window.addEventListener('pointermove', this._onWindowPointerMove, { passive: false });
+    window.addEventListener('pointerup', this._onWindowPointerUp, { passive: false });
+    window.addEventListener('pointercancel', this._onWindowPointerUp, { passive: false });
 
     if (this.activeTool === 'eraser') {
+      this.erasedStrokesBatch = [];
+      this.erasedHighlightsBatch = [];
       this.eraseAt(pageNum, screenX, screenY, canvasW, canvasH);
       return;
     }
@@ -129,7 +158,7 @@ export class InkEngine {
       type: this.activeTool,
       color: strokeColor,
       width: baseWidth,
-      opacity: isHighlighter ? 0.45 : 1.0,
+      opacity: isHighlighter ? 0.38 : 1.0,
       points: [{ x: normX, y: normY, pressure }],
       isSnapped: false,
       isNormalized: true,
@@ -137,16 +166,20 @@ export class InkEngine {
 
     this.lastPoint = { x: screenX, y: screenY };
 
-    // 350ms Hold-to-Snap straight line / shape timer
-    this.startHoldTimer();
+    // Initial dot render
+    this.renderLiveStroke(canvas, pageNum);
   }
 
-  handlePointerMove(e, canvas, pageNum) {
-    if (!this.isPointerAllowed(e)) return;
+  onWindowPointerMove(e) {
+    if (!this.isPointerDown || !this.activeCanvas) return;
+    e.preventDefault();
 
+    const canvas = this.activeCanvas;
+    const pageNum = this.activePageNum;
     const rect = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : { left: 0, top: 0, width: canvas.width || 800, height: canvas.height || 1000 };
     const canvasW = Math.max(1, rect.width || canvas.clientWidth || 800);
     const canvasH = Math.max(1, rect.height || canvas.clientHeight || 1000);
+
     const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
 
     for (const ev of events) {
@@ -163,11 +196,15 @@ export class InkEngine {
 
       if (!this.currentStroke) continue;
 
-      // Cancel hold timer if movement exceeds 4px
+      // Reset hold-to-snap timer on movement
+      this.cancelHoldTimer();
+
+      // Check movement distance from last point
       if (this.lastPoint) {
         const dist = Math.hypot(screenX - this.lastPoint.x, screenY - this.lastPoint.y);
-        if (dist > 4) {
-          this.cancelHoldTimer();
+        // If stroke was snapped but user resumed moving, un-snap to continue fluid drawing
+        if (dist > 3 && this.currentStroke.isSnapped) {
+          this.currentStroke.isSnapped = false;
         }
       }
 
@@ -177,6 +214,9 @@ export class InkEngine {
 
     if (this.activeTool !== 'eraser' && this.currentStroke) {
       this.scheduleLiveRender(canvas, pageNum);
+
+      // Start stillness timer for gentle hold-to-snap at line end
+      this.startHoldTimer();
     }
   }
 
@@ -190,21 +230,37 @@ export class InkEngine {
     });
   }
 
-  handlePointerUp(e, canvas, pageNum) {
+  onWindowPointerUp(e) {
     this.cancelHoldTimer();
     if (this._animFrame) {
       cancelAnimationFrame(this._animFrame);
       this._animFrame = null;
     }
-    try {
-      if (canvas.releasePointerCapture) canvas.releasePointerCapture(e.pointerId);
-    } catch {}
+
+    window.removeEventListener('pointermove', this._onWindowPointerMove);
+    window.removeEventListener('pointerup', this._onWindowPointerUp);
+    window.removeEventListener('pointercancel', this._onWindowPointerUp);
+
+    const canvas = this.activeCanvas;
+    if (canvas && canvas.releasePointerCapture && this.activePointerId !== undefined) {
+      try {
+        canvas.releasePointerCapture(this.activePointerId);
+      } catch {}
+    }
+
+    if (this.activeTool === 'eraser') {
+      this.finishEraserDrag();
+      this.isPointerDown = false;
+      this.activeCanvas = null;
+      this.activePageNum = null;
+      return;
+    }
 
     if (this.currentStroke && this.currentStroke.points.length >= 1) {
       const strokeToCommit = this.currentStroke;
       const targetPage = this.activePageNum;
 
-      // Commit to CommandStack for reversible Undo/Redo
+      // Commit completed stroke to CommandStack for reversible Undo/Redo
       commandStack.execute({
         description: `Draw ${strokeToCommit.type}`,
         execute: () => {
@@ -224,32 +280,44 @@ export class InkEngine {
       });
     }
 
+    this.isPointerDown = false;
     this.currentStroke = null;
     this.activeCanvas = null;
     this.activePageNum = null;
     this.lastPoint = null;
   }
 
+  /**
+   * Hold-to-Snap: Auto-straightens a line ONLY when user holds still at the end for 700ms
+   */
   startHoldTimer() {
     this.cancelHoldTimer();
     this.holdTimer = setTimeout(() => {
-      if (this.currentStroke && this.currentStroke.points.length > 5) {
-        // Snap from start point to end point into a straight vector line
+      // Must have enough points to form a meaningful line
+      if (this.isPointerDown && this.currentStroke && this.currentStroke.points.length > 8) {
         const first = this.currentStroke.points[0];
         const last = this.currentStroke.points[this.currentStroke.points.length - 1];
-        this.currentStroke.points = [first, last];
-        this.currentStroke.isSnapped = true;
 
-        // Subtle tactile tick on supported devices
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate(10);
-        }
+        // Only snap if the total distance is significant (at least 20px)
+        const dx = (last.x - first.x);
+        const dy = (last.y - first.y);
+        const totalDist = Math.hypot(dx, dy);
 
-        if (this.activeCanvas && this.activePageNum) {
-          this.renderLiveStroke(this.activeCanvas, this.activePageNum);
+        if (totalDist > 0.03) {
+          this.currentStroke.points = [first, last];
+          this.currentStroke.isSnapped = true;
+
+          // Subtle tactile tick on supported devices
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(8);
+          }
+
+          if (this.activeCanvas && this.activePageNum) {
+            this.renderLiveStroke(this.activeCanvas, this.activePageNum);
+          }
         }
       }
-    }, 350);
+    }, 700);
   }
 
   cancelHoldTimer() {
@@ -260,38 +328,96 @@ export class InkEngine {
   }
 
   /**
-   * Vector Whole-Stroke Eraser (O(1) stroke removal)
+   * Unified Eraser: Sweeps across vector strokes AND text highlights
    */
   eraseAt(pageNum, x, y, canvasW = 1, canvasH = 1) {
-    const strokes = this.viewer.pageStrokes.get(pageNum) || [];
-    if (!strokes.length) return;
+    const eraserRadius = 24; // Generous natural sweep radius
 
-    for (let i = strokes.length - 1; i >= 0; i--) {
-      const stroke = strokes[i];
-      if (stroke.intersectsPoint(x, y, 10, canvasW, canvasH)) {
-        // Remove stroke via CommandStack for Undo/Redo
-        commandStack.execute({
-          description: 'Erase Stroke',
-          execute: () => {
-            const list = (this.viewer.pageStrokes.get(pageNum) || []).filter(s => s.id !== stroke.id);
-            this.viewer.pageStrokes.set(pageNum, list);
-            this.viewer.redrawPageStrokes(pageNum);
-            this.queueAutosaveStrokes();
-          },
-          undo: () => {
-            const list = this.viewer.pageStrokes.get(pageNum) || [];
-            list.push(stroke);
-            this.viewer.pageStrokes.set(pageNum, list);
-            this.viewer.redrawPageStrokes(pageNum);
-            this.queueAutosaveStrokes();
-          },
-        });
-        break; // Erase one stroke per intersection check for precision
+    // 1. Erase vector strokes on this page
+    const strokes = this.viewer ? (this.viewer.pageStrokes.get(pageNum) || []) : [];
+    if (strokes.length) {
+      let changed = false;
+      for (let i = strokes.length - 1; i >= 0; i--) {
+        const stroke = strokes[i];
+        if (stroke.intersectsPoint(x, y, eraserRadius, canvasW, canvasH)) {
+          strokes.splice(i, 1);
+          this.erasedStrokesBatch.push({ stroke, pageNum });
+          changed = true;
+        }
       }
+      if (changed) {
+        this.viewer.pageStrokes.set(pageNum, strokes);
+        this.viewer.redrawPageStrokes(pageNum);
+      }
+    }
+
+    // 2. Erase text highlights on this page
+    const hitHighlight = highlightManager.findHighlightAt(pageNum, x, y, eraserRadius, canvasW, canvasH);
+    if (hitHighlight) {
+      const removed = highlightManager.removeHighlightSilently(hitHighlight.id);
+      if (removed) {
+        this.erasedHighlightsBatch.push(removed);
+      }
+    }
+
+    // If called directly outside a pointer drag (e.g. programmatic erase or test), commit immediately
+    if (!this.isPointerDown && (this.erasedStrokesBatch.length > 0 || this.erasedHighlightsBatch.length > 0)) {
+      this.finishEraserDrag();
     }
   }
 
+  /**
+   * Finalizes an eraser swipe into a single cohesive undoable CommandStack operation
+   */
+  finishEraserDrag() {
+    const strokesToRestore = [...this.erasedStrokesBatch];
+    const highlightsToRestore = [...this.erasedHighlightsBatch];
+    this.erasedStrokesBatch = [];
+    this.erasedHighlightsBatch = [];
+
+    const totalCount = strokesToRestore.length + highlightsToRestore.length;
+    if (totalCount === 0) return;
+
+    commandStack.execute({
+      description: `Erase ${totalCount} item${totalCount > 1 ? 's' : ''}`,
+      execute: () => {
+        // Remove strokes on initial execute / redo
+        strokesToRestore.forEach(({ stroke, pageNum }) => {
+          const list = (this.viewer.pageStrokes.get(pageNum) || []).filter(s => s.id !== stroke.id);
+          this.viewer.pageStrokes.set(pageNum, list);
+          this.viewer.redrawPageStrokes(pageNum);
+        });
+        // Remove highlights on initial execute / redo
+        highlightsToRestore.forEach(ann => {
+          highlightManager.removeHighlightSilently(ann.id);
+        });
+        this.queueAutosaveStrokes();
+      },
+      undo: () => {
+        // Restore strokes grouped by page
+        strokesToRestore.forEach(({ stroke, pageNum }) => {
+          const pageList = this.viewer.pageStrokes.get(pageNum) || [];
+          if (!pageList.some(s => s.id === stroke.id)) {
+            pageList.push(stroke);
+            this.viewer.pageStrokes.set(pageNum, pageList);
+            this.viewer.redrawPageStrokes(pageNum);
+          }
+        });
+
+        // Restore highlights
+        highlightsToRestore.forEach(ann => {
+          highlightManager.restoreHighlightSilently(ann);
+        });
+
+        this.queueAutosaveStrokes();
+      },
+    });
+
+    this.queueAutosaveStrokes();
+  }
+
   renderLiveStroke(canvas, pageNum) {
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
@@ -299,7 +425,7 @@ export class InkEngine {
     const targetW = metrics ? metrics.width : (canvas.clientWidth || canvas.width / dpr || 800);
     const targetH = metrics ? metrics.height : (canvas.clientHeight || canvas.height / dpr || 1000);
 
-    // Redraw existing strokes
+    // Redraw existing strokes on this page
     this.viewer.redrawPageStrokes(pageNum);
 
     // Draw active in-progress stroke with exact matching targetW and targetH

@@ -38,7 +38,7 @@ export class Stroke {
     return [minX - pad, minY - pad, maxX + pad, maxY + pad];
   }
 
-  intersectsPoint(x, y, tolerance = 6, canvasWidth = 1, canvasHeight = 1) {
+  intersectsPoint(x, y, tolerance = 16, canvasWidth = 1, canvasHeight = 1) {
     if (!this.points.length) return false;
     const isNorm = this.isNormalized && canvasWidth > 1 && this.points[0].x <= 1.0 && this.points[0].y <= 1.0;
     const sx = isNorm ? canvasWidth : 1;
@@ -48,8 +48,15 @@ export class Stroke {
     if (x < minX - tolerance || x > maxX + tolerance || y < minY - tolerance || y > maxY + tolerance) {
       return false;
     }
+    const tolSq = (tolerance + (this.width || 3) / 2) ** 2;
+
+    if (this.points.length === 1) {
+      const p = { x: this.points[0].x * sx, y: this.points[0].y * sy };
+      const distSq = (x - p.x) ** 2 + (y - p.y) ** 2;
+      return distSq <= tolSq;
+    }
+
     // Check distance to line segments
-    const tolSq = (tolerance + this.width / 2) ** 2;
     for (let i = 0; i < this.points.length - 1; i++) {
       const p1 = { x: this.points[i].x * sx, y: this.points[i].y * sy };
       const p2 = { x: this.points[i + 1].x * sx, y: this.points[i + 1].y * sy };

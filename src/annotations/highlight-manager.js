@@ -110,6 +110,31 @@ export class HighlightManager {
     return ann;
   }
 
+  findHighlightAt(pageNum, x, y, tolerance = 14, canvasWidth = 800, canvasHeight = 1000) {
+    const list = this.getAnnotationsForPage(pageNum);
+    for (let i = list.length - 1; i >= 0; i--) {
+      const ann = list[i];
+      if (typeof ann.intersectsPoint === 'function' && ann.intersectsPoint(x, y, tolerance, canvasWidth, canvasHeight)) {
+        return ann;
+      }
+    }
+    return null;
+  }
+
+  removeHighlightSilently(id) {
+    const ann = this.annotations.get(id);
+    if (!ann) return null;
+    this.annotations.delete(id);
+    this._notify(ann.page);
+    return ann;
+  }
+
+  restoreHighlightSilently(ann) {
+    if (!ann) return;
+    this.annotations.set(ann.id, ann);
+    this._notify(ann.page);
+  }
+
   removeHighlight(id) {
     const ann = this.annotations.get(id);
     if (!ann) return;
