@@ -70,7 +70,7 @@ export class InkToolbar {
 
   setMode(mode) {
     this.currentMode = mode;
-    if (mode !== 'pen' && mode !== 'highlighter') {
+    if (mode !== 'pen' && mode !== 'highlighter' && mode !== 'eraser') {
       this.hide();
       return;
     }
@@ -95,7 +95,79 @@ export class InkToolbar {
     }, 200);
   }
 
+  updateEraserCursor() {
+    if (typeof document === 'undefined') return;
+    const r = (this.inkEngine && this.inkEngine.eraserRadius) || 24;
+    const size = Math.max(24, r * 2 + 8);
+    const center = Math.round(size / 2);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${center}" cy="${center}" r="${r}" fill="rgba(255,59,48,0.18)" stroke="%23ff3b30" stroke-width="1.5"/></svg>`;
+    const cursorStyle = `url('data:image/svg+xml;utf8,${svg}') ${center} ${center}, crosshair`;
+
+    const styleEl = document.getElementById('dynamic-eraser-cursor') || document.createElement('style');
+    styleEl.id = 'dynamic-eraser-cursor';
+    styleEl.textContent = `
+      .layer-2-ink.mode-eraser,
+      [data-tool="eraser"] .layer-2-ink {
+        cursor: ${cursorStyle} !important;
+      }
+    `;
+    if (!document.getElementById('dynamic-eraser-cursor')) {
+      document.head.appendChild(styleEl);
+    }
+  }
+
   updateContent() {
+    if (this.currentMode === 'eraser') {
+      this.updateEraserCursor();
+      const mode = (this.inkEngine && this.inkEngine.eraserMode) || 'whole';
+      const radius = (this.inkEngine && this.inkEngine.eraserRadius) || 24;
+      const radii = [
+        { val: 14, label: 'Fine' },
+        { val: 24, label: 'Med' },
+        { val: 40, label: 'Broad' },
+      ];
+
+      const modesHtml = `
+        <button class="width-btn ${mode === 'whole' ? 'selected' : ''}" id="btn-eraser-whole" title="Erase entire strokes instantly">Whole Stroke</button>
+        <button class="width-btn ${mode === 'segment' ? 'selected' : ''}" id="btn-eraser-segment" title="Erase precise stroke segments">Segment</button>
+      `;
+
+      const radiiHtml = radii.map(r => {
+        const isSel = radius === r.val;
+        return `<button class="width-btn ${isSel ? 'selected' : ''}" data-radius="${r.val}">${r.label}</button>`;
+      }).join('');
+
+      this.container.innerHTML = `
+        <div class="ink-toolbar-group">
+          ${modesHtml}
+        </div>
+        <div class="ink-toolbar-divider"></div>
+        <div class="ink-toolbar-group">
+          ${radiiHtml}
+        </div>
+      `;
+
+      this.container.querySelector('#btn-eraser-whole')?.addEventListener('click', () => {
+        if (this.inkEngine) this.inkEngine.setEraserMode('whole');
+        this.updateContent();
+      });
+
+      this.container.querySelector('#btn-eraser-segment')?.addEventListener('click', () => {
+        if (this.inkEngine) this.inkEngine.setEraserMode('segment');
+        this.updateContent();
+      });
+
+      this.container.querySelectorAll('[data-radius]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const r = parseInt(e.currentTarget.dataset.radius, 10);
+          if (this.inkEngine) this.inkEngine.setEraserRadius(r);
+          this.updateContent();
+        });
+      });
+
+      return;
+    }
+
     const isPen = this.currentMode === 'pen';
     const presets = isPen ? PEN_PRESETS : HIGHLIGHTER_PRESETS;
     const activeColor = isPen ? this.activePenColor : this.activeHighlighterColor;

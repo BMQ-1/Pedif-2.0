@@ -27,34 +27,42 @@ export class SelectionBubble {
     }).join('');
 
     this.container.innerHTML = `
-      <div class="bubble-colors">
-        ${chipsHtml}
+      <div class="bubble-row" style="display: flex; align-items: center; gap: 4px;">
+        <div class="bubble-colors">
+          ${chipsHtml}
+        </div>
+        <div class="bubble-divider"></div>
+        <button class="b sm rip" id="bubble-btn-note" title="Add Note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+        <button class="b sm rip" id="bubble-btn-copy" title="Copy text (Ctrl+C)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+        <button class="b sm rip" id="bubble-btn-search" title="Search in document">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <button class="b sm rip" id="bubble-btn-speak" title="Read Aloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
       </div>
-      <div class="bubble-divider"></div>
-      <button class="b sm rip" id="bubble-btn-note" title="Add Note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-      </button>
-      <button class="b sm rip" id="bubble-btn-copy" title="Copy text (Ctrl+C)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-      </button>
-      <button class="b sm rip" id="bubble-btn-search" title="Search in document">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </button>
-      <button class="b sm rip" id="bubble-btn-speak" title="Read Aloud">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      </button>
+      <div class="bubble-note-row" id="bubble-note-row" style="display: none; padding-top: 6px; width: 100%;">
+        <div class="note-input-wrap">
+          <input type="text" class="note-inline-input" id="bubble-note-input" placeholder="Type a note...">
+          <button class="btn-note-save rip" id="bubble-note-save">Save</button>
+        </div>
+      </div>
     `;
 
     document.body.appendChild(this.container);
@@ -67,12 +75,36 @@ export class SelectionBubble {
       });
     });
 
+    const noteRow = this.container.querySelector('#bubble-note-row');
+    const noteInp = this.container.querySelector('#bubble-note-input');
+    const noteSave = this.container.querySelector('#bubble-note-save');
+
     this.container.querySelector('#bubble-btn-note').addEventListener('click', () => {
-      const note = prompt('Add a note to this highlight:');
-      if (note !== null) {
-        this.applyHighlight('yellow', note);
+      if (noteRow) {
+        const isHidden = noteRow.style.display === 'none';
+        noteRow.style.display = isHidden ? 'block' : 'none';
+        if (isHidden && noteInp) {
+          noteInp.focus();
+        }
       }
     });
+
+    if (noteSave && noteInp) {
+      const commitBubbleNote = () => {
+        const note = noteInp.value.trim();
+        this.applyHighlight('yellow', note);
+        noteInp.value = '';
+        if (noteRow) noteRow.style.display = 'none';
+      };
+
+      noteSave.addEventListener('click', commitBubbleNote);
+      noteInp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commitBubbleNote();
+        }
+      });
+    }
 
     this.container.querySelector('#bubble-btn-copy').addEventListener('click', () => {
       const text = this.getSelectedText();
@@ -253,6 +285,9 @@ export class SelectionBubble {
 
   hide() {
     this.container.style.display = 'none';
+    if (this.currentSelection && this.currentSelection.pageNum) {
+      window.dispatchEvent(new CustomEvent('clear-selection', { detail: { pageNum: this.currentSelection.pageNum } }));
+    }
     this.currentSelection = null;
   }
 }

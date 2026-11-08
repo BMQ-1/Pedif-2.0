@@ -9,6 +9,7 @@
 
 import { pdfEngine } from '../core/pdf-engine.js';
 import { highlightManager, PALETTE } from '../annotations/highlight-manager.js';
+import { showToast } from './toast.js';
 
 export class Sidebar {
   constructor(options = {}) {
@@ -264,8 +265,36 @@ export class Sidebar {
             ? `Active margins: L ${(margins.left * 100).toFixed(0)}%, R ${(margins.right * 100).toFixed(0)}%, T ${(margins.top * 100).toFixed(0)}%, B ${(margins.bottom * 100).toFixed(0)}%`
             : 'No margin crop active'}
         </div>
+
+        <h3 class="panel-section-title" style="font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 22px;">Neural PP-OCRv4 (WebGPU)</h3>
+        <p class="panel-desc" style="font-size: 12px; color: var(--tx2); margin-bottom: 12px; line-height: 1.4;">
+          Extract text and search indices from page ${(this.viewer && this.viewer.currentPage) || 1} on-device using local neural models.
+        </p>
+        <button class="b sm" id="btn-ocr-page" style="width: 100%; justify-content: center; font-weight: 600;">
+          Scan Current Page with OCR
+        </button>
       </div>
     `;
+
+    pane.querySelector('#btn-ocr-page')?.addEventListener('click', async () => {
+      const curPage = (this.viewer && this.viewer.currentPage) || 1;
+      const btn = pane.querySelector('#btn-ocr-page');
+      if (btn) {
+        btn.textContent = 'Running PP-OCRv4...';
+        btn.disabled = true;
+      }
+      showToast(`Running WebGPU OCR on Page ${curPage}...`, 'info');
+      const res = await this.viewer.runManualOcr(curPage);
+      if (res && res.lines && res.lines.length) {
+        showToast(`OCR Success: Found ${res.lines.length} lines on Page ${curPage}`, 'check');
+      } else {
+        showToast(`OCR Completed: Ready for text selection`, 'check');
+      }
+      if (btn) {
+        btn.textContent = 'Scan Current Page with OCR';
+        btn.disabled = false;
+      }
+    });
 
     pane.querySelector('#btn-mode-continuous')?.addEventListener('click', () => {
       this.viewer.setMode('continuous');

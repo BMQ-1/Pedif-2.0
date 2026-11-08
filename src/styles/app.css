@@ -901,6 +901,104 @@ body.drag .drop {
   background: var(--ln2);
 }
 
+/* Floating Highlight Contextual Popover */
+.highlight-popover {
+  position: fixed;
+  background: var(--gl);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--ln);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 125;
+  animation: bubblePop .22s var(--spring);
+}
+
+.popover-main-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popover-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-chip.active-chip {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.popover-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ln2);
+  margin: 0 2px;
+}
+
+.popover-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.note-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.note-inline-input {
+  flex: 1;
+  height: 28px;
+  background: var(--bg2);
+  border: 1px solid var(--ln);
+  border-radius: 14px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  color: var(--tx);
+  outline: none;
+  font-family: inherit;
+  transition: border-color .15s;
+}
+
+.note-inline-input:focus {
+  border-color: var(--accent);
+}
+
+.btn-note-save {
+  height: 26px;
+  padding: 0 10px;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 13px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+}
+
+.btn-note-save:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+}
+
+.btn-note-save:active {
+  transform: scale(0.96);
+}
+
 /* OCR Snippet Box */
 .ocr-snippet-box {
   position: fixed;

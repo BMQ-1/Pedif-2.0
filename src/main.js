@@ -233,6 +233,12 @@ class PedifApp {
             return;
           }
 
+          // Trigger Samsung DeepSky continuous pill-hull quads & teardrop handles
+          const record = this.viewer ? this.viewer.renderedPages.get(pageNum) : null;
+          if (record && record.overlay) {
+            record.overlay.selectFromClientBounds(rects, pageEl.getBoundingClientRect());
+          }
+
           const b = range.getBoundingClientRect();
           this.selectionBubble.showAtRange({
             pageNum,
@@ -333,7 +339,7 @@ class PedifApp {
 
   async handleExportPdf() {
     if (!this.currentDoc || !this.currentDoc.buffer) {
-      alert('Please open a PDF document first.');
+      showToast('Please open a PDF document first.', 'alert');
       return;
     }
 
@@ -359,7 +365,7 @@ class PedifApp {
 
     } catch (err) {
       console.error('[Pedif] Export PDF error:', err);
-      alert('Failed to export PDF: ' + err.message);
+      showToast('Failed to export PDF: ' + err.message, 'alert');
     } finally {
       if (btnExport) {
         btnExport.disabled = false;

@@ -230,6 +230,23 @@ export class SelectionOverlay {
     elem.setAttribute('transform', `translate(${x}, ${y})`);
   }
 
+  selectFromClientBounds(rects, pageRect) {
+    if (!this.allChars.length || !rects || !rects.length || !pageRect) return;
+    const first = rects[0];
+    const last = rects[rects.length - 1];
+    const startX = first.left - pageRect.left;
+    const startY = (first.top + first.height / 2) - pageRect.top;
+    const endX = last.right - pageRect.left;
+    const endY = (last.top + last.height / 2) - pageRect.top;
+
+    const sIdx = this.findNearestChar(startX, startY, pageRect.width, pageRect.height, 90);
+    const eIdx = this.findNearestChar(endX, endY, pageRect.width, pageRect.height, 90);
+
+    if (sIdx !== -1 && eIdx !== -1) {
+      this.renderSelection(sIdx, eIdx);
+    }
+  }
+
   clearSelection() {
     this.selectedRange = null;
     if (this.highlightGroup) {

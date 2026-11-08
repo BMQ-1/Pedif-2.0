@@ -15,6 +15,7 @@ import { searchEngine } from './search-engine.js';
 import { GlyphExtractor } from '../selection/glyph-extractor.js';
 import { SelectionOverlay } from '../selection/selection-overlay.js';
 import { highlightManager } from '../annotations/highlight-manager.js';
+import { highlightPopover } from '../ui/highlight-popover.js';
 import { ocrManager } from '../ocr/ocr-manager.js';
 
 export class VirtualViewer {
@@ -335,9 +336,17 @@ export class VirtualViewer {
           overlay.updateLines(ocrResult.lines);
         }
       }
+      return ocrResult;
     } catch (err) {
       console.warn(`[VirtualViewer] Lazy OCR error on page ${pageNum}:`, err);
+      return null;
     }
+  }
+
+  async runManualOcr(pageNum = this.currentPage) {
+    const record = this.renderedPages.get(pageNum);
+    if (!record || !record.layer0) return null;
+    return this.runLazyOcrOnPage(pageNum, record.layer0, record.overlay);
   }
 
   unmountPage(pageNum, pageEl) {
@@ -412,9 +421,7 @@ export class VirtualViewer {
 
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm(`Remove highlight: "${ann.text.slice(0, 30)}..."?`)) {
-          highlightManager.removeHighlight(ann.id);
-        }
+        highlightPopover.showForHighlight(ann, pageNum, e);
       });
 
       highlightGroup.appendChild(pathEl);

@@ -22,6 +22,8 @@ export class InkEngine {
     this.penWidth = options.penWidth || 3;
     this.highlighterColor = options.highlighterColor || 'rgba(250, 204, 21, 0.45)';
     this.highlighterWidth = options.highlighterWidth || 22;
+    this.eraserRadius = options.eraserRadius || 24;
+    this.eraserMode = options.eraserMode || 'whole'; // 'whole' | 'segment'
 
     this.currentStroke = null;
     this.activeCanvas = null;
@@ -31,6 +33,7 @@ export class InkEngine {
     this.lastPoint = null;
     this.hasStylusPen = false;
     this._animFrame = null;
+    this.liveBaseSnapshot = null;
 
     // Batch records for eraser gestures
     this.erasedStrokesBatch = [];
@@ -63,6 +66,14 @@ export class InkEngine {
 
   setHighlighterWidth(width) {
     this.highlighterWidth = width;
+  }
+
+  setEraserRadius(radius) {
+    this.eraserRadius = Math.max(8, Math.min(60, radius));
+  }
+
+  setEraserMode(mode) {
+    this.eraserMode = mode === 'segment' ? 'segment' : 'whole';
   }
 
   initCanvasListeners() {
@@ -165,6 +176,20 @@ export class InkEngine {
     });
 
     this.lastPoint = { x: screenX, y: screenY };
+
+    // Snapshot base canvas state for 120 FPS live inking with zero recalculation
+    if (this.activeTool !== 'eraser' && canvas && canvas.getContext) {
+      try {
+        const ctx = canvas.getContext('2d');
+        if (canvas.width > 0 && canvas.height > 0) {
+          this.liveBaseSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+      } catch {
+        this.liveBaseSnapshot = null;
+      }
+    } else {
+      this.liveBaseSnapshot = null;
+    }
 
     // Initial dot render
     this.renderLiveStroke(canvas, pageNum);
@@ -285,6 +310,7 @@ export class InkEngine {
     this.activeCanvas = null;
     this.activePageNum = null;
     this.lastPoint = null;
+    this.liveBaseSnapshot = null;
   }
 
   /**
@@ -331,23 +357,42 @@ export class InkEngine {
    * Unified Eraser: Sweeps across vector strokes AND text highlights
    */
   eraseAt(pageNum, x, y, canvasW = 1, canvasH = 1) {
-    const eraserRadius = 24; // Generous natural sweep radius
+    const eraserRadius = this.eraserRadius || 24;
 
     // 1. Erase vector strokes on this page
     const strokes = this.viewer ? (this.viewer.pageStrokes.get(pageNum) || []) : [];
     if (strokes.length) {
       let changed = false;
-      for (let i = strokes.length - 1; i >= 0; i--) {
-        const stroke = strokes[i];
-        if (stroke.intersectsPoint(x, y, eraserRadius, canvasW, canvasH)) {
-          strokes.splice(i, 1);
-          this.erasedStrokesBatch.push({ stroke, pageNum });
-          changed = true;
+      if (this.eraserMode === 'segment') {
+        const nextStrokes = [];
+        for (let i = 0; i < strokes.length; i++) {
+          const s = strokes[i];
+          if (!s.intersectsPoint(x, y, eraserRadius, canvasW, canvasH)) {
+            nextStrokes.push(s);
+          } else {
+            const segments = this.splitStrokeAtPoint(s, x, y, eraserRadius, canvasW, canvasH);
+            this.erasedStrokesBatch.push({ stroke: s, pageNum, replacedBy: segments });
+            nextStrokes.push(...segments);
+            changed = true;
+          }
         }
-      }
-      if (changed) {
-        this.viewer.pageStrokes.set(pageNum, strokes);
-        this.viewer.redrawPageStrokes(pageNum);
+        if (changed) {
+          this.viewer.pageStrokes.set(pageNum, nextStrokes);
+          this.viewer.redrawPageStrokes(pageNum);
+        }
+      } else {
+        for (let i = strokes.length - 1; i >= 0; i--) {
+          const stroke = strokes[i];
+          if (stroke.intersectsPoint(x, y, eraserRadius, canvasW, canvasH)) {
+            strokes.splice(i, 1);
+            this.erasedStrokesBatch.push({ stroke, pageNum });
+            changed = true;
+          }
+        }
+        if (changed) {
+          this.viewer.pageStrokes.set(pageNum, strokes);
+          this.viewer.redrawPageStrokes(pageNum);
+        }
       }
     }
 
@@ -366,6 +411,46 @@ export class InkEngine {
     }
   }
 
+  splitStrokeAtPoint(stroke, x, y, radius, canvasW, canvasH) {
+    if (!stroke.points || stroke.points.length <= 1) return [];
+    const isNorm = stroke.isNormalized && canvasW > 1 && stroke.points[0].x <= 1.0;
+    const sx = isNorm ? canvasW : 1;
+    const sy = isNorm ? canvasH : 1;
+
+    const segments = [];
+    let currentPts = [];
+
+    for (let i = 0; i < stroke.points.length; i++) {
+      const pt = stroke.points[i];
+      const px = pt.x * sx;
+      const py = pt.y * sy;
+      const dist = Math.hypot(x - px, y - py);
+
+      if (dist > radius) {
+        currentPts.push(pt);
+      } else {
+        if (currentPts.length > 0) {
+          segments.push(new Stroke({
+            ...stroke,
+            id: 'stroke_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            points: currentPts,
+          }));
+          currentPts = [];
+        }
+      }
+    }
+
+    if (currentPts.length > 0) {
+      segments.push(new Stroke({
+        ...stroke,
+        id: 'stroke_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        points: currentPts,
+      }));
+    }
+
+    return segments;
+  }
+
   /**
    * Finalizes an eraser swipe into a single cohesive undoable CommandStack operation
    */
@@ -382,8 +467,15 @@ export class InkEngine {
       description: `Erase ${totalCount} item${totalCount > 1 ? 's' : ''}`,
       execute: () => {
         // Remove strokes on initial execute / redo
-        strokesToRestore.forEach(({ stroke, pageNum }) => {
-          const list = (this.viewer.pageStrokes.get(pageNum) || []).filter(s => s.id !== stroke.id);
+        strokesToRestore.forEach(({ stroke, pageNum, replacedBy }) => {
+          let list = this.viewer.pageStrokes.get(pageNum) || [];
+          list = list.filter(s => s.id !== stroke.id);
+          if (replacedBy && replacedBy.length) {
+            const existingIds = new Set(list.map(s => s.id));
+            replacedBy.forEach(r => {
+              if (!existingIds.has(r.id)) list.push(r);
+            });
+          }
           this.viewer.pageStrokes.set(pageNum, list);
           this.viewer.redrawPageStrokes(pageNum);
         });
@@ -395,13 +487,17 @@ export class InkEngine {
       },
       undo: () => {
         // Restore strokes grouped by page
-        strokesToRestore.forEach(({ stroke, pageNum }) => {
-          const pageList = this.viewer.pageStrokes.get(pageNum) || [];
+        strokesToRestore.forEach(({ stroke, pageNum, replacedBy }) => {
+          let pageList = this.viewer.pageStrokes.get(pageNum) || [];
+          if (replacedBy && replacedBy.length) {
+            const replIds = new Set(replacedBy.map(r => r.id));
+            pageList = pageList.filter(s => !replIds.has(s.id));
+          }
           if (!pageList.some(s => s.id === stroke.id)) {
             pageList.push(stroke);
-            this.viewer.pageStrokes.set(pageNum, pageList);
-            this.viewer.redrawPageStrokes(pageNum);
           }
+          this.viewer.pageStrokes.set(pageNum, pageList);
+          this.viewer.redrawPageStrokes(pageNum);
         });
 
         // Restore highlights
@@ -425,8 +521,18 @@ export class InkEngine {
     const targetW = metrics ? metrics.width : (canvas.clientWidth || canvas.width / dpr || 800);
     const targetH = metrics ? metrics.height : (canvas.clientHeight || canvas.height / dpr || 1000);
 
-    // Redraw existing strokes on this page
-    this.viewer.redrawPageStrokes(pageNum);
+    // Fast 120 FPS live stroke compositing using saved base snapshot
+    if (this.liveBaseSnapshot) {
+      try {
+        ctx.putImageData(this.liveBaseSnapshot, 0, 0);
+      } catch {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.viewer.redrawPageStrokes(pageNum);
+      }
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this.viewer.redrawPageStrokes(pageNum);
+    }
 
     // Draw active in-progress stroke with exact matching targetW and targetH
     if (this.currentStroke) {

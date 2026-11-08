@@ -55,6 +55,12 @@ async function initializeOcr(config = {}) {
 
   svtr = new SVTR(dictText);
 
+  if (ort && ort.env && ort.env.wasm) {
+    ort.env.wasm.numThreads = Math.min(4, (self.navigator && self.navigator.hardwareConcurrency) || 2);
+    ort.env.wasm.simd = true;
+    ort.env.wasm.proxy = false;
+  }
+
   // Configure WebGPU execution provider with WASM SIMD fallback
   const sessionOptions = {
     executionProviders: ['webgpu', 'wasm'],
