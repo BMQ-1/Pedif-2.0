@@ -37,7 +37,7 @@ export class InkToolbar {
     this.container.className = 'ink-subtoolbar';
     this.container.style.display = 'none';
 
-    document.getElementById('app').appendChild(this.container);
+    (document.getElementById('rd') || document.body).appendChild(this.container);
   }
 
   setMode(mode) {

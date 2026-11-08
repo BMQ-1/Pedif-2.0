@@ -133,8 +133,10 @@ export class HomeLibrary {
 
         const docId = tile.dataset.id;
         const fullDoc = await libraryStore.getDocument(docId);
-        if (fullDoc && fullDoc.buffer && this.onOpenDocument) {
+        if (fullDoc && fullDoc.buffer && fullDoc.buffer.byteLength > 0 && !fullDoc.buffer.detached && this.onOpenDocument) {
           this.onOpenDocument(fullDoc);
+        } else {
+          showToast('Please open or drop the PDF file to view', 'alert');
         }
       });
     });

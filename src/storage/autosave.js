@@ -60,20 +60,35 @@ class AutosaveEngine {
    * Saves the raw PDF binary buffer
    */
   async savePdfBuffer(buffer, metadata = {}) {
+    if (!buffer || !(buffer instanceof ArrayBuffer) || buffer.byteLength === 0) {
+      return false;
+    }
+    if (typeof buffer.detached === 'boolean' && buffer.detached) {
+      return false;
+    }
+
+    let bufCopy;
+    try {
+      bufCopy = buffer.slice(0);
+    } catch {
+      return false;
+    }
+
     const meta = {
       id: 'active_session',
       name: metadata.name || 'Untitled.pdf',
       pageCount: metadata.pageCount || 1,
       currentPage: metadata.currentPage || 1,
       updatedAt: Date.now(),
-      size: buffer.byteLength,
+      size: bufCopy.byteLength,
     };
 
     if (this.useOpfs && this.opfsRoot) {
       try {
         const fileHandle = await this.opfsRoot.getFileHandle('active_doc.pdf', { create: true });
         const writable = await fileHandle.createWritable();
-        await writable.write(buffer);
+        // Always write an isolated slice so OPFS sink cannot detach bufCopy
+        await writable.write(bufCopy.slice(0));
         await writable.close();
 
         // Save metadata
@@ -88,8 +103,13 @@ class AutosaveEngine {
       }
     }
 
-    // Fallback: IndexedDB
-    return this._idbPut({ ...meta, buffer });
+    // Fallback: IndexedDB with fresh buffer slice
+    try {
+      return this._idbPut({ ...meta, buffer: bufCopy.slice(0) });
+    } catch (e) {
+      console.warn('[Autosave] Non-fatal IDB save error:', e);
+      return false;
+    }
   }
 
   /**
@@ -231,6 +251,9 @@ class AutosaveEngine {
     if (!this.db) return Promise.resolve(false);
     return new Promise((resolve) => {
       try {
+        if (val && val.buffer && (val.buffer.byteLength === 0 || (typeof val.buffer.detached === 'boolean' && val.buffer.detached))) {
+          val.buffer = null;
+        }
         const tx = this.db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put(val);
         tx.oncomplete = () => resolve(true);

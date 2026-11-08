@@ -7,6 +7,14 @@ const DB_NAME = 'pedif_library_db';
 const DB_VERSION = 1;
 const DOC_STORE = 'documents';
 
+function isBufferValid(buf) {
+  if (!buf) return false;
+  if (!(buf instanceof ArrayBuffer)) return false;
+  if (typeof buf.detached === 'boolean' && buf.detached) return false;
+  if (buf.byteLength === 0) return false;
+  return true;
+}
+
 class LibraryStore {
   constructor() {
     this.db = null;
@@ -39,7 +47,7 @@ class LibraryStore {
         await this.init();
       } catch (e) {
         console.warn('[LibraryStore] Init failed:', e);
-        return null;
+        return false;
       }
     }
     return new Promise((resolve) => {
@@ -49,7 +57,7 @@ class LibraryStore {
 
         // Safely verify buffer is not detached
         let safeBuffer = null;
-        if (doc.buffer && doc.buffer instanceof ArrayBuffer && doc.buffer.byteLength > 0) {
+        if (isBufferValid(doc.buffer)) {
           try {
             safeBuffer = doc.buffer.slice(0);
           } catch {
@@ -57,75 +65,145 @@ class LibraryStore {
           }
         }
 
-        const record = {
-          id: doc.id || ('doc_' + Date.now()),
-          name: doc.name || 'Untitled Document',
-          size: doc.size || (safeBuffer ? safeBuffer.byteLength : 0),
-          pageCount: doc.pageCount || 1,
-          currentPage: doc.currentPage || 1,
-          thumbnail: doc.thumbnail || null, // data URL of first page
-          buffer: safeBuffer, // ArrayBuffer
-          updatedAt: Date.now(),
-          createdAt: doc.createdAt || Date.now(),
+        const stableId = doc.id || ('doc_' + encodeURIComponent(doc.name || 'doc').replace(/[^a-zA-Z0-9_]/g, '_') + '_' + (doc.pageCount || 0));
+
+        const getReq = store.get(stableId);
+        getReq.onsuccess = () => {
+          try {
+            const existing = getReq.result || null;
+            let finalBuffer = safeBuffer;
+            if (!finalBuffer && existing && isBufferValid(existing.buffer)) {
+              try {
+                finalBuffer = existing.buffer.slice(0);
+              } catch {
+                finalBuffer = null;
+              }
+            }
+
+            const record = {
+              id: stableId,
+              name: doc.name || (existing && existing.name) || 'Untitled Document',
+              size: doc.size || (finalBuffer ? finalBuffer.byteLength : (existing && existing.size) || 0),
+              pageCount: doc.pageCount || (existing && existing.pageCount) || 1,
+              currentPage: doc.currentPage || (existing && existing.currentPage) || 1,
+              thumbnail: doc.thumbnail || (existing && existing.thumbnail) || null,
+              buffer: finalBuffer,
+              updatedAt: Date.now(),
+              createdAt: (existing && existing.createdAt) || doc.createdAt || Date.now(),
+            };
+
+            store.put(record);
+          } catch (putErr) {
+            console.warn('[LibraryStore] Safe onsuccess put caught error:', putErr);
+          }
         };
 
-        store.put(record);
-        tx.oncomplete = () => resolve(record);
+        getReq.onerror = () => {
+          console.warn('[LibraryStore] getReq error before put');
+        };
+
+        tx.oncomplete = () => resolve(true);
         tx.onerror = (e) => {
           console.warn('[LibraryStore] save transaction error:', e);
-          resolve(record);
+          resolve(false);
         };
       } catch (err) {
         console.warn('[LibraryStore] Non-fatal save error:', err);
-        resolve(null);
+        resolve(false);
       }
     });
   }
 
   async listDocuments() {
-    if (!this.db) await this.init();
+    if (!this.db) {
+      try {
+        await this.init();
+      } catch {
+        return [];
+      }
+    }
     return new Promise((resolve) => {
-      const tx = this.db.transaction(DOC_STORE, 'readonly');
-      const store = tx.objectStore(DOC_STORE);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const list = req.result || [];
-        // Sort descending by updatedAt
-        list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-        // Return without heavy buffer for fast list rendering
-        resolve(list.map(({ buffer, ...meta }) => meta));
-      };
-      req.onerror = () => resolve([]);
+      try {
+        const tx = this.db.transaction(DOC_STORE, 'readonly');
+        const store = tx.objectStore(DOC_STORE);
+        const req = store.getAll();
+        req.onsuccess = () => {
+          const list = req.result || [];
+          // Sort descending by updatedAt
+          list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+          // Return without heavy buffer for fast list rendering
+          resolve(list.map(({ buffer, ...meta }) => meta));
+        };
+        req.onerror = () => resolve([]);
+      } catch {
+        resolve([]);
+      }
     });
   }
 
   async getDocument(id) {
-    if (!this.db) await this.init();
+    if (!this.db) {
+      try {
+        await this.init();
+      } catch {
+        return null;
+      }
+    }
     return new Promise((resolve) => {
-      const tx = this.db.transaction(DOC_STORE, 'readonly');
-      const req = tx.objectStore(DOC_STORE).get(id);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
+      try {
+        const tx = this.db.transaction(DOC_STORE, 'readonly');
+        const req = tx.objectStore(DOC_STORE).get(id);
+        req.onsuccess = () => {
+          const res = req.result;
+          if (res && res.buffer && !isBufferValid(res.buffer)) {
+            res.buffer = null;
+          }
+          resolve(res || null);
+        };
+        req.onerror = () => resolve(null);
+      } catch {
+        resolve(null);
+      }
     });
   }
 
   async removeDocument(id) {
-    if (!this.db) await this.init();
+    if (!this.db) {
+      try {
+        await this.init();
+      } catch {
+        return false;
+      }
+    }
     return new Promise((resolve) => {
-      const tx = this.db.transaction(DOC_STORE, 'readwrite');
-      tx.objectStore(DOC_STORE).delete(id);
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => resolve(false);
+      try {
+        const tx = this.db.transaction(DOC_STORE, 'readwrite');
+        tx.objectStore(DOC_STORE).delete(id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch {
+        resolve(false);
+      }
     });
   }
 
   async clearAll() {
-    if (!this.db) await this.init();
+    if (!this.db) {
+      try {
+        await this.init();
+      } catch {
+        return false;
+      }
+    }
     return new Promise((resolve) => {
-      const tx = this.db.transaction(DOC_STORE, 'readwrite');
-      tx.objectStore(DOC_STORE).clear();
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => resolve(false);
+      try {
+        const tx = this.db.transaction(DOC_STORE, 'readwrite');
+        tx.objectStore(DOC_STORE).clear();
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch {
+        resolve(false);
+      }
     });
   }
 }

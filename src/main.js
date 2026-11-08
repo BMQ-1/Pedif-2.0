@@ -48,10 +48,7 @@ class PedifApp {
     await autosave.init();
     await libraryStore.init();
 
-    // 2. Register PWA Service Worker
-    this.registerServiceWorker();
-
-    // 3. Initialize Home Library View
+    // 2. Initialize Home Library View
     this.homeLibrary = new HomeLibrary({
       container: document.getElementById('libwrap'),
       dropzone: document.getElementById('drop'),
@@ -135,16 +132,6 @@ class PedifApp {
     await this.checkRestoreSession();
 
     console.log('[Pedif] App initialized with full Cupertino Studio UI. Cross-Origin Isolated:', window.crossOriginIsolated);
-  }
-
-  registerServiceWorker() {
-    if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && window.location.protocol === 'https:') {
-      navigator.serviceWorker.register('./sw.js').then((reg) => {
-        console.log('[PWA] Service Worker registered:', reg.scope);
-      }).catch((err) => {
-        console.warn('[PWA] Service Worker registration failed:', err);
-      });
-    }
   }
 
   setupTheme() {
@@ -465,8 +452,31 @@ class PedifApp {
     }
   }
 
+  async generateThumbnail(pdf) {
+    try {
+      const page = await pdf.getPage(1);
+      const vp = page.getViewport({ scale: 0.35 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(vp.width));
+      canvas.height = Math.max(1, Math.round(vp.height));
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      return canvas.toDataURL('image/jpeg', 0.85);
+    } catch (e) {
+      console.warn('[Pedif] Thumbnail generation non-fatal:', e);
+      return null;
+    }
+  }
+
   async loadPdfBuffer(buffer, fileName = 'Document.pdf', savedState = null) {
     try {
+      if (!buffer || !(buffer instanceof ArrayBuffer) || buffer.byteLength === 0) {
+        throw new Error('PDF file buffer is empty or could not be read.');
+      }
+      if (typeof buffer.detached === 'boolean' && buffer.detached) {
+        throw new Error('PDF file buffer was detached.');
+      }
+
       // Create independent copies so worker transfers never detach the stored buffer
       const pdfJsBuffer = buffer.slice(0);
       const docBuffer = buffer.slice(0);
@@ -511,12 +521,23 @@ class PedifApp {
         currentPage: 1,
       }).catch(e => console.warn('[Autosave] Non-fatal save failure:', e));
 
-      libraryStore.saveDocument({
-        name: fileName,
-        pageCount: pdf.numPages,
-        currentPage: 1,
-        buffer: docBuffer.slice(0),
-      }).catch(e => console.warn('[LibraryStore] Non-fatal save failure:', e));
+      // Asynchronously render real cover thumbnail for the library card
+      this.generateThumbnail(pdf).then(thumbnail => {
+        libraryStore.saveDocument({
+          name: fileName,
+          pageCount: pdf.numPages,
+          currentPage: 1,
+          thumbnail: thumbnail || null,
+          buffer: docBuffer.slice(0),
+        }).catch(e => console.warn('[LibraryStore] Non-fatal save failure:', e));
+      }).catch(() => {
+        libraryStore.saveDocument({
+          name: fileName,
+          pageCount: pdf.numPages,
+          currentPage: 1,
+          buffer: docBuffer.slice(0),
+        }).catch(e => console.warn('[LibraryStore] Non-fatal save failure:', e));
+      });
 
     } catch (err) {
       console.error('[Pedif] Error opening PDF:', err);

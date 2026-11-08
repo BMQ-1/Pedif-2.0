@@ -84,7 +84,7 @@ export class Sidebar {
       </div>
     `;
 
-    document.getElementById('app').appendChild(this.container);
+    (document.getElementById('rd') || document.body).appendChild(this.container);
 
     // Event listeners
     this.container.querySelectorAll('.tab-btn').forEach(btn => {
