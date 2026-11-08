@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pedif — PDF Editor</title>
+  <desc id="desc">Pedif: an ivory reading page with a copper page fold on a deep evergreen field.</desc>
+  <defs>
+    <linearGradient id="field" x1="128" y1="80" x2="896" y2="944" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B4541"/>
+      <stop offset="1" stop-color="#102E2D"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="340" y1="196" x2="700" y2="832" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFCF5"/>
+      <stop offset="1" stop-color="#F0E9DC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#field)"/>
+  <path d="M353 190h220l147 147v435a62 62 0 0 1-62 62H353a62 62 0 0 1-62-62V252a62 62 0 0 1 62-62Z" fill="url(#paper)"/>
+  <path d="M573 190v103a44 44 0 0 0 44 44h103L573 190Z" fill="#DED3C0"/>
+  <path d="M573 190v103a44 44 0 0 0 44 44h103" fill="none" stroke="#C87C56" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+  <path d="M389 439h226" fill="none" stroke="#244845" stroke-linecap="round" stroke-width="24"/>
+  <path d="M389 505h174" fill="none" stroke="#A9A293" stroke-linecap="round" stroke-width="18"/>
+  <path d="M389 566h198" fill="none" stroke="#A9A293" stroke-linecap="round" stroke-width="18"/>
+  <path d="M389 684h112" fill="none" stroke="#C87C56" stroke-linecap="round" stroke-width="18"/>
+</svg>

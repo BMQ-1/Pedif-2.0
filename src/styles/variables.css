@@ -1,0 +1,159 @@
+/* ============================================================
+   PEDIF · Apple-aligned design system
+   Type: SF Pro via -apple-system · Color: iOS system palette
+   Motion: iOS curves + real spring (WAAPI) · Grid: 8pt rhythm
+   ============================================================ */
+:root {
+  /* Motion — Apple curves. --e is the iOS sheet curve */
+  --e: cubic-bezier(.32, .72, 0, 1);
+  --e2: cubic-bezier(.25, .1, .25, 1);
+  --eio: cubic-bezier(.3, .9, .35, 1);
+  --spring: cubic-bezier(.34, 1.08, .64, 1);
+  --q: .22s;
+  --d: .52s;
+  --d-instant: .12s;
+  --d-quick: .2s;
+  --d-normal: .35s;
+  --d-slow: .5s;
+
+  /* Spacing — 8pt rhythm */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+
+  /* Typography scale */
+  --t-title: 28px;
+  --t-head: 22px;
+  --t-body: 17px;
+  --t-call: 16px;
+  --t-sub: 15px;
+  --t-foot: 13px;
+  --t-cap: 11px;
+  --r-s: 10px;
+  --r-m: 14px;
+  --r-l: 20px;
+  --r-xl: 24px;
+  --pad: 20px;
+  --maxw: 800px;
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
+  --brand1: #ff6a5c;
+  --brand2: #ff2d55;
+  --brand3: #c1124a;
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  letter-spacing: -.01em;
+}
+
+:root[data-theme=light] {
+  color-scheme: light;
+  --bg: #f2f2f7;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --card2: #f2f2f7;
+  --gl: rgba(249, 249, 249, .8);
+  --tx: #000000;
+  --tx2: rgba(60, 60, 67, .68);
+  --tx3: rgba(60, 60, 67, .52);
+  --ln: rgba(60, 60, 67, .29);
+  --ln2: rgba(60, 60, 67, .13);
+  --ac: #007aff;
+  --ac-soft: rgba(0, 122, 255, .14);
+  --grn: #34c759;
+  --red: #ff3b30;
+  --ylw: #ffcc00;
+  --fill: rgba(120, 120, 128, .12);
+  --fill2: rgba(120, 120, 128, .06);
+  --page-bg: #ffffff;
+  --hud: rgba(28, 28, 30, .9);
+  --sh: 0 1px 2px rgba(0,0,0,.05), 0 14px 34px -18px rgba(0,0,0,.35);
+  --sh-s: 0 1px 3px rgba(0,0,0,.07), 0 6px 16px -10px rgba(0,0,0,.22);
+}
+
+:root[data-theme=dark] {
+  color-scheme: dark;
+  --bg: #1c1c1e;
+  --bg2: #2c2c2e;
+  --card: #2c2c2e;
+  --card2: #3a3a3c;
+  --gl: rgba(44, 44, 46, .78);
+  --tx: #ffffff;
+  --tx2: rgba(235, 235, 245, .6);
+  --tx3: rgba(235, 235, 245, .46);
+  --ln: rgba(84, 84, 88, .6);
+  --ln2: rgba(84, 84, 88, .36);
+  --ac: #0a84ff;
+  --ac-soft: rgba(10, 132, 255, .22);
+  --grn: #30d158;
+  --red: #ff453a;
+  --ylw: #ffd60a;
+  --fill: rgba(118, 118, 128, .24);
+  --fill2: rgba(118, 118, 128, .12);
+  --page-bg: #141416;
+  --hud: rgba(28, 28, 30, .92);
+  --sh: 0 1px 2px rgba(0,0,0,.5), 0 18px 44px -20px rgba(0,0,0,.8);
+  --sh-s: 0 1px 3px rgba(0,0,0,.45), 0 8px 20px -12px rgba(0,0,0,.7);
+}
+
+:root[data-theme=oled] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg2: #0a0a0b;
+  --card: #000000;
+  --card2: #121214;
+  --gl: rgba(10, 10, 11, .72);
+  --tx: #ffffff;
+  --tx2: rgba(235, 235, 245, .58);
+  --tx3: rgba(235, 235, 245, .44);
+  --ln: rgba(84, 84, 88, .52);
+  --ln2: rgba(84, 84, 88, .3);
+  --ac: #0a84ff;
+  --ac-soft: rgba(10, 132, 255, .22);
+  --grn: #30d158;
+  --red: #ff453a;
+  --ylw: #ffd60a;
+  --fill: rgba(118, 118, 128, .2);
+  --fill2: rgba(118, 118, 128, .1);
+  --page-bg: #0e0e10;
+  --hud: rgba(28, 28, 30, .94);
+  --sh: 0 1px 2px rgba(0,0,0,.6), 0 18px 44px -20px rgba(0,0,0,.9);
+  --sh-s: 0 1px 3px rgba(0,0,0,.6), 0 8px 20px -12px rgba(0,0,0,.8);
+}
+
+:root[data-theme=sepia] {
+  color-scheme: light;
+  --bg: #efe4cd;
+  --bg2: #f7efdd;
+  --card: #fbf4e4;
+  --card2: #f2e8d3;
+  --gl: rgba(250, 243, 228, .82);
+  --tx: #3c3021;
+  --tx2: rgba(61, 48, 34, .66);
+  --tx3: rgba(61, 48, 34, .52);
+  --ln: rgba(61, 48, 34, .24);
+  --ln2: rgba(61, 48, 34, .12);
+  --ac: #a25c17;
+  --ac-soft: rgba(162, 92, 23, .16);
+  --grn: #4b8b3b;
+  --red: #c0392b;
+  --ylw: #e0a800;
+  --fill: rgba(120, 90, 50, .14);
+  --fill2: rgba(120, 90, 50, .07);
+  --page-bg: #f7eed9;
+  --hud: rgba(60, 48, 34, .92);
+  --sh: 0 1px 2px rgba(61,48,34,.1), 0 14px 34px -18px rgba(61,48,34,.4);
+  --sh-s: 0 1px 3px rgba(61,48,34,.12), 0 6px 16px -10px rgba(61,48,34,.3);
+}

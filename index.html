@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f2f2f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="application-name" content="Pedif">
+  <meta name="apple-mobile-web-app-title" content="Pedif">
+  <meta name="description" content="Pedif — High-Performance Offline-First PDF Studio with WebGPU PP-OCRv4 & Vector Inking">
+  <title>Pedif — PDF Editor</title>
+
+  <!-- GitHub Pages Cross-Origin Isolation for SharedArrayBuffer & WebGPU/WASM -->
+  <script src="./coi-serviceworker.js"></script>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./pedif-logo.svg">
+
+  <!-- Immediate Theme Initializer to prevent flash -->
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('pedif:theme') || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = savedTheme;
+    } catch {}
+  </script>
+</head>
+<body>
+  <div id="app">
+    <!-- Top Action & Navigation Bar -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <button class="b" id="btn-sidebar" title="Toggle Sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
+        <div class="brand">
+          <img src="./pedif-logo.svg" alt="Pedif logo">
+          <span>Pedif</span>
+        </div>
+        <input type="file" id="file-input" accept="application/pdf" style="display: none;">
+        <button class="b" id="btn-open-file" title="Open PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="top-bar-center">
+        <!-- Tool Selectors -->
+        <button class="b active" id="tool-select" title="Text Select & Highlight (V)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+          </svg>
+        </button>
+        <button class="b" id="tool-pen" title="Vector Pen (P)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+            <path d="M2 2l7.586 7.586"></path>
+            <circle cx="11" cy="11" r="2"></circle>
+          </svg>
+        </button>
+        <button class="b" id="tool-highlighter" title="Freehand Highlighter (H)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15.5 3.5l5 5L7 22H2v-5L15.5 3.5z"></path>
+            <path d="M14 5l5 5"></path>
+          </svg>
+        </button>
+        <button class="b" id="tool-eraser" title="Vector Stroke Eraser (E)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 20H7L3 16a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l6 6a1 1 0 0 1 0 1.4L13 19"></path>
+          </svg>
+        </button>
+        <button class="b" id="tool-ocr" title="Area OCR Snippet (O)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"></rect>
+            <path d="M8 12h8M12 8v8"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="top-bar-right">
+        <button class="b" id="btn-search" title="Find in Document (Ctrl+F)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <button class="b" id="btn-undo" title="Undo (Ctrl+Z)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7v6h6"></path>
+            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+          </svg>
+        </button>
+        <button class="b" id="btn-redo" title="Redo (Ctrl+Y)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 7v6h-6"></path>
+            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path>
+          </svg>
+        </button>
+        <button class="b" id="btn-theme" title="Toggle Theme (D)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button class="b" id="btn-shortcuts" title="Shortcuts (?)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+        <button class="b" id="btn-export" title="Export PDF (Ctrl+S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport Scroll Container -->
+    <main id="viewport-container">
+      <div id="drop-zone" style="margin: auto; text-align: center; max-width: 420px; padding: 40px; border: 2px dashed var(--ln); border-radius: var(--r-l);">
+        <img src="./pedif-logo.svg" style="width: 64px; height: 64px; margin: 0 auto 16px auto;" alt="Pedif logo">
+        <h2 style="margin: 0 0 8px 0; font-size: var(--t-title); font-weight: 600;">Welcome to Pedif</h2>
+        <p style="margin: 0 0 24px 0; color: var(--tx2); font-size: var(--t-sub);">
+          Open a PDF to read, highlight, ink, and OCR with local WebGPU acceleration.
+        </p>
+        <button class="btn-primary" id="btn-open-prompt" style="padding: 10px 24px; font-size: var(--t-body);">Open a Document</button>
+      </div>
+    </main>
+
+    <!-- Restore Session Banner (injected dynamically when unsaved session found) -->
+    <div id="restore-banner-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
