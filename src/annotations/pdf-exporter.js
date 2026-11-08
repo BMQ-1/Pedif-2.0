@@ -38,6 +38,7 @@ export class PdfExporter {
       const pageNum = pageIdx + 1;
       const page = pages[pageIdx];
       const { width: pdfWidth, height: pdfHeight } = page.getSize();
+      const pageRotation = (page.getRotation ? (page.getRotation().angle || 0) : 0) % 360;
       const metrics = pageMetricsMap.get(pageNum);
 
       // Scale factors from screen viewport coordinates to PDF user space
@@ -45,6 +46,23 @@ export class PdfExporter {
       const screenHeight = metrics ? metrics.height : pdfHeight;
       const scaleX = pdfWidth / screenWidth;
       const scaleY = pdfHeight / screenHeight;
+
+      // Coordinate converter with page rotation invariance
+      const toPdfCoord = (sx, sy, isNorm) => {
+        const nx = isNorm ? sx * pdfWidth : sx * scaleX;
+        const ny = isNorm ? sy * pdfHeight : sy * scaleY;
+        switch (pageRotation) {
+          case 90:
+            return [ny, nx];
+          case 180:
+            return [pdfWidth - nx, ny];
+          case 270:
+            return [pdfWidth - ny, pdfHeight - nx];
+          case 0:
+          default:
+            return [nx, pdfHeight - ny];
+        }
+      };
 
       const pageAnnotsRef = page.node.Annots();
       const annotsArray = pageAnnotsRef ? pageAnnotsRef : context.obj([]);
@@ -67,20 +85,12 @@ export class PdfExporter {
         const rgbColor = this.hexToRgb(ann.color || '#ffcc00');
 
         for (const q of ann.quads) {
-          // Zero-Drift Coordinate Transformation:
-          // If quads are normalized [0.0, 1.0], map directly to native PDF dimensions.
           const isNorm = q.isNormalized || (q.lt.x <= 1.0 && q.lt.y <= 1.0);
-          const qScaleX = isNorm ? pdfWidth : scaleX;
-          const qScaleY = isNorm ? pdfHeight : scaleY;
 
-          const tlX = q.lt.x * qScaleX;
-          const tlY = pdfHeight - (q.lt.y * qScaleY);
-          const trX = q.rt.x * qScaleX;
-          const trY = pdfHeight - (q.rt.y * qScaleY);
-          const blX = q.lb.x * qScaleX;
-          const blY = pdfHeight - (q.lb.y * qScaleY);
-          const brX = q.rb.x * qScaleX;
-          const brY = pdfHeight - (q.rb.y * qScaleY);
+          const [tlX, tlY] = toPdfCoord(q.lt.x, q.lt.y, isNorm);
+          const [trX, trY] = toPdfCoord(q.rt.x, q.rt.y, isNorm);
+          const [blX, blY] = toPdfCoord(q.lb.x, q.lb.y, isNorm);
+          const [brX, brY] = toPdfCoord(q.rb.x, q.rb.y, isNorm);
 
           // Standard ISO 32000-1 QuadPoints order: x1 y1 (TL), x2 y2 (TR), x3 y3 (BL), x4 y4 (BR)
           quadPointsList.push(
@@ -128,12 +138,9 @@ export class PdfExporter {
         const strokeColor = this.parseColorToRgb(stroke.color, isHighlighter);
 
         const isNorm = stroke.isNormalized && (stroke.points[0].x <= 1.0 && stroke.points[0].y <= 1.0);
-        const ptScaleX = isNorm ? pdfWidth : scaleX;
-        const ptScaleY = isNorm ? pdfHeight : scaleY;
 
         for (const pt of stroke.points) {
-          const pdfX = pt.x * ptScaleX;
-          const pdfY = pdfHeight - (pt.y * ptScaleY);
+          const [pdfX, pdfY] = toPdfCoord(pt.x, pt.y, isNorm);
 
           inkListPoints.push(context.obj(pdfX), context.obj(pdfY));
 

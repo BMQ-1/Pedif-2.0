@@ -901,7 +901,7 @@ body.drag .drop {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: normal;
   padding: var(--s6) var(--s4);
   gap: var(--s6);
 }

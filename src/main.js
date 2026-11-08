@@ -23,6 +23,7 @@ import { Scrubber } from './ui/scrubber.js';
 import { showToast } from './ui/toast.js';
 import { createShowcasePdf } from './core/sample-document.js';
 import { SmartScanner } from './ui/smart-scanner.js';
+import { passwordDialog } from './ui/password-dialog.js';
 import { CropTool } from './ui/crop-tool.js';
 import { LassoTool } from './inking/lasso-tool.js';
 import { ExtractDialog } from './ui/extract-dialog.js';
@@ -108,6 +109,9 @@ class PedifApp {
         } else {
           this.selectionBubble.hide();
         }
+      },
+      onZoomChange: (scale) => {
+        if (this.dock) this.dock.updateZoom(scale);
       },
     });
 
@@ -410,10 +414,18 @@ class PedifApp {
     window.addEventListener('wheel', (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.15 : -0.15;
-        const newScale = Math.max(0.4, Math.min(3.5, this.viewer.scale + delta));
-        this.viewer.setScale(newScale);
-        if (this.dock) this.dock.updateZoom(newScale);
+        const isTrackpad = Math.abs(e.deltaY) < 50;
+        let delta;
+        if (isTrackpad) {
+          delta = -e.deltaY * 0.008 * (this.viewer ? this.viewer.scale : 1);
+        } else {
+          delta = e.deltaY < 0 ? 0.15 : -0.15;
+        }
+        if (this.viewer) {
+          const newScale = Math.max(0.25, Math.min(5.0, this.viewer.scale + delta));
+          this.viewer.setScale(newScale, { x: e.clientX, y: e.clientY });
+          if (this.dock) this.dock.updateZoom(newScale);
+        }
       }
     }, { passive: false });
   }
@@ -625,7 +637,18 @@ class PedifApp {
       const pdfJsBuffer = validBuffer.slice(0);
       const docBuffer = validBuffer.slice(0);
 
-      const pdf = await pdfEngine.loadDocument(pdfJsBuffer);
+      const pdf = await pdfEngine.loadDocument(
+        pdfJsBuffer,
+        '',
+        async (updatePassword, reason) => {
+          const pwd = await passwordDialog.show(reason);
+          if (pwd) {
+            updatePassword(pwd);
+          } else {
+            showToast('Password required to view encrypted document', 'alert');
+          }
+        }
+      );
       this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages, currentPage: 1 };
 
       // Switch view to Reader Screen

@@ -21,6 +21,8 @@
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: var(--s6);
   flex: none;
   transition: box-shadow .2s var(--e), clip-path .25s var(--e);
@@ -50,6 +52,16 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  transition: filter 0.25s ease;
+}
+
+[data-theme="dark"] .layer-0-canvas,
+[data-theme="oled"] .layer-0-canvas {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.95);
+}
+
+[data-theme="sepia"] .layer-0-canvas {
+  filter: sepia(0.35) contrast(0.95) brightness(0.96);
 }
 
 /* Layer 1: Interactive SVG Selection & 8-Pt Quads */

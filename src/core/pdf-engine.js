@@ -17,7 +17,7 @@ export class PdfEngine {
   /**
    * Load PDF document from ArrayBuffer, Uint8Array, or URL
    */
-  async loadDocument(source, password = '') {
+  async loadDocument(source, password = '', onPasswordNeeded = null) {
     // Clone ArrayBuffer / Uint8Array so PDF.js worker transfer does NOT detach original buffer
     let dataForPdfJs;
     if (source instanceof ArrayBuffer) {
@@ -36,6 +36,12 @@ export class PdfEngine {
       cMapPacked: true,
       standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
     });
+
+    if (typeof onPasswordNeeded === 'function') {
+      loadingTask.onPassword = (updatePassword, reason) => {
+        onPasswordNeeded(updatePassword, reason);
+      };
+    }
 
     this.pdfDoc = await loadingTask.promise;
     return this.pdfDoc;

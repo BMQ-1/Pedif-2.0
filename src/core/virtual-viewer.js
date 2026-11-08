@@ -34,11 +34,58 @@ export class VirtualViewer {
     this.activeTool = 'select'; // 'select' | 'pen' | 'highlighter' | 'eraser' | 'ocr'
     this.onPageChange = options.onPageChange || null;
     this.onSelectionEnd = options.onSelectionEnd || null;
+    this.onZoomChange = options.onZoomChange || null;
+    this.userHasManuallyZoomed = false;
 
     this.initObserver();
     this.initSearchSync();
     this.initHighlightSync();
     this.initGlobalListeners();
+    this.initTouchGestures();
+  }
+
+  initTouchGestures() {
+    if (!this.container) return;
+
+    let touchStartDist = 0;
+    let touchStartScale = 1;
+    let touchMidpoint = null;
+
+    this.container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        touchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        touchStartScale = this.scale;
+        touchMidpoint = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2,
+        };
+      }
+    }, { passive: true });
+
+    this.container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && touchStartDist > 0 && touchMidpoint) {
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        if (currentDist > 0) {
+          e.preventDefault();
+          const factor = currentDist / touchStartDist;
+          const targetScale = Math.max(0.25, Math.min(5.0, touchStartScale * factor));
+          if (Math.abs(this.scale - targetScale) > 0.02) {
+            this.setScale(targetScale, touchMidpoint);
+          }
+        }
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        touchStartDist = 0;
+        touchMidpoint = null;
+      }
+    }, { passive: true });
   }
 
   initObserver() {
@@ -125,8 +172,15 @@ export class VirtualViewer {
     if (numPages === 0) return;
 
     const firstPage = await pdfEngine.getPage(1);
-    const firstViewport = firstPage.getViewport({ scale: 1 });
+    const effectiveRotation = (firstPage.rotate + this.rotation) % 360;
+    const firstViewport = firstPage.getViewport({ scale: 1, rotation: effectiveRotation });
     const defaultAspect = firstViewport.width / firstViewport.height;
+
+    // Auto fit-width on initial document load if user hasn't explicitly zoomed
+    const availW = Math.max(280, this.container.clientWidth - 48);
+    if (!this.userHasManuallyZoomed) {
+      this.scale = Math.max(0.35, Math.min(2.5, availW / firstViewport.width));
+    }
 
     const fragment = document.createDocumentFragment();
 
@@ -136,10 +190,11 @@ export class VirtualViewer {
       pageEl.id = `page-${pageNum}`;
       pageEl.dataset.page = pageNum;
 
-      const width = Math.min(this.container.clientWidth - 48, firstViewport.width * this.scale);
-      const height = width / defaultAspect;
+      const width = Math.round(firstViewport.width * this.scale);
+      const height = Math.round(width / defaultAspect);
 
       pageEl.style.width = `${width}px`;
+      pageEl.style.height = `${height}px`;
       pageEl.style.minHeight = `${height}px`;
 
       this.pageMetrics.set(pageNum, {
@@ -147,6 +202,9 @@ export class VirtualViewer {
         height,
         aspectRatio: defaultAspect,
         scale: this.scale,
+        unscaledWidth: firstViewport.width,
+        unscaledHeight: firstViewport.height,
+        rotation: effectiveRotation,
       });
 
       fragment.appendChild(pageEl);
@@ -166,19 +224,18 @@ export class VirtualViewer {
       const unscaledViewport = page.getViewport({ scale: 1, rotation: effectiveRotation });
       const aspect = unscaledViewport.width / unscaledViewport.height;
 
-      const maxAvailableWidth = (this.mode === 'spread' && this.container.clientWidth > 720)
-        ? (this.container.clientWidth - 80) / 2
-        : (this.container.clientWidth - 48);
-      const containerWidth = Math.min(maxAvailableWidth, unscaledViewport.width * this.scale);
-      const targetWidth = Math.max(300, containerWidth);
-      const targetHeight = targetWidth / aspect;
-      const targetScale = targetWidth / unscaledViewport.width;
+      const targetScale = this.scale;
+      const targetWidth = Math.round(unscaledViewport.width * targetScale);
+      const targetHeight = Math.round(unscaledViewport.height * targetScale);
 
       this.pageMetrics.set(pageNum, {
         width: targetWidth,
         height: targetHeight,
         aspectRatio: aspect,
         scale: targetScale,
+        unscaledWidth: unscaledViewport.width,
+        unscaledHeight: unscaledViewport.height,
+        rotation: effectiveRotation,
       });
 
       pageEl.style.width = `${targetWidth}px`;
@@ -236,6 +293,7 @@ export class VirtualViewer {
         svg1.appendChild(handleGroup);
         pageEl.appendChild(svg1);
       }
+      svg1.setAttribute('viewBox', `0 0 ${targetWidth} ${targetHeight}`);
 
       // ─────────────────────────────────────────────────────────────
       // LAYER 1.5: Native PDF.js Text Layer (Zero-lag native browser selection)
@@ -354,6 +412,10 @@ export class VirtualViewer {
   unmountPage(pageNum, pageEl) {
     const record = this.renderedPages.get(pageNum);
     if (!record) return;
+
+    if (record.renderTask && typeof record.renderTask.cancel === 'function') {
+      try { record.renderTask.cancel(); } catch {}
+    }
 
     if (record.layer0) {
       record.layer0.width = 0;
@@ -580,34 +642,103 @@ export class VirtualViewer {
     });
   }
 
-  setScale(newScale) {
-    if (newScale < 0.4 || newScale > 4.0 || Math.abs(this.scale - newScale) < 0.01) return;
+  setScale(newScale, anchorPoint = null) {
+    if (newScale < 0.25 || newScale > 5.0 || Math.abs(this.scale - newScale) < 0.005) return;
+    this.userHasManuallyZoomed = true;
+    const oldScale = this.scale;
+    const ratio = newScale / oldScale;
     this.scale = newScale;
 
+    // Anchor calculation for cursor or viewport-centered zooming
+    let scrollX = 0, scrollY = 0;
+    if (this.container) {
+      let clientX, clientY;
+      if (anchorPoint && typeof anchorPoint.x === 'number' && typeof anchorPoint.y === 'number') {
+        clientX = anchorPoint.x;
+        clientY = anchorPoint.y;
+      } else {
+        clientX = this.container.clientWidth / 2;
+        clientY = this.container.clientHeight / 2;
+      }
+      const rect = this.container.getBoundingClientRect();
+      const offsetX = clientX - rect.left;
+      const offsetY = clientY - rect.top;
+
+      const docX = this.container.scrollLeft + offsetX;
+      const docY = this.container.scrollTop + offsetY;
+
+      scrollX = Math.round((docX * ratio) - offsetX);
+      scrollY = Math.round((docY * ratio) - offsetY);
+    }
+
+    // Resize ALL page containers across the entire virtual document
+    const numPages = pdfEngine.numPages;
+    for (let pNum = 1; pNum <= numPages; pNum++) {
+      const el = document.getElementById(`page-${pNum}`);
+      if (!el) continue;
+
+      let unscaledW = 600, unscaledH = 800;
+      const metrics = this.pageMetrics.get(pNum);
+      if (metrics && metrics.unscaledWidth && metrics.unscaledHeight) {
+        unscaledW = metrics.unscaledWidth;
+        unscaledH = metrics.unscaledHeight;
+      } else if (metrics && metrics.scale) {
+        unscaledW = metrics.width / metrics.scale;
+        unscaledH = metrics.height / metrics.scale;
+      }
+
+      const newW = Math.round(unscaledW * newScale);
+      const newH = Math.round(unscaledH * newScale);
+
+      el.style.width = `${newW}px`;
+      el.style.height = `${newH}px`;
+      el.style.minHeight = `${newH}px`;
+
+      if (metrics) {
+        metrics.width = newW;
+        metrics.height = newH;
+        metrics.scale = newScale;
+      }
+    }
+
+    // Re-render currently visible active pages at new DPR scale
     this.renderedPages.forEach((record, pageNum) => {
       this.unmountPage(pageNum, record.container);
       this.mountPage(pageNum, record.container);
     });
+
+    if (this.container) {
+      this.container.scrollLeft = scrollX;
+      this.container.scrollTop = scrollY;
+    }
+
+    if (typeof this.onZoomChange === 'function') {
+      this.onZoomChange(newScale);
+    }
   }
 
   fitWidth() {
     if (!this.container || !this.pageMetrics.size) return this.scale;
-    const m = this.pageMetrics.get(1);
+    const targetPage = this.currentPage || 1;
+    const m = this.pageMetrics.get(targetPage) || this.pageMetrics.get(1);
     if (!m) return this.scale;
-    const unscaledW = m.width / m.scale;
-    const availW = Math.max(300, this.container.clientWidth - 48);
-    const targetScale = Math.max(0.4, Math.min(3.5, availW / unscaledW));
+    const unscaledW = m.unscaledWidth || (m.width / m.scale);
+    const availW = Math.max(280, this.container.clientWidth - 48);
+    const targetScale = Math.max(0.3, Math.min(4.5, availW / unscaledW));
     this.setScale(targetScale);
     return targetScale;
   }
 
   fitPage() {
     if (!this.container || !this.pageMetrics.size) return this.scale;
-    const m = this.pageMetrics.get(1);
+    const targetPage = this.currentPage || 1;
+    const m = this.pageMetrics.get(targetPage) || this.pageMetrics.get(1);
     if (!m) return this.scale;
-    const unscaledH = m.height / m.scale;
-    const availH = Math.max(300, this.container.clientHeight - 64);
-    const targetScale = Math.max(0.4, Math.min(3.5, availH / unscaledH));
+    const unscaledW = m.unscaledWidth || (m.width / m.scale);
+    const unscaledH = m.unscaledHeight || (m.height / m.scale);
+    const availW = Math.max(280, this.container.clientWidth - 48);
+    const availH = Math.max(280, this.container.clientHeight - 64);
+    const targetScale = Math.max(0.3, Math.min(4.5, Math.min(availW / unscaledW, availH / unscaledH)));
     this.setScale(targetScale);
     return targetScale;
   }
@@ -627,6 +758,28 @@ export class VirtualViewer {
   rotateClockwise() {
     this.rotation = (this.rotation + 90) % 360;
     this.pageTextData.clear();
+
+    // Invert unscaledWidth & unscaledHeight for placeholders
+    const numPages = pdfEngine.numPages;
+    for (let pNum = 1; pNum <= numPages; pNum++) {
+      const el = document.getElementById(`page-${pNum}`);
+      const metrics = this.pageMetrics.get(pNum);
+      if (metrics) {
+        const temp = metrics.unscaledWidth;
+        metrics.unscaledWidth = metrics.unscaledHeight;
+        metrics.unscaledHeight = temp;
+        const newW = Math.round(metrics.unscaledWidth * this.scale);
+        const newH = Math.round(metrics.unscaledHeight * this.scale);
+        metrics.width = newW;
+        metrics.height = newH;
+        if (el) {
+          el.style.width = `${newW}px`;
+          el.style.height = `${newH}px`;
+          el.style.minHeight = `${newH}px`;
+        }
+      }
+    }
+
     this.renderedPages.forEach((record, pageNum) => {
       this.unmountPage(pageNum, record.container);
       this.mountPage(pageNum, record.container);
