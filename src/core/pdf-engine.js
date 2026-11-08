@@ -2,11 +2,15 @@
  * PDF Engine Core
  * Handles PDF.js loading, worker initialization, and page rasterization.
  */
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLibRaw from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 
-// Configure worker URL for Vite asset pipeline
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+const pdfjs = pdfjsLibRaw.getDocument ? pdfjsLibRaw : (pdfjsLibRaw.default || pdfjsLibRaw);
+
+// Configure worker URL for Vite asset pipeline safely across browser and Node environments
+if (pdfjs && pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+}
 
 export class PdfEngine {
   constructor() {
@@ -28,7 +32,7 @@ export class PdfEngine {
       this.originalBytes = source.buffer.slice(0);
     }
 
-    const loadingTask = pdfjsLib.getDocument({
+    const loadingTask = pdfjs.getDocument({
       data: dataForPdfJs,
       url: typeof source === 'string' ? source : undefined,
       password,
@@ -115,7 +119,7 @@ export class PdfEngine {
     });
 
     container.innerHTML = '';
-    const textLayerTask = pdfjsLib.renderTextLayer({
+    const textLayerTask = pdfjs.renderTextLayer({
       textContentSource: textContent,
       container,
       viewport,
