@@ -23,7 +23,8 @@
   <a href="https://github.com"><img src="https://img.shields.io/badge/Spec-ISO%2032000--1-C87C56?style=flat-square" alt="ISO 32000-1 Compliant"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Engine-WebGPU%20%7C%20WASM-38B2AC?style=flat-square&logo=webgpu" alt="WebGPU Engine"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-276749?style=flat-square" alt="100% Local"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Tests-11%2F11%20Passing-brightgreen?style=flat-square" alt="Tests 11/11"></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Languages-7%20(Full%20RTL)-0A84FF?style=flat-square" alt="7 Languages RTL"></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Tests-16%2F16%20Passing-brightgreen?style=flat-square" alt="Tests 16/16"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-4A5568?style=flat-square" alt="MIT License"></a>
 </p>
 
@@ -65,6 +66,12 @@ Most PDF viewers force a compromise: either they are clunky, server-tethered web
 | **Hold-to-Snap Line** | ❌ No | ✅ Yes | **✅ Yes (Fluid Inking + Gentle End-Snap)** |
 | **Selection Geometry** | Rectangular Slabs | Simple Highlights | **Continuous Pill-Hull Union &amp; Haptic Snapping** |
 | **Storage Architecture** | Temporary Memory | Proprietary Cloud | **Dual-Tier OPFS + IndexedDB Ledger** |
+| **Visual Page Organizer** | ❌ No | Limited | **✅ Drag &amp; Drop Cards, 90° Rotate, Duplicate, Delete** |
+| **Multi-PDF Merger** | Cloud Only / Paid | ❌ No | **✅ 100% On-Device Client Concatenation** |
+| **Security Watermarking** | Cloud API | ❌ No | **✅ Configurable Angle, Opacity &amp; Tint** |
+| **Bates &amp; Page Numbers** | Expensive Enterprise | ❌ No | **✅ Automated Page X of Y &amp; Legal Bates Stamping** |
+| **Metadata Catalog Editor** | ❌ No | ❌ No | **✅ View &amp; Modify Title, Author, Subject, Keywords** |
+| **Globalization &amp; RTL** | English Only | 1–2 Languages | **✅ 7 Languages (English, Arabic RTL, Spanish, French, German, Japanese, Chinese)** |
 
 <p align="center">
   <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
@@ -131,6 +138,58 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 * User annotations and ink strokes are **never** persisted in volatile screen pixels.
 * All stored geometry resides in scale-invariant unit space $[0.0, 1.0]$.
 * Coordinates project dynamically to screen DPI at runtime and directly to native PDF User Space ($72\text{ DPI}$) upon export, guaranteeing bit-exact alignment regardless of whether you view at $50\%$, $100\%$, or $400\%$ zoom.
+
+<p align="center">
+  <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
+</p>
+
+## 🛠️ Sovereign Workbench & Multi-Document Studio
+
+Pedif 2.0 incorporates a complete desktop-grade document workbench inspired by the sovereign tooling architecture of modern offline PDF utilities (such as `pdfcraft`):
+
+* 🗂️ **Visual Card Page Organizer:**
+  - Dynamic grid of thumbnail cards representing every page in your document.
+  - **Fluid Drag-and-Drop Reordering:** Drag pages into any sequence with real-time drop targets.
+  - **Per-Page 90° Rotations:** Rotate individual landscape or inverted pages without rotating the entire document.
+  - **Page Duplication & Deletion:** Clone or prune pages with automatic non-destructive rebuilds via `pdf-lib`.
+  - **Blank Page Insertion:** Insert standard blank sheets directly into your document hierarchy.
+* 📑 **Multi-PDF Merger:**
+  - Combine 2 or more PDF files into a single unified document entirely client-side.
+  - Real-time page count and file size pre-inspection before merging.
+  - Drag-and-drop file queue reordering with move up/down controls.
+* 🛡️ **Security Watermarking:**
+  - Stamp customizable text watermarks (`CONFIDENTIAL`, `DRAFT`, `DO NOT COPY`, or custom strings) across document pages.
+  - Fine-grained controls for opacity ($5\% - 60\%$), font size, diagonal angles ($-45^\circ, 0^\circ, 45^\circ, 90^\circ$), and semantic color tints (Security Red, Neutral Slate, Corporate Blue, Caution Amber).
+* 🔢 **Page Numbering & Legal Bates Stamping:**
+  - Automated page stamping with configurable layouts: `Page X of Y`, `X / Y`, `Page X`, or raw numbers.
+  - **Legal Bates Stamping:** Configurable prefixes (e.g. `CASE-`, `DOC-`) with zero-padded digit indices (e.g. `DOC-00001`).
+  - Flexible positioning: Bottom Center, Bottom Right, Bottom Left, Top Right, Top Center, Top Left.
+* 🏷️ **PDF Document Metadata Editor:**
+  - Inspect and modify core PDF catalog metadata dictionaries: Title, Author, Subject, Keywords, and Producer.
+  - Saves clean metadata without requiring PDF rasterization or external utilities.
+
+<p align="center">
+  <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
+</p>
+
+## 🌍 Globalization Engine (7 Languages with Native RTL)
+
+Pedif 2.0 is built for a global audience with zero external dependencies for internationalization:
+
+* **7 Fully Localized Languages:**
+  - 🇺🇸 **English** (`en`)
+  - 🇸🇦 **العربية (Arabic)** (`ar`) — with **complete native Right-to-Left (RTL)** layout, reversed flex directions, and mirrored toolbar navigation.
+  - 🇪🇸 **Español (Spanish)** (`es`)
+  - 🇫🇷 **Français (French)** (`fr`)
+  - 🇩🇪 **Deutsch (German)** (`de`)
+  - 🇯🇵 **日本語 (Japanese)** (`ja`)
+  - 🇨🇳 **中文 (Simplified Chinese)** (`zh`)
+* **Instant Dynamic Switching:** Change languages instantaneously from the top navigation dropdown without page reloads.
+* **Persistent Preference:** Your chosen locale is automatically remembered across offline sessions.
+
+<p align="center">
+  <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
+</p>
 
 <p align="center">
   <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
@@ -239,4 +298,5 @@ Complete third-party licenses and model attributions are cataloged in [`THIRD_PA
 * **PDF Object Serialization:** [pdf-lib](https://pdf-lib.js.org/) (Andrew Dillon, MIT)
 * **Neural Runtime:** [ONNX Runtime Web](https://onnxruntime.ai/) (Microsoft Corporation, MIT)
 * **OCR Models:** [PaddleOCR PP-OCRv4](https://github.com/PaddlePaddle/PaddleOCR) (PaddlePaddle Authors, Apache 2.0) via [W3C WebNN Models](https://huggingface.co/webnn/PP-OCRv4-ONNX)
+* **Workbench Inspiration:** Visual card page organizer and multi-document workbench architecture inspired by [storytold/pdfcraft](https://github.com/storytold/pdfcraft).
 * **Iconography:** [Lucide Icons](https://lucide.dev/) (ISC License)

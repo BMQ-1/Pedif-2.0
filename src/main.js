@@ -1,5 +1,12 @@
 import './styles/app.css';
 import './styles/viewer.css';
+import './styles/workbench.css';
+import { i18n } from './i18n/i18n.js';
+import { PageOrganizer } from './organizer/page-organizer.js';
+import { MergeTool } from './tools/merge-tool.js';
+import { WatermarkDialog } from './tools/watermark-dialog.js';
+import { NumberingDialog } from './tools/numbering-dialog.js';
+import { MetadataDialog } from './tools/metadata-dialog.js';
 import { autosave } from './storage/autosave.js';
 import { libraryStore, toValidArrayBuffer } from './storage/library.js';
 import { pdfEngine } from './core/pdf-engine.js';
@@ -59,6 +66,11 @@ class PedifApp {
     this.lassoTool = null;
     this.extractDialog = null;
     this.statsModal = null;
+    this.pageOrganizer = null;
+    this.mergeTool = null;
+    this.watermarkDialog = null;
+    this.numberingDialog = null;
+    this.metadataDialog = null;
 
     this.init();
   }
@@ -171,6 +183,44 @@ class PedifApp {
       getDocName: () => this.currentDoc?.name || 'Document.pdf',
     });
 
+    // 12. Initialize Sovereign Workbench & Globalization Studio
+    this.pageOrganizer = new PageOrganizer({
+      onApplied: async (newBytes) => {
+        showToast('Updating document layout...', 'check');
+        await this.loadPdfBuffer(newBytes, this.currentDoc?.name || 'reordered.pdf');
+      },
+    });
+
+    this.mergeTool = new MergeTool({
+      onMerged: async (mergedBytes, outName) => {
+        showToast('Loading combined document...', 'check');
+        await this.loadPdfBuffer(mergedBytes, outName);
+      },
+    });
+
+    this.watermarkDialog = new WatermarkDialog({
+      onApplied: async (wmBytes) => {
+        showToast('Updating with watermark...', 'check');
+        await this.loadPdfBuffer(wmBytes, this.currentDoc?.name || 'watermarked.pdf');
+      },
+    });
+
+    this.numberingDialog = new NumberingDialog({
+      onApplied: async (numBytes) => {
+        showToast('Updating page numbering...', 'check');
+        await this.loadPdfBuffer(numBytes, this.currentDoc?.name || 'numbered.pdf');
+      },
+    });
+
+    this.metadataDialog = new MetadataDialog({
+      onApplied: async (metaBytes) => {
+        showToast('Updating document metadata...', 'check');
+        await this.loadPdfBuffer(metaBytes, this.currentDoc?.name || 'metadata.pdf');
+      },
+    });
+
+    this.setupGlobalization();
+
     // 12. Setup UI interactions, shortcuts & CommandStack
     this.setupTheme();
     this.setupEventListeners();
@@ -182,6 +232,27 @@ class PedifApp {
     await this.checkRestoreSession();
 
     console.log('[Pedif] App initialized with full Cupertino Studio UI. Cross-Origin Isolated:', window.crossOriginIsolated);
+  }
+
+  setupGlobalization() {
+    const langSelect = document.getElementById('lang-select');
+    if (langSelect) {
+      langSelect.value = i18n.currentLang;
+      langSelect.addEventListener('change', (e) => {
+        i18n.setLanguage(e.target.value);
+        showToast(`Language: ${e.target.selectedOptions[0]?.text || e.target.value}`, 'check');
+      });
+    }
+
+    i18n.onChange(() => {
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        const translated = i18n.t(key);
+        if (translated) {
+          el.textContent = translated;
+        }
+      });
+    });
   }
 
   setupTheme() {
@@ -405,6 +476,98 @@ class PedifApp {
     if (btnTheme) btnTheme.addEventListener('click', () => this.toggleTheme());
     if (hTheme) hTheme.addEventListener('click', () => this.toggleTheme());
 
+    // Sovereign Workbench Tool Listeners
+    const btnHomeMerge = document.getElementById('btn-home-merge');
+    if (btnHomeMerge) {
+      btnHomeMerge.addEventListener('click', () => {
+        if (this.mergeTool) this.mergeTool.show();
+      });
+    }
+
+    const btnOrganize = document.getElementById('btn-organize');
+    if (btnOrganize) {
+      btnOrganize.addEventListener('click', () => {
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.pageOrganizer) {
+          this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+        }
+      });
+    }
+
+    const btnWorkbench = document.getElementById('btn-workbench');
+    const popover = document.getElementById('workbench-popover');
+    if (btnWorkbench && popover) {
+      btnWorkbench.addEventListener('click', (e) => {
+        e.stopPropagation();
+        popover.hidden = !popover.hidden;
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!popover.hidden && !popover.contains(e.target) && e.target !== btnWorkbench) {
+          popover.hidden = true;
+        }
+      });
+    }
+
+    const wbItemOrganize = document.getElementById('wb-item-organize');
+    if (wbItemOrganize) {
+      wbItemOrganize.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.pageOrganizer) this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+      });
+    }
+
+    const wbItemMerge = document.getElementById('wb-item-merge');
+    if (wbItemMerge) {
+      wbItemMerge.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (this.mergeTool) this.mergeTool.show();
+      });
+    }
+
+    const wbItemWatermark = document.getElementById('wb-item-watermark');
+    if (wbItemWatermark) {
+      wbItemWatermark.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.watermarkDialog) this.watermarkDialog.show(this.currentDoc.buffer);
+      });
+    }
+
+    const wbItemNumbering = document.getElementById('wb-item-numbering');
+    if (wbItemNumbering) {
+      wbItemNumbering.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.numberingDialog) this.numberingDialog.show(this.currentDoc.buffer);
+      });
+    }
+
+    const wbItemMetadata = document.getElementById('wb-item-metadata');
+    if (wbItemMetadata) {
+      wbItemMetadata.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
+      });
+    }
+
     const tools = ['select', 'pen', 'highlighter', 'eraser', 'ocr'];
     tools.forEach(tool => {
       const el = document.getElementById(`tool-${tool}`);
@@ -577,6 +740,12 @@ class PedifApp {
           this.extractDialog.show();
         } else {
           showToast('Please open a PDF document first', 'alert');
+        }
+      } else if (e.key === 'm' || e.key === 'M') {
+        if (this.currentDoc && this.pageOrganizer) {
+          this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+        } else if (this.mergeTool) {
+          this.mergeTool.show();
         }
       } else if (e.key === 'a' || e.key === 'A') {
         this.readAloudPage();

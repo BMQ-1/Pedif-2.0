@@ -30,3 +30,7 @@ export function showToast(message, icon = 'check', duration = 2200) {
     toastEl.classList.remove('on');
   }, duration);
 }
+
+export const toast = {
+  show: (msg, icon = 'check', duration = 2200) => showToast(msg, icon, duration),
+};
