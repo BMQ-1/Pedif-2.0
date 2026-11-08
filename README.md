@@ -124,8 +124,8 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 ### 1. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/BMQ-1/Pedif.git
-cd Pedif
+git clone https://github.com/BMQ-1/Pedif-2.0.git
+cd Pedif-2.0
 
 # Install dependencies
 npm install
