@@ -8,21 +8,42 @@
 <h1 align="center">Pedif 2.0</h1>
 
 <p align="center">
-  <b>The Privacy-Sovereign, High-Performance PDF Studio with WebGPU Neural OCR &amp; Dynamic Vector Inking</b>
+  <b>Zero-Install Web App · The Privacy-Sovereign PDF Studio with WebGPU Neural OCR &amp; Dynamic Vector Inking</b>
 </p>
 
 <p align="center">
+  <a href="https://bmq-1.github.io/Pedif-2.0/">
+    <img src="https://img.shields.io/badge/▶_Launch_Live_Web_App-bmq--1.github.io%2FPedif--2.0-0A84FF?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Launch Live Web App">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Type-Web%20App-0A84FF?style=flat-square" alt="Web App"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Release-v2.0.0-1B4541?style=flat-square" alt="Version 2.0"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Spec-ISO%2032000--1-C87C56?style=flat-square" alt="ISO 32000-1 Compliant"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Engine-WebGPU%20%7C%20WASM-38B2AC?style=flat-square&logo=webgpu" alt="WebGPU Engine"></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-276749?style=flat-square" alt="100% Local"></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Tests-10%2F10%20Passing-brightgreen?style=flat-square" alt="Tests 10/10"></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Tests-11%2F11%20Passing-brightgreen?style=flat-square" alt="Tests 11/11"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-4A5568?style=flat-square" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <i>Zero servers. Zero telemetry. Zero cloud roundtrips. Your documents and annotations never leave your hardware.</i>
+  <i>Zero installation. Zero servers. Zero telemetry. 100% in-browser on your hardware.</i>
 </p>
+
+<p align="center">
+  <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
+</p>
+
+> [!TIP]
+> ### 🌐 Main Way to Use Pedif: In-Browser Web App
+> The primary way of using **Pedif 2.0** is directly as a **Web App** in any modern desktop or tablet browser:
+> 
+> 👉 **[Open the Live Web App: https://bmq-1.github.io/Pedif-2.0/](https://bmq-1.github.io/Pedif-2.0/)**
+> 
+> * No downloads, extensions, or account required.
+> * Runs 100% offline with on-device WebGPU neural inference.
+> * Your files and annotations remain strictly on your local device via browser OPFS and IndexedDB storage.
 
 <p align="center">
   <img src="./divider.svg" width="100%" height="4" alt="Pedif Section Divider">
@@ -32,16 +53,16 @@
 
 Most PDF viewers force a compromise: either they are clunky, server-tethered web apps that upload your sensitive documents to remote clouds, or they are rudimentary readers that flatten your ink into destructive pixel bitmaps.
 
-**Pedif 2.0** is engineered from scratch as an offline-first, client-side workstation that bridges the tactile ergonomics of tablet note-taking with the rigorous precision of desktop publishing.
+**Pedif 2.0** is engineered from scratch as a zero-install **Web App** that bridges the tactile ergonomics of tablet note-taking with the rigorous precision of desktop publishing.
 
-| Capability | Standard Web Readers | Mobile Note Apps | Pedif 2.0 |
+| Capability | Standard Web Readers | Mobile Note Apps | Pedif 2.0 (Web App) |
 | :--- | :---: | :---: | :---: |
 | **Privacy & Egress** | Uploads PDF to Cloud | Proprietary Cloud Sync | **100% On-Device (Zero Telemetry)** |
 | **Neural OCR Pipeline** | Server API / Tesseract.js | None / Proprietary | **Local WebGPU PP-OCRv4 (DBNet++ &amp; SVTR)** |
 | **Annotation Export** | Flattened Raster / Non-std | Proprietary Database | **True ISO 32000-1 (`/Highlight`, `/Ink`)** |
 | **Coordinate Fidelity** | Ephemeral Screen Pixels | Canvas Pixels | **Scale-Invariant Unit Space $[0.0, 1.0]$** |
 | **Stylus Inking** | Jagged Polylines | Proprietary Engine | **Dynamic Catmull-Rom Splines (120 FPS)** |
-| **Hold-to-Snap Line** | ❌ No | ✅ Yes | **✅ Yes (350ms Geometric Straightening)** |
+| **Hold-to-Snap Line** | ❌ No | ✅ Yes | **✅ Yes (Fluid Inking + Gentle End-Snap)** |
 | **Selection Geometry** | Rectangular Slabs | Simple Highlights | **Continuous Pill-Hull Union &amp; Haptic Snapping** |
 | **Storage Architecture** | Temporary Memory | Proprietary Cloud | **Dual-Tier OPFS + IndexedDB Ledger** |
 
@@ -56,7 +77,7 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │  LAYER 2: Dynamic Vector Inking Canvas (120 FPS)                       │
-│  • Catmull-Rom Splines  • 350ms Hold-to-Snap  • Hardware Palm Rejection│
+│  • Catmull-Rom Splines  • Fluid Highlighting  • Hardware Palm Rejection│
 ├────────────────────────────────────────────────────────────────────────┤
 │  LAYER 1: Interactive SVG Geometry Layer                               │
 │  • 8-Pt Affine Quads   • Continuous Pill-Hulls • Teardrop Drag-Handles │
@@ -96,7 +117,7 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 * **Sub-Millisecond Stroke Latency:** Decoupled inking overlay utilizing coalesced `PointerEvents`.
 * **Catmull-Rom Spline Smoothing:** Eliminates stylus jitter using cubic polynomial curve interpolation.
 * **Pressure Dynamics:** Dynamically modulates stroke thickness according to stylus pressure (`PointerEvent.pressure`).
-* **350ms Hold-to-Snap:** Draw a hand-drawn stroke, hold for 350ms, and it automatically snaps into a laser-straight vector line.
+* **Hold-to-Snap Line:** Fluid continuous inking that automatically straightens into a crisp vector line when held stationary at the end.
 * **Hardware Palm Rejection:** Touch discrimination ignores accidental palm touches whenever an active stylus (`pointerType === 'pen'`) is detected.
 * **Vector Whole-Stroke Eraser:** Erase entire strokes with $O(1)$ bounding box pruning and segment raycasting.
 
@@ -117,11 +138,23 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 🌐 Option A: Use the Live Web App (Primary & Recommended)
+No installation or command line needed. Open the live app in any browser:
+
+👉 **[https://bmq-1.github.io/Pedif-2.0/](https://bmq-1.github.io/Pedif-2.0/)**
+
+* Instantly ready to open, read, ink, and search PDFs.
+* Fully functional offline once loaded.
+
+---
+
+### 💻 Option B: Run Locally from Source (For Developers)
+
+#### Prerequisites
 * Node.js 18+ (tested on Node 20 / 22 / 24)
 * npm 9+
 
-### 1. Installation
+#### 1. Installation
 ```bash
 # Clone the repository
 git clone https://github.com/BMQ-1/Pedif-2.0.git
@@ -131,14 +164,14 @@ cd Pedif-2.0
 npm install
 ```
 
-### 2. Development Server
+#### 2. Development Server
 ```bash
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-### 3. Run Automated Verification Tests
-Pedif includes 10 automated test suites covering geometry, search, inking, selection, export, coordinate invariance, and live ONNX neural inference:
+#### 3. Run Automated Verification Tests
+Pedif includes 11 automated test suites covering geometry, search, inking, selection, export, coordinate invariance, and live ONNX neural inference:
 ```bash
 npm test
 ```
@@ -152,9 +185,10 @@ npm test
 --- All Phase 8 Tests Passed Successfully ---
 --- All Live Model Inference Tests Passed Successfully ---
 --- All Law 1: Coordinate Space Invariance Tests Passed Successfully ---
+--- All Phase 11 Overhaul Tests Passed Successfully ---
 ```
 
-### 4. Production Build
+#### 4. Production Build
 ```bash
 npm run build
 ```

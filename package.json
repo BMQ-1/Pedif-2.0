@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "Pedif — The High-Performance Offline-First PDF Studio with WebGPU PP-OCRv4 & Vector Inking",
+  "description": "Pedif — Zero-Install Web App PDF Studio with WebGPU PP-OCRv4 & Vector Inking",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
