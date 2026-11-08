@@ -182,6 +182,7 @@ export class VirtualViewer {
       pageEl.style.height = `${targetHeight}px`;
       pageEl.style.minHeight = `${targetHeight}px`;
       pageEl.classList.remove('virtual-placeholder');
+      pageEl.dataset.tool = this.activeTool || 'select';
 
       if (this.margins && (this.margins.left || this.margins.right || this.margins.top || this.margins.bottom)) {
         const leftPct = (this.margins.left * 100).toFixed(1) + '%';
@@ -443,7 +444,7 @@ export class VirtualViewer {
   }
 
   renderStroke(ctx, stroke, dpr = 1, targetW = 800, targetH = 1000) {
-    if (!stroke || stroke.points.length < 2) return;
+    if (!stroke || !stroke.points || stroke.points.length === 0) return;
 
     const w = targetW || (ctx.canvas ? ctx.canvas.width / dpr : 800);
     const h = targetH || (ctx.canvas ? ctx.canvas.height / dpr : 1000);
@@ -470,6 +471,16 @@ export class VirtualViewer {
     });
 
     const p0 = toPx(stroke.points[0]);
+
+    if (stroke.points.length === 1) {
+      ctx.beginPath();
+      ctx.arc(p0.x, p0.y, Math.max(1.5, ctx.lineWidth / 2), 0, Math.PI * 2);
+      ctx.fillStyle = stroke.color;
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
 
@@ -494,9 +505,12 @@ export class VirtualViewer {
 
   setTool(tool) {
     this.activeTool = tool;
-    this.renderedPages.forEach(({ layer2 }) => {
+    this.renderedPages.forEach(({ layer2, container }) => {
       if (layer2) {
         layer2.className = `layer-2-ink mode-${tool}`;
+      }
+      if (container) {
+        container.dataset.tool = tool;
       }
     });
   }

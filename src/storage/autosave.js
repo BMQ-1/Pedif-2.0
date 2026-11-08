@@ -230,10 +230,15 @@ class AutosaveEngine {
   _idbPut(val) {
     if (!this.db) return Promise.resolve(false);
     return new Promise((resolve) => {
-      const tx = this.db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(val);
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => resolve(false);
+      try {
+        const tx = this.db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(val);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (err) {
+        console.warn('[Autosave] _idbPut caught non-fatal error:', err);
+        resolve(false);
+      }
     });
   }
 

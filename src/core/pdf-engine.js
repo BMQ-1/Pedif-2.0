@@ -18,8 +18,18 @@ export class PdfEngine {
    * Load PDF document from ArrayBuffer, Uint8Array, or URL
    */
   async loadDocument(source, password = '') {
+    // Clone ArrayBuffer / Uint8Array so PDF.js worker transfer does NOT detach original buffer
+    let dataForPdfJs;
+    if (source instanceof ArrayBuffer) {
+      dataForPdfJs = new Uint8Array(source.slice(0));
+      this.originalBytes = source.slice(0);
+    } else if (source instanceof Uint8Array) {
+      dataForPdfJs = new Uint8Array(source.buffer.slice(0));
+      this.originalBytes = source.buffer.slice(0);
+    }
+
     const loadingTask = pdfjsLib.getDocument({
-      data: source instanceof ArrayBuffer ? source : undefined,
+      data: dataForPdfJs,
       url: typeof source === 'string' ? source : undefined,
       password,
       cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
@@ -28,9 +38,6 @@ export class PdfEngine {
     });
 
     this.pdfDoc = await loadingTask.promise;
-    if (source instanceof ArrayBuffer) {
-      this.originalBytes = source;
-    }
     return this.pdfDoc;
   }
 

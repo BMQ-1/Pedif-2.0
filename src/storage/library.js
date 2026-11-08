@@ -34,24 +34,51 @@ class LibraryStore {
   }
 
   async saveDocument(doc) {
-    if (!this.db) await this.init();
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction(DOC_STORE, 'readwrite');
-      const store = tx.objectStore(DOC_STORE);
-      const record = {
-        id: doc.id || ('doc_' + Date.now()),
-        name: doc.name || 'Untitled Document',
-        size: doc.size || (doc.buffer ? doc.buffer.byteLength : 0),
-        pageCount: doc.pageCount || 1,
-        currentPage: doc.currentPage || 1,
-        thumbnail: doc.thumbnail || null, // data URL of first page
-        buffer: doc.buffer || null, // ArrayBuffer
-        updatedAt: Date.now(),
-        createdAt: doc.createdAt || Date.now(),
-      };
-      store.put(record);
-      tx.oncomplete = () => resolve(record);
-      tx.onerror = (e) => reject(e);
+    if (!this.db) {
+      try {
+        await this.init();
+      } catch (e) {
+        console.warn('[LibraryStore] Init failed:', e);
+        return null;
+      }
+    }
+    return new Promise((resolve) => {
+      try {
+        const tx = this.db.transaction(DOC_STORE, 'readwrite');
+        const store = tx.objectStore(DOC_STORE);
+
+        // Safely verify buffer is not detached
+        let safeBuffer = null;
+        if (doc.buffer && doc.buffer instanceof ArrayBuffer && doc.buffer.byteLength > 0) {
+          try {
+            safeBuffer = doc.buffer.slice(0);
+          } catch {
+            safeBuffer = null;
+          }
+        }
+
+        const record = {
+          id: doc.id || ('doc_' + Date.now()),
+          name: doc.name || 'Untitled Document',
+          size: doc.size || (safeBuffer ? safeBuffer.byteLength : 0),
+          pageCount: doc.pageCount || 1,
+          currentPage: doc.currentPage || 1,
+          thumbnail: doc.thumbnail || null, // data URL of first page
+          buffer: safeBuffer, // ArrayBuffer
+          updatedAt: Date.now(),
+          createdAt: doc.createdAt || Date.now(),
+        };
+
+        store.put(record);
+        tx.oncomplete = () => resolve(record);
+        tx.onerror = (e) => {
+          console.warn('[LibraryStore] save transaction error:', e);
+          resolve(record);
+        };
+      } catch (err) {
+        console.warn('[LibraryStore] Non-fatal save error:', err);
+        resolve(null);
+      }
     });
   }
 

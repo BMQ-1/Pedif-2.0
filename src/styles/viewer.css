@@ -63,14 +63,44 @@
   z-index: 10;
 }
 
-.layer-1-selection * {
+/* When the active tool is selection, capture full surface pointer events */
+[data-tool="select"] .layer-1-selection {
   pointer-events: auto;
 }
 
-/* When the active tool is selection, capture full surface pointer events */
-.mode-select .layer-1-selection,
-[data-tool="select"] .layer-1-selection {
+.layer-1-selection .focus-dimmer {
+  fill: rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  pointer-events: none !important;
+  transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.layer-1-selection .focus-dimmer.active {
+  opacity: 1;
+}
+
+.layer-1-selection .active-selection-path {
+  pointer-events: none;
+}
+
+.layer-1-selection .permanent-highlight {
   pointer-events: auto;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.layer-1-selection .permanent-highlight:hover {
+  opacity: 0.85;
+}
+
+.layer-1-selection .teardrop-handle {
+  pointer-events: auto;
+  cursor: grab;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.layer-1-selection .teardrop-handle:active {
+  cursor: grabbing;
 }
 
 /* Layer 2: Vector Inking Canvas */
@@ -82,40 +112,32 @@
   height: 100%;
   touch-action: none;
   z-index: 20;
-  cursor: crosshair;
 }
 
 .layer-2-ink.mode-select,
-.layer-2-ink.mode-ocr {
+.layer-2-ink.mode-ocr,
+[data-tool="select"] .layer-2-ink,
+[data-tool="ocr"] .layer-2-ink {
   cursor: text;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
-.layer-2-ink.mode-pen {
+.layer-2-ink.mode-pen,
+[data-tool="pen"] .layer-2-ink {
   cursor: crosshair;
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
-.layer-2-ink.mode-highlighter {
+.layer-2-ink.mode-highlighter,
+[data-tool="highlighter"] .layer-2-ink {
   cursor: crosshair;
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
-.layer-2-ink.mode-eraser {
+.layer-2-ink.mode-eraser,
+[data-tool="eraser"] .layer-2-ink {
   cursor: cell;
-  pointer-events: auto;
-}
-
-/* Focus Dimming Backdrop (Cubic Bézier) */
-.focus-dimmer {
-  fill: rgba(0, 0, 0, 0.38);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.focus-dimmer.active {
-  opacity: 1;
+  pointer-events: auto !important;
 }
 
 /* Permanent User Highlights */

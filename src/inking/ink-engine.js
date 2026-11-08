@@ -185,7 +185,7 @@ export class InkEngine {
       if (canvas.releasePointerCapture) canvas.releasePointerCapture(e.pointerId);
     } catch {}
 
-    if (this.currentStroke && this.currentStroke.points.length > 1) {
+    if (this.currentStroke && this.currentStroke.points.length >= 1) {
       const strokeToCommit = this.currentStroke;
       const targetPage = this.activePageNum;
 
@@ -280,12 +280,16 @@ export class InkEngine {
     const ctx = canvas.getContext('2d');
     const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
+    const metrics = this.viewer ? this.viewer.pageMetrics.get(pageNum) : null;
+    const targetW = metrics ? metrics.width : (canvas.clientWidth || canvas.width / dpr || 800);
+    const targetH = metrics ? metrics.height : (canvas.clientHeight || canvas.height / dpr || 1000);
+
     // Redraw existing strokes
     this.viewer.redrawPageStrokes(pageNum);
 
-    // Draw active in-progress stroke
+    // Draw active in-progress stroke with exact matching targetW and targetH
     if (this.currentStroke) {
-      this.viewer.renderStroke(ctx, this.currentStroke, dpr);
+      this.viewer.renderStroke(ctx, this.currentStroke, dpr, targetW, targetH);
     }
   }
 

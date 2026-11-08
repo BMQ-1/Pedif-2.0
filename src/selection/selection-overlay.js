@@ -50,6 +50,7 @@ export class SelectionOverlay {
             wordIdx: wIdx,
             charIdx: cIdx,
             dir: line.dir || 'ltr',
+            pageNum: this.pageNum,
           });
         });
       });
@@ -85,10 +86,11 @@ export class SelectionOverlay {
 
   /**
    * Magnetic character snapping using Euclidean projection to character midpoints
+   * Returns -1 if click is too far from any character (e.g. blank margins)
    */
-  findNearestChar(px, py, width = 1, height = 1) {
+  findNearestChar(px, py, width = 1, height = 1, maxDistance = 65) {
     let bestDist = Infinity;
-    let bestIdx = 0;
+    let bestIdx = -1;
 
     const isNorm = this.allChars.length > 0 && (this.allChars[0].quad.isNormalized || (this.allChars[0].quad.lt.x <= 1.0 && this.allChars[0].quad.lt.y <= 1.0));
     const targetW = (isNorm && width > 1) ? width : 1;
@@ -104,6 +106,10 @@ export class SelectionOverlay {
         bestDist = dist;
         bestIdx = i;
       }
+    }
+
+    if (bestDist > maxDistance) {
+      return -1;
     }
 
     return bestIdx;
@@ -143,7 +149,7 @@ export class SelectionOverlay {
       activePath.setAttribute('class', 'active-selection-path');
       activePath.setAttribute('fill', 'rgba(0, 122, 255, 0.28)'); // System highlight blue
       activePath.setAttribute('stroke', 'rgba(0, 122, 255, 0.5)');
-      activePath.setAttribute('stroke-width', '2');
+      activePath.setAttribute('stroke-width', '1.5');
       activePath.setAttribute('stroke-linejoin', 'round');
       activePath.setAttribute('stroke-linecap', 'round');
       this.highlightGroup.appendChild(activePath);
@@ -165,28 +171,46 @@ export class SelectionOverlay {
     const sy = (isNorm && targetH > 1) ? targetH : 1;
 
     let combinedPathData = '';
-    byLine.forEach(chars => {
-      const isRtl = chars[0].dir === 'rtl';
-      const first = isRtl ? chars[chars.length - 1].quad : chars[0].quad;
-      const last = isRtl ? chars[0].quad : chars[chars.length - 1].quad;
+    let handleStartPt = null;
+    let handleEndPt = null;
 
-      combinedPathData += ` M ${first.lt.x * sx} ${first.lt.y * sy}`
-        + ` L ${last.rt.x * sx} ${last.rt.y * sy}`
-        + ` L ${last.rb.x * sx} ${last.rb.y * sy}`
-        + ` L ${first.lb.x * sx} ${first.lb.y * sy}`
-        + ` Z`;
+    byLine.forEach((chars) => {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      chars.forEach(c => {
+        const q = c.quad;
+        minX = Math.min(minX, q.lt.x * sx, q.lb.x * sx);
+        maxX = Math.max(maxX, q.rt.x * sx, q.rb.x * sx);
+        minY = Math.min(minY, q.lt.y * sy, q.rt.y * sy);
+        maxY = Math.max(maxY, q.lb.y * sy, q.rb.y * sy);
+      });
+
+      const lineH = Math.max(8, maxY - minY);
+      const lineW = Math.max(4, maxX - minX);
+      const r = Math.min(4, lineH / 4);
+
+      if (!handleStartPt) {
+        handleStartPt = { x: minX, y: minY };
+      }
+      handleEndPt = { x: maxX, y: maxY };
+
+      // Continuous rounded pill per text row
+      combinedPathData += ` M ${minX + r} ${minY}`
+        + ` h ${lineW - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r}`
+        + ` v ${lineH - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r}`
+        + ` h -${lineW - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r}`
+        + ` v -${lineH - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z `;
     });
 
     if (activePath) {
       activePath.setAttribute('d', combinedPathData.trim());
     }
 
-    // Position teardrop handles
-    const firstQuad = selectedChars[0].quad;
-    const lastQuad = selectedChars[selectedChars.length - 1].quad;
-
-    if (this.startHandle) this.positionHandle(this.startHandle, firstQuad.lt.x * sx, firstQuad.lt.y * sy);
-    if (this.endHandle) this.positionHandle(this.endHandle, lastQuad.rb.x * sx, lastQuad.rb.y * sy);
+    if (this.startHandle && handleStartPt) {
+      this.positionHandle(this.startHandle, handleStartPt.x, handleStartPt.y);
+    }
+    if (this.endHandle && handleEndPt) {
+      this.positionHandle(this.endHandle, handleEndPt.x, handleEndPt.y);
+    }
 
     if (typeof this.onSelectionChange === 'function') {
       const selectedText = selectedChars.map(c => c.char).join('');
@@ -237,17 +261,30 @@ export class SelectionOverlay {
 
       if (e.target === this.startHandle) {
         this.dragTarget = 'start';
+        this.isDragging = true;
       } else if (e.target === this.endHandle) {
         this.dragTarget = 'end';
+        this.isDragging = true;
       } else {
+        const charIdx = this.findNearestChar(x, y, rect.width, rect.height, 50);
+        if (charIdx === -1) {
+          // Clicked outside text boundaries, dismiss selection
+          this.clearSelection();
+          if (typeof this.onSelectionEnd === 'function') {
+            this.onSelectionEnd(null);
+          }
+          return;
+        }
+
         this.dragTarget = 'new';
-        const charIdx = this.findNearestChar(x, y, rect.width, rect.height);
         this.selectedRange = { startIdx: charIdx, endIdx: charIdx };
         this.renderSelection(charIdx, charIdx);
+        this.isDragging = true;
       }
 
-      this.isDragging = true;
-      if (this.svg.setPointerCapture) this.svg.setPointerCapture(e.pointerId);
+      if (this.svg.setPointerCapture) {
+        try { this.svg.setPointerCapture(e.pointerId); } catch {}
+      }
     });
 
     this.svg.addEventListener('pointermove', (e) => {
@@ -256,7 +293,8 @@ export class SelectionOverlay {
       const rect = this.svg.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const nearest = this.findNearestChar(x, y, rect.width, rect.height);
+      const nearest = this.findNearestChar(x, y, rect.width, rect.height, 120);
+      if (nearest === -1) return;
 
       if (this.dragTarget === 'start') {
         this.selectedRange.startIdx = nearest;
@@ -270,18 +308,24 @@ export class SelectionOverlay {
     this.svg.addEventListener('pointerup', (e) => {
       if (!this.isDragging) return;
       this.isDragging = false;
-      if (this.svg.releasePointerCapture) this.svg.releasePointerCapture(e.pointerId);
+      if (this.svg.releasePointerCapture) {
+        try { this.svg.releasePointerCapture(e.pointerId); } catch {}
+      }
 
       if (typeof this.onSelectionEnd === 'function' && this.selectedRange) {
         const s = Math.min(this.selectedRange.startIdx, this.selectedRange.endIdx);
         const eIdx = Math.max(this.selectedRange.startIdx, this.selectedRange.endIdx);
         const selectedChars = this.allChars.slice(s, eIdx + 1);
         const text = selectedChars.map(c => c.char).join('');
+        const activePath = this.highlightGroup ? this.highlightGroup.querySelector('.active-selection-path') : null;
+        const bounds = activePath && activePath.getBoundingClientRect ? activePath.getBoundingClientRect() : null;
+
         this.onSelectionEnd({
           pageNum: this.pageNum,
           text,
           chars: selectedChars,
           range: this.selectedRange,
+          bounds,
         });
       }
     });

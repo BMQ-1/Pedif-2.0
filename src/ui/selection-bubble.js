@@ -103,6 +103,10 @@ export class SelectionBubble {
 
   computeBounds(chars) {
     if (!chars.length) return null;
+    const pageNum = chars[0].pageNum || 1;
+    const pageEl = document.getElementById(`page-${pageNum}`);
+    const pageRect = pageEl ? pageEl.getBoundingClientRect() : { left: 0, top: 0, width: 800, height: 1000 };
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     chars.forEach(c => {
       const q = c.quad;
@@ -112,15 +116,21 @@ export class SelectionBubble {
       maxY = Math.max(maxY, q.lb.y, q.rb.y);
     });
 
-    const pageEl = document.getElementById(`page-${chars[0].lineIdx !== undefined ? chars[0].pageNum || 1 : 1}`);
-    const pageRect = pageEl ? pageEl.getBoundingClientRect() : { left: 0, top: 0 };
+    const isNorm = (minX <= 1.0 && minY <= 1.0 && maxX <= 1.0 && maxY <= 1.0);
+    const sx = isNorm ? pageRect.width : 1;
+    const sy = isNorm ? pageRect.height : 1;
+
+    const screenLeft = pageRect.left + (minX * sx);
+    const screenTop = pageRect.top + (minY * sy);
+    const screenWidth = Math.max(10, (maxX - minX) * sx);
+    const screenHeight = Math.max(14, (maxY - minY) * sy);
 
     return {
-      left: pageRect.left + minX,
-      top: pageRect.top + minY,
-      width: maxX - minX,
-      height: maxY - minY,
-      bottom: pageRect.top + maxY,
+      left: screenLeft,
+      top: screenTop,
+      width: screenWidth,
+      height: screenHeight,
+      bottom: screenTop + screenHeight,
     };
   }
 

@@ -16,6 +16,7 @@ import { ocrManager } from './ocr/ocr-manager.js';
 import { PdfExporter } from './annotations/pdf-exporter.js';
 import { Sidebar } from './ui/sidebar.js';
 import { ShortcutsModal } from './ui/shortcuts-modal.js';
+import { InkToolbar } from './ui/ink-toolbar.js';
 
 class PedifApp {
   constructor() {
@@ -29,6 +30,7 @@ class PedifApp {
     this.searchBar = null;
     this.selectionBubble = null;
     this.inkEngine = null;
+    this.inkToolbar = null;
     this.snippetTool = null;
 
     this.init();
@@ -70,6 +72,9 @@ class PedifApp {
     this.inkEngine = new InkEngine({
       viewer: this.viewer,
       activeTool: this.currentMode,
+    });
+    this.inkToolbar = new InkToolbar({
+      inkEngine: this.inkEngine,
     });
 
     // 7. Initialize Area OCR Snippet Tool
@@ -133,6 +138,9 @@ class PedifApp {
     }
     if (this.inkEngine) {
       this.inkEngine.setTool(mode);
+    }
+    if (this.inkToolbar) {
+      this.inkToolbar.setMode(mode);
     }
     if (this.snippetTool) {
       this.snippetTool.setMode(mode);
@@ -340,14 +348,23 @@ class PedifApp {
   }
 
   async handleFileOpen(file) {
-    const buffer = await file.arrayBuffer();
-    await this.loadPdfBuffer(buffer, file.name);
+    try {
+      const buffer = await file.arrayBuffer();
+      await this.loadPdfBuffer(buffer, file.name);
+    } catch (err) {
+      console.error('[Pedif] File read error:', err);
+      alert('Could not read file: ' + err.message);
+    }
   }
 
   async loadPdfBuffer(buffer, fileName = 'Document.pdf', savedState = null) {
     try {
-      const pdf = await pdfEngine.loadDocument(buffer);
-      this.currentDoc = { buffer, name: fileName, pageCount: pdf.numPages };
+      // Create independent copies so worker transfers never detach the stored buffer
+      const pdfJsBuffer = buffer.slice(0);
+      const docBuffer = buffer.slice(0);
+
+      const pdf = await pdfEngine.loadDocument(pdfJsBuffer);
+      this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages };
 
       if (savedState) {
         if (savedState.annotations) {
@@ -371,17 +388,18 @@ class PedifApp {
 
       searchEngine.indexDocument((page, total) => {});
 
-      await autosave.savePdfBuffer(buffer, {
+      // Non-blocking persistent saves
+      autosave.savePdfBuffer(docBuffer.slice(0), {
         name: fileName,
         pageCount: pdf.numPages,
         currentPage: 1,
-      });
+      }).catch(e => console.warn('[Autosave] Non-fatal save failure:', e));
 
-      await libraryStore.saveDocument({
+      libraryStore.saveDocument({
         name: fileName,
         pageCount: pdf.numPages,
-        buffer: buffer,
-      });
+        buffer: docBuffer.slice(0),
+      }).catch(e => console.warn('[LibraryStore] Non-fatal save failure:', e));
 
     } catch (err) {
       console.error('[Pedif] Error opening PDF:', err);
