@@ -233,5 +233,5 @@ export async function createShowcasePdf() {
   });
 
   const pdfBytes = await doc.save();
-  return pdfBytes.buffer;
+  return pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength);
 }

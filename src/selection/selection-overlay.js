@@ -158,8 +158,13 @@ export class SelectionOverlay {
     // Group selected characters by line for continuous pill-hull rendering
     const byLine = new Map();
     selectedChars.forEach(c => {
-      if (!byLine.has(c.lineIdx)) byLine.set(c.lineIdx, []);
-      byLine.get(c.lineIdx).push(c);
+      let lKey = c.lineIdx;
+      if (lKey === undefined) {
+        const y = c.quad && c.quad.lb ? (c.quad.lb.y || 0) : 0;
+        lKey = 'y_' + Math.round(y * (c.quad && c.quad.isNormalized ? 80 : 1 / 10));
+      }
+      if (!byLine.has(lKey)) byLine.set(lKey, []);
+      byLine.get(lKey).push(c);
     });
 
     const rect = this.svg && this.svg.getBoundingClientRect ? this.svg.getBoundingClientRect() : null;

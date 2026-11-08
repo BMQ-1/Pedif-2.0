@@ -25,6 +25,8 @@ import { createShowcasePdf } from './core/sample-document.js';
 import { SmartScanner } from './ui/smart-scanner.js';
 import { CropTool } from './ui/crop-tool.js';
 import { LassoTool } from './inking/lasso-tool.js';
+import { ExtractDialog } from './ui/extract-dialog.js';
+import { StatsModal } from './ui/stats-modal.js';
 
 // Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
 if (typeof window !== 'undefined') {
@@ -54,6 +56,8 @@ class PedifApp {
     this.smartScanner = null;
     this.cropTool = null;
     this.lassoTool = null;
+    this.extractDialog = null;
+    this.statsModal = null;
 
     this.init();
   }
@@ -151,6 +155,17 @@ class PedifApp {
     this.smartScanner = new SmartScanner({ viewer: this.viewer });
     this.cropTool = new CropTool({ viewer: this.viewer });
     this.lassoTool = new LassoTool({ viewer: this.viewer });
+    this.extractDialog = new ExtractDialog({
+      getPdfBuffer: () => this.currentDoc?.buffer || null,
+      getCurrentPage: () => this.viewer?.currentPage || 1,
+      getTotalPages: () => pdfEngine.numPages || 1,
+      getDocName: () => this.currentDoc?.name || 'Document.pdf',
+    });
+    this.statsModal = new StatsModal({
+      getCurrentPage: () => this.viewer?.currentPage || 1,
+      getTotalPages: () => pdfEngine.numPages || 1,
+      getDocName: () => this.currentDoc?.name || 'Document.pdf',
+    });
 
     // 12. Setup UI interactions, shortcuts & CommandStack
     this.setupTheme();
@@ -257,8 +272,14 @@ class PedifApp {
 
           // Trigger continuous pill-hull quads & teardrop handles
           const record = this.viewer ? this.viewer.renderedPages.get(pageNum) : null;
+          let matchedChars = null;
           if (record && record.overlay) {
             record.overlay.selectFromClientBounds(rects, pageEl.getBoundingClientRect());
+            if (record.overlay.selectedRange) {
+              const s = Math.min(record.overlay.selectedRange.startIdx, record.overlay.selectedRange.endIdx);
+              const e = Math.max(record.overlay.selectedRange.startIdx, record.overlay.selectedRange.endIdx);
+              matchedChars = record.overlay.allChars.slice(s, e + 1);
+            }
           }
 
           const b = range.getBoundingClientRect();
@@ -269,6 +290,7 @@ class PedifApp {
             bounds: b,
             rects,
             pageEl,
+            chars: matchedChars,
           });
         } catch {
           this.selectionBubble.hide();
@@ -337,6 +359,43 @@ class PedifApp {
 
     if (btnExport) {
       btnExport.addEventListener('click', () => this.handleExportPdf());
+    }
+
+    const btnExtract = document.getElementById('btn-extract');
+    if (btnExtract) {
+      btnExtract.addEventListener('click', () => {
+        if (!this.currentDoc) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.extractDialog) this.extractDialog.show();
+      });
+    }
+
+    const btnRotate = document.getElementById('btn-rotate');
+    if (btnRotate) {
+      btnRotate.addEventListener('click', () => {
+        if (this.viewer) {
+          const rot = this.viewer.rotateClockwise();
+          showToast(`Rotated ${rot}°`, 'check');
+        }
+      });
+    }
+
+    const btnReadAloud = document.getElementById('btn-read-aloud');
+    if (btnReadAloud) {
+      btnReadAloud.addEventListener('click', () => this.readAloudPage());
+    }
+
+    const btnStats = document.getElementById('btn-stats');
+    if (btnStats) {
+      btnStats.addEventListener('click', () => {
+        if (!this.currentDoc) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.statsModal) this.statsModal.show();
+      });
     }
 
     if (btnTheme) btnTheme.addEventListener('click', () => this.toggleTheme());
@@ -416,6 +475,13 @@ class PedifApp {
         return;
       }
 
+      // Print shortcut Ctrl+P
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        window.print();
+        return;
+      }
+
       // Save / Export shortcut Ctrl+S
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
@@ -489,6 +555,25 @@ class PedifApp {
         e.preventDefault();
         const pageBtn = document.getElementById('btn-dock-page');
         if (pageBtn) pageBtn.click();
+      } else if (e.key === 'r' || e.key === 'R') {
+        if (this.viewer) {
+          const rot = this.viewer.rotateClockwise();
+          showToast(`Rotated ${rot}°`, 'check');
+        }
+      } else if (e.key === 'x' || e.key === 'X') {
+        if (this.currentDoc && this.extractDialog) {
+          this.extractDialog.show();
+        } else {
+          showToast('Please open a PDF document first', 'alert');
+        }
+      } else if (e.key === 'a' || e.key === 'A') {
+        this.readAloudPage();
+      } else if (!e.ctrlKey && !e.metaKey && (e.key === 's' || e.key === 'S')) {
+        if (this.currentDoc && this.statsModal) {
+          this.statsModal.show();
+        } else {
+          showToast('Please open a PDF document first', 'alert');
+        }
       } else if (e.key === 'd') {
         this.toggleTheme();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
@@ -564,6 +649,9 @@ class PedifApp {
       }
 
       await this.viewer.loadDocument();
+      if (this.statsModal) {
+        this.statsModal.resetSession(pdf.numPages);
+      }
       this.updatePageIndicator(1, pdf.numPages);
 
       // Refresh sidebar outline if open
@@ -615,9 +703,57 @@ class PedifApp {
     if (this.scrubber) {
       this.scrubber.updateProgress(current, total);
     }
+    if (this.statsModal) {
+      this.statsModal.recordPage(current);
+    }
     if (this.currentDoc) {
       this.currentDoc.currentPage = current;
     }
+  }
+
+  async readAloudPage(pageNum) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      showToast('Speech synthesis is not supported in this browser', 'alert');
+      return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      showToast('Speech stopped', 'check');
+      return;
+    }
+
+    const p = pageNum || (this.viewer ? this.viewer.currentPage : 1);
+    const textData = this.viewer ? this.viewer.pageTextData.get(p) : null;
+    let pageText = textData ? textData.fullText : '';
+
+    if (!pageText && pdfEngine.pdfDoc) {
+      try {
+        const page = await pdfEngine.getPage(p);
+        const tc = await page.getTextContent();
+        pageText = tc.items.map(it => it.str).join(' ');
+      } catch (err) {
+        console.warn('[Pedif] Text extraction for speech failed:', err);
+      }
+    }
+
+    if (!pageText || !pageText.trim()) {
+      showToast('No readable text on this page to speak', 'alert');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(pageText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.onstart = () => showToast(`Reading Page ${p} aloud… Click Read Aloud to stop`, 'star');
+    utterance.onend = () => showToast(`Finished reading Page ${p}`, 'check');
+    utterance.onerror = (e) => {
+      if (e.error !== 'canceled') {
+        showToast('Speech error: ' + e.error, 'alert');
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
   }
 
   async checkRestoreSession() {

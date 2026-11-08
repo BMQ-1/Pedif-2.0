@@ -261,8 +261,11 @@ export class SelectionBubble {
     if (!this.currentSelection) return;
     const { pageNum, range, pageEl, chars, text } = this.currentSelection;
 
-    if (range && pageEl) {
-      // Calculate normalized scale-invariant quads directly from browser selection rects
+    if (chars && chars.length > 0) {
+      // 1. Prioritize precision normalized character quads from glyph engine
+      highlightManager.createHighlight(pageNum, chars, colorKey, note, this.activeStyle || 'highlight');
+    } else if (range && pageEl) {
+      // 2. Fallback: Calculate normalized scale-invariant quads from browser selection rects
       const pageRect = pageEl.getBoundingClientRect();
       const clientRects = Array.from(range.getClientRects()).filter(r => r.width > 0 && r.height > 0);
       const quads = [];
@@ -285,8 +288,6 @@ export class SelectionBubble {
       if (quads.length > 0) {
         highlightManager.createHighlightFromQuads(pageNum, quads, text || this.getSelectedText(), colorKey, note, this.activeStyle || 'highlight');
       }
-    } else if (chars && chars.length > 0) {
-      highlightManager.createHighlight(pageNum, chars, colorKey, note, this.activeStyle || 'highlight');
     }
 
     // Dismiss selection cleanly

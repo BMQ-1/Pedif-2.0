@@ -1799,3 +1799,250 @@ kbd {
     max-width: 100%;
   }
 }
+
+/* ============================================================
+   Extract Pages & Reading Statistics Modals (Pedif Suite)
+   ============================================================ */
+.extract-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: grid;
+  place-items: center;
+  z-index: 260;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s var(--e);
+}
+
+.extract-modal-backdrop.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.extract-modal-card {
+  background: var(--card);
+  border: 1px solid var(--ln);
+  border-radius: var(--r-l);
+  box-shadow: var(--sh);
+  padding: 24px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow: auto;
+  transform: translateY(12px) scale(0.97);
+  transition: transform .28s var(--spring);
+}
+
+.extract-modal-backdrop.on .extract-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.extract-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.extract-header-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.extract-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--ac);
+  flex: none;
+}
+
+.extract-header-title h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -.02em;
+}
+
+.extract-header-title p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--tx2);
+}
+
+.extract-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.extract-preset-chip {
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: var(--fill);
+  color: var(--tx2);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .2s var(--spring);
+}
+
+.extract-preset-chip:hover {
+  background: var(--fill2);
+  color: var(--tx);
+}
+
+.extract-preset-chip.active {
+  background: var(--ac);
+  color: #fff;
+  border-color: var(--ac);
+}
+
+.extract-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx2);
+  margin-bottom: 8px;
+}
+
+.extract-input-wrap {
+  margin-bottom: 10px;
+}
+
+.extract-input {
+  width: 100%;
+  height: 42px;
+  background: var(--bg2);
+  border: 1.5px solid var(--ln);
+  border-radius: var(--r-s);
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--tx);
+  outline: none;
+  transition: border-color .18s;
+  box-sizing: border-box;
+}
+
+.extract-input:focus {
+  border-color: var(--ac);
+  box-shadow: 0 0 0 3px var(--ac-soft);
+}
+
+.extract-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+}
+
+.extract-count-badge {
+  font-weight: 600;
+  color: var(--ac);
+}
+
+.extract-count-badge.error {
+  color: var(--red);
+}
+
+.extract-range-hint {
+  color: var(--tx3);
+}
+
+.extract-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ln2);
+}
+
+/* Stats Modal Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  background: var(--fill2);
+  border: 1px solid var(--ln2);
+  border-radius: var(--r-m);
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-val {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--tx);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-lbl {
+  display: block;
+  font-size: 12px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-top: 4px;
+}
+
+.stat-est-box {
+  background: var(--card);
+  border: 1px solid var(--ln2);
+  border-radius: var(--r-m);
+  padding: 14px 16px;
+}
+
+.stat-est-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+
+.stat-est-text strong {
+  color: var(--tx2);
+  font-weight: 550;
+}
+
+.stat-est-text span {
+  color: var(--ac);
+  font-weight: 650;
+}
+
+/* Print Optimization */
+@media print {
+  body, html {
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  #tb, #dk, .app-sidebar, .toast, .restore-banner, .ink-subtoolbar, #home, .selection-bubble {
+    display: none !important;
+  }
+  #rd {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #viewport-container {
+    padding: 0 !important;
+    gap: 0 !important;
+    overflow: visible !important;
+  }
+  .page-container {
+    box-shadow: none !important;
+    margin: 0 0 20px 0 !important;
+    page-break-after: always;
+  }
+}

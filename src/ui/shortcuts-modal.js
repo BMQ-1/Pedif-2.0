@@ -52,11 +52,16 @@ export class ShortcutsModal {
           </div>
 
           <div class="shortcut-group">
-            <h4>Actions & History</h4>
+            <h4>Actions & Utilities</h4>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Find in document</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>P</kbd><span>Print document</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Export PDF</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>Z</kbd><span>Undo</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>Y</kbd><span>Redo</span></div>
-            <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Export PDF</span></div>
+            <div class="shortcut-row"><kbd>X</kbd><span>Extract Pages</span></div>
+            <div class="shortcut-row"><kbd>R</kbd><span>Rotate View (90°)</span></div>
+            <div class="shortcut-row"><kbd>A</kbd><span>Read Page Aloud (TTS)</span></div>
+            <div class="shortcut-row"><kbd>S</kbd><span>Reading Statistics</span></div>
             <div class="shortcut-row"><kbd>D</kbd><span>Toggle Theme</span></div>
             <div class="shortcut-row"><kbd>?</kbd><span>Show Shortcuts</span></div>
           </div>

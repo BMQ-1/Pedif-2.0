@@ -34,21 +34,37 @@ export class HighlightManager {
     // Group by line to construct pill-hull quads
     const byLine = new Map();
     chars.forEach(c => {
-      if (!byLine.has(c.lineIdx)) byLine.set(c.lineIdx, []);
-      byLine.get(c.lineIdx).push(c);
+      let lKey = c.lineIdx;
+      if (lKey === undefined) {
+        // Fallback: cluster by baseline Y (within ~10 units)
+        const y = c.quad && c.quad.lb ? (c.quad.lb.y || 0) : 0;
+        lKey = 'y_' + Math.round(y * (c.quad && c.quad.isNormalized ? 80 : 1 / 10));
+      }
+      if (!byLine.has(lKey)) byLine.set(lKey, []);
+      byLine.get(lKey).push(c);
     });
 
     const quads = [];
     byLine.forEach(lineChars => {
+      if (!lineChars.length) return;
       const isRtl = lineChars[0].dir === 'rtl';
-      const first = isRtl ? lineChars[lineChars.length - 1].quad : lineChars[0].quad;
-      const last = isRtl ? lineChars[0].quad : lineChars[lineChars.length - 1].quad;
+
+      // Sort characters along reading axis to guarantee leftmost and rightmost endpoints
+      lineChars.sort((a, b) => {
+        const ax = a.quad ? (a.quad.lt.x + a.quad.rt.x) / 2 : 0;
+        const bx = b.quad ? (b.quad.lt.x + b.quad.rt.x) / 2 : 0;
+        return isRtl ? bx - ax : ax - bx;
+      });
+
+      const first = lineChars[0].quad;
+      const last = lineChars[lineChars.length - 1].quad;
 
       quads.push({
         lt: first.lt,
         rt: last.rt,
         rb: last.rb,
         lb: first.lb,
+        isNormalized: first.isNormalized !== undefined ? first.isNormalized : true,
       });
     });
 

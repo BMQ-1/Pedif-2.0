@@ -22,6 +22,7 @@ export class VirtualViewer {
   constructor(options = {}) {
     this.container = options.container || document.getElementById('viewport-container');
     this.scale = options.scale || 1.25;
+    this.rotation = options.rotation || 0; // 0, 90, 180, 270 degrees
     this.mode = options.mode || 'continuous'; // 'continuous' | 'page' | 'spread'
     this.margins = { left: 0, right: 0, top: 0, bottom: 0 };
     this.currentPage = 1;
@@ -161,7 +162,8 @@ export class VirtualViewer {
 
     try {
       const page = await pdfEngine.getPage(pageNum);
-      const unscaledViewport = page.getViewport({ scale: 1 });
+      const effectiveRotation = (page.rotate + this.rotation) % 360;
+      const unscaledViewport = page.getViewport({ scale: 1, rotation: effectiveRotation });
       const aspect = unscaledViewport.width / unscaledViewport.height;
 
       const maxAvailableWidth = (this.mode === 'spread' && this.container.clientWidth > 720)
@@ -264,7 +266,7 @@ export class VirtualViewer {
       canvas2.style.height = `${targetHeight}px`;
 
       // Extract native glyph quads for this page at current viewport and normalize to [0.0, 1.0]
-      const targetViewport = page.getViewport({ scale: targetScale });
+      const targetViewport = page.getViewport({ scale: targetScale, rotation: effectiveRotation });
       let textData = this.pageTextData.get(pageNum);
       if (!textData) {
         textData = await GlyphExtractor.extractPageText(page, targetViewport);
@@ -299,7 +301,7 @@ export class VirtualViewer {
       };
       this.renderedPages.set(pageNum, record);
 
-      record.renderTask = pdfEngine.renderPageToCanvas(page, canvas0, targetScale);
+      record.renderTask = pdfEngine.renderPageToCanvas(page, canvas0, targetScale, effectiveRotation);
       await record.renderTask;
 
       // Render native text spans into textLayerDiv for seamless browser selection
@@ -620,6 +622,16 @@ export class VirtualViewer {
       this.unmountPage(pageNum, record.container);
       this.mountPage(pageNum, record.container);
     });
+  }
+
+  rotateClockwise() {
+    this.rotation = (this.rotation + 90) % 360;
+    this.pageTextData.clear();
+    this.renderedPages.forEach((record, pageNum) => {
+      this.unmountPage(pageNum, record.container);
+      this.mountPage(pageNum, record.container);
+    });
+    return this.rotation;
   }
 
   setCropMargins(margins) {

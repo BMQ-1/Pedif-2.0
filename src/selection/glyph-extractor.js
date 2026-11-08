@@ -53,6 +53,16 @@ export class GlyphExtractor {
         lines.push(currentLine);
       }
 
+      // Propagate lineIdx down to words and chars for line-by-line highlight rendering
+      words.forEach(w => {
+        w.lineIdx = currentLine.lineIdx;
+        if (w.chars) {
+          w.chars.forEach(c => {
+            c.lineIdx = currentLine.lineIdx;
+          });
+        }
+      });
+
       currentLine.words.push(...words);
       currentLine.text += (currentLine.text ? ' ' : '') + str;
     }
@@ -69,18 +79,27 @@ export class GlyphExtractor {
    */
   static normalizeTextData(textData, width, height) {
     if (!textData || !textData.lines || !width || !height) return textData;
-    const normLines = textData.lines.map(line => ({
-      ...line,
-      baselineY: line.baselineY / height,
-      words: line.words.map(w => ({
-        ...w,
-        quad: w.quad.toNormalized(width, height),
-        chars: w.chars.map(c => ({
-          ...c,
-          quad: c.quad.toNormalized(width, height),
+    const normLines = textData.lines.map((line, lIdx) => {
+      const lineIdx = line.lineIdx !== undefined ? line.lineIdx : lIdx;
+      return {
+        ...line,
+        lineIdx,
+        baselineY: line.baselineY / height,
+        words: line.words.map((w, wIdx) => ({
+          ...w,
+          lineIdx,
+          wordIdx: w.wordIdx !== undefined ? w.wordIdx : wIdx,
+          quad: w.quad.toNormalized(width, height),
+          chars: w.chars.map((c, cIdx) => ({
+            ...c,
+            lineIdx,
+            wordIdx: w.wordIdx !== undefined ? w.wordIdx : wIdx,
+            charIdx: c.charIdx !== undefined ? c.charIdx : cIdx,
+            quad: c.quad.toNormalized(width, height),
+          })),
         })),
-      })),
-    }));
+      };
+    });
     return {
       ...textData,
       lines: normLines,
@@ -88,34 +107,44 @@ export class GlyphExtractor {
   }
 
   /**
-   * Computes oriented 8-point quad from PDF.js item.transform and viewport
+   * Computes oriented 8-point quad from PDF.js item.transform and viewport.
+   * Accurately converts PDF user space coordinates [LB, RB, RT, LT] to viewport space
+   * respecting font ascent, scale, and arbitrary rotation.
    */
   static computeItemQuad(item, viewport) {
-    // PDF.js transform: [scaleX, skewY, skewX, scaleY, transX, transY]
     const tx = item.transform;
     const width = item.width;
     const height = item.height || Math.hypot(tx[2], tx[3]);
 
-    // Local glyph box corners in PDF user space:
-    // LB: (0, 0), RB: (width, 0), RT: (width, height), LT: (0, height)
-    const pLB = [0, 0];
-    const pRB = [width, 0];
-    const pRT = [width, height];
-    const pLT = [0, height];
+    // Unit vectors in PDF user space
+    const fontScaleX = Math.hypot(tx[0], tx[1]) || 1;
+    const fontScaleY = Math.hypot(tx[2], tx[3]) || fontScaleX;
 
-    const applyTransform = ([x, y]) => {
-      // Affine transform: x' = a*x + c*y + e, y' = b*x + d*y + f
-      const px = tx[0] * x + tx[2] * y + tx[4];
-      const py = tx[1] * x + tx[3] * y + tx[5];
-      // Convert PDF coordinates (origin bottom-left) to Viewport space (origin top-left)
-      const [vx, vy] = viewport.convertToViewportPoint(px, py);
-      return new Point(vx, vy);
-    };
+    const uBasX = tx[0] / fontScaleX;
+    const uBasY = tx[1] / fontScaleX;
+    const uAscX = tx[2] / fontScaleY;
+    const uAscY = tx[3] / fontScaleY;
 
-    const lb = applyTransform(pLB);
-    const rb = applyTransform(pRB);
-    const rt = applyTransform(pRT);
-    const lt = applyTransform(pLT);
+    // Corner coordinates in PDF user space (origin bottom-left):
+    // pLB: baseline origin (e, f)
+    // pRB: baseline end (e + uBasX * width, f + uBasY * width)
+    // pLT: ascent start (e + uAscX * height, f + uAscY * height)
+    // pRT: ascent end (e + uBasX * width + uAscX * height, f + uBasY * width + uAscY * height)
+    const e = tx[4], f = tx[5];
+    const pLB = [e, f];
+    const pRB = [e + uBasX * width, f + uBasY * width];
+    const pLT = [e + uAscX * height, f + uAscY * height];
+    const pRT = [e + uBasX * width + uAscX * height, f + uBasY * width + uAscY * height];
+
+    const [lbX, lbY] = viewport.convertToViewportPoint(...pLB);
+    const [rbX, rbY] = viewport.convertToViewportPoint(...pRB);
+    const [ltX, ltY] = viewport.convertToViewportPoint(...pLT);
+    const [rtX, rtY] = viewport.convertToViewportPoint(...pRT);
+
+    const lb = new Point(lbX, lbY);
+    const rb = new Point(rbX, rbY);
+    const lt = new Point(ltX, ltY);
+    const rt = new Point(rtX, rtY);
 
     return new Quad(lt, rt, rb, lb);
   }

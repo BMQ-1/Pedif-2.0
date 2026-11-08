@@ -88,6 +88,7 @@ class LibraryStore {
         const getReq = store.get(stableId);
         getReq.onsuccess = () => {
           try {
+            const existing = getReq.result;
             let finalBuffer = safeBuffer || (existing ? toValidArrayBuffer(existing.buffer) : null);
             if (finalBuffer) {
               try {
