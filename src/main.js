@@ -22,6 +22,17 @@ import { Dock } from './ui/dock.js';
 import { Scrubber } from './ui/scrubber.js';
 import { showToast } from './ui/toast.js';
 import { createShowcasePdf } from './core/sample-document.js';
+import { SmartScanner } from './ui/smart-scanner.js';
+import { CropTool } from './ui/crop-tool.js';
+import { LassoTool } from './inking/lasso-tool.js';
+
+// Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
+if (typeof window !== 'undefined') {
+  window.alert = (msg) => {
+    console.warn('[Pedif] Intercepted browser alert modal:', msg);
+    showToast(String(msg), 'alert', 3500);
+  };
+}
 
 class PedifApp {
   constructor() {
@@ -40,6 +51,9 @@ class PedifApp {
     this.homeLibrary = null;
     this.dock = null;
     this.scrubber = null;
+    this.smartScanner = null;
+    this.cropTool = null;
+    this.lassoTool = null;
 
     this.init();
   }
@@ -133,7 +147,12 @@ class PedifApp {
       },
     });
 
-    // 11. Setup UI interactions, shortcuts & CommandStack
+    // 11. Initialize Precision Stylus Lasso & Smart Tools
+    this.smartScanner = new SmartScanner({ viewer: this.viewer });
+    this.cropTool = new CropTool({ viewer: this.viewer });
+    this.lassoTool = new LassoTool({ viewer: this.viewer });
+
+    // 12. Setup UI interactions, shortcuts & CommandStack
     this.setupTheme();
     this.setupEventListeners();
     this.setupNativeSelectionHandler();
@@ -178,6 +197,9 @@ class PedifApp {
     }
     if (this.snippetTool) {
       this.snippetTool.setMode(mode);
+    }
+    if (this.lassoTool) {
+      this.lassoTool.setMode(mode);
     }
   }
 
@@ -233,7 +255,7 @@ class PedifApp {
             return;
           }
 
-          // Trigger Samsung DeepSky continuous pill-hull quads & teardrop handles
+          // Trigger continuous pill-hull quads & teardrop handles
           const record = this.viewer ? this.viewer.renderedPages.get(pageNum) : null;
           if (record && record.overlay) {
             record.overlay.selectFromClientBounds(rects, pageEl.getBoundingClientRect());
@@ -452,6 +474,12 @@ class PedifApp {
         this.setToolMode('eraser');
       } else if (e.key === 'o') {
         this.setToolMode('ocr');
+      } else if (e.key === 'l' || e.key === 'L') {
+        this.setToolMode('lasso');
+      } else if (e.key === 'c' || e.key === 'C') {
+        if (this.cropTool) this.cropTool.open(this.viewer.currentPage);
+      } else if (e.key === 't' || e.key === 'T') {
+        if (this.smartScanner) this.smartScanner.toggleScanCurrentPage();
       } else if (e.key === 'w' || e.key === 'W') {
         if (this.viewer) {
           const newScale = this.viewer.fitWidth();

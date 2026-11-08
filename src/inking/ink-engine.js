@@ -13,6 +13,7 @@ import { Stroke } from './stroke-model.js';
 import { commandStack } from '../core/command-stack.js';
 import { autosave } from '../storage/autosave.js';
 import { highlightManager } from '../annotations/highlight-manager.js';
+import { ShapeRecognizer } from './shape-recognizer.js';
 
 export class InkEngine {
   constructor(options = {}) {
@@ -314,26 +315,43 @@ export class InkEngine {
   }
 
   /**
-   * Hold-to-Snap: Auto-straightens a line ONLY when user holds still at the end for 700ms
+   * Hold-to-Snap: Intelligent shape recognition (Lines, Circles, Rectangles) when holding still for 700ms
    */
   startHoldTimer() {
     this.cancelHoldTimer();
     this.holdTimer = setTimeout(() => {
-      // Must have enough points to form a meaningful line
       if (this.isPointerDown && this.currentStroke && this.currentStroke.points.length > 8) {
+        const canvas = this.activeCanvas;
+        const rect = (canvas && canvas.getBoundingClientRect) ? canvas.getBoundingClientRect() : null;
+        const canvasW = (rect && rect.width > 1) ? rect.width : 800;
+        const canvasH = (rect && rect.height > 1) ? rect.height : 1000;
+
+        // Run Intelligent Shape Recognition (Circle, Ellipse, Rectangle, Line)
+        const recognized = ShapeRecognizer.recognize(this.currentStroke.points, canvasW, canvasH);
+        if (recognized && recognized.points && recognized.points.length >= 2) {
+          this.currentStroke.points = recognized.points;
+          this.currentStroke.isSnapped = true;
+          this.currentStroke.shapeType = recognized.type;
+
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(10);
+          }
+
+          if (this.activeCanvas && this.activePageNum) {
+            this.renderLiveStroke(this.activeCanvas, this.activePageNum);
+          }
+          return;
+        }
+
+        // Fallback: Straight line
         const first = this.currentStroke.points[0];
         const last = this.currentStroke.points[this.currentStroke.points.length - 1];
-
-        // Only snap if the total distance is significant (at least 20px)
-        const dx = (last.x - first.x);
-        const dy = (last.y - first.y);
-        const totalDist = Math.hypot(dx, dy);
+        const totalDist = Math.hypot(last.x - first.x, last.y - first.y);
 
         if (totalDist > 0.03) {
           this.currentStroke.points = [first, last];
           this.currentStroke.isSnapped = true;
 
-          // Subtle tactile tick on supported devices
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
             navigator.vibrate(8);
           }

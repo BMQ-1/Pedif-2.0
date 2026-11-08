@@ -13,6 +13,12 @@ import { PDFDocument, PDFName, PDFArray, PDFNumber, PDFString, rgb } from 'pdf-l
 import { highlightManager, PALETTE } from './highlight-manager.js';
 
 export class PdfExporter {
+  static getSubtypeName(ann) {
+    if (!ann) return 'Highlight';
+    if (ann.style === 'underline') return 'Underline';
+    if (ann.style === 'strikethrough') return 'StrikeOut';
+    return 'Highlight';
+  }
   /**
    * Exports annotated PDF document
    * @param {ArrayBuffer} originalPdfBytes
@@ -90,15 +96,16 @@ export class PdfExporter {
           maxY = Math.max(maxY, tlY, trY, blY, brY);
         }
 
-        // Construct PDF Dictionary for Highlight Annotation
+        // Construct PDF Dictionary for Highlight / Underline / StrikeOut Annotation
+        const subtypeName = ann.style === 'underline' ? 'Underline' : (ann.style === 'strikethrough' ? 'StrikeOut' : 'Highlight');
         const highlightDict = context.obj({
           Type: PDFName.of('Annot'),
-          Subtype: PDFName.of('Highlight'),
+          Subtype: PDFName.of(subtypeName),
           Rect: [context.obj(minX), context.obj(minY), context.obj(maxX), context.obj(maxY)],
           QuadPoints: quadPointsList,
           C: [context.obj(rgbColor.r), context.obj(rgbColor.g), context.obj(rgbColor.b)],
           CA: context.obj(ann.opacity || 0.35),
-          T: PDFString.of('Pedif Highlight'),
+          T: PDFString.of(`Pedif ${subtypeName}`),
           Contents: PDFString.of(ann.note || ann.text || ''),
         });
 

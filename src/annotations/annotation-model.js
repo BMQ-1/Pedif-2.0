@@ -7,6 +7,7 @@ export class Annotation {
   constructor(options = {}) {
     this.id = options.id || ('ann_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
     this.type = options.type || 'highlight'; // 'highlight' | 'note' | 'box'
+    this.style = options.style || 'highlight'; // 'highlight' | 'underline' | 'strikethrough'
     this.page = options.page || 1;
     this.color = options.color || '#ffcc00';
     this.opacity = options.opacity !== undefined ? options.opacity : 0.35;

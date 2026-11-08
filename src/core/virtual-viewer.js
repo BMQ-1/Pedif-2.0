@@ -390,6 +390,9 @@ export class VirtualViewer {
     const annotations = highlightManager.getAnnotationsForPage(pageNum);
     annotations.forEach(ann => {
       let pathData = '';
+      const isUnderline = ann.style === 'underline';
+      const isStrike = ann.style === 'strikethrough';
+
       ann.quads.forEach(q => {
         const isNorm = (q.isNormalized || (q.lt.x <= 1.0 && q.lt.y <= 1.0));
         const sx = isNorm ? targetW : 1;
@@ -405,18 +408,32 @@ export class VirtualViewer {
         const maxY = Math.max(lbY, rbY);
         const w = Math.max(4, maxX - minX);
         const h = Math.max(6, maxY - minY);
-        const r = Math.min(4, h / 3);
 
-        pathData += ` M ${minX + r} ${minY} h ${w - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r} v ${h - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r} h -${w - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r} v -${h - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z`;
+        if (isUnderline) {
+          pathData += ` M ${minX} ${maxY - 1} L ${maxX} ${maxY - 1}`;
+        } else if (isStrike) {
+          const midY = minY + h / 2;
+          pathData += ` M ${minX} ${midY} L ${maxX} ${midY}`;
+        } else {
+          const r = Math.min(4, h / 3);
+          pathData += ` M ${minX + r} ${minY} h ${w - 2 * r} a ${r} ${r} 0 0 1 ${r} ${r} v ${h - 2 * r} a ${r} ${r} 0 0 1 -${r} ${r} h -${w - 2 * r} a ${r} ${r} 0 0 1 -${r} -${r} v -${h - 2 * r} a ${r} ${r} 0 0 1 ${r} -${r} Z`;
+        }
       });
 
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', pathData.trim());
-      pathEl.setAttribute('class', 'permanent-highlight');
-      pathEl.setAttribute('fill', ann.color);
-      pathEl.setAttribute('fill-opacity', ann.opacity || 0.38);
-      pathEl.setAttribute('stroke', ann.color);
-      pathEl.setAttribute('stroke-width', '1');
+      pathEl.setAttribute('class', `permanent-highlight style-${ann.style || 'highlight'}`);
+      if (isUnderline || isStrike) {
+        pathEl.setAttribute('fill', 'none');
+        pathEl.setAttribute('stroke', ann.color);
+        pathEl.setAttribute('stroke-width', isUnderline ? '2.5' : '2');
+        pathEl.setAttribute('stroke-linecap', 'round');
+      } else {
+        pathEl.setAttribute('fill', ann.color);
+        pathEl.setAttribute('fill-opacity', ann.opacity || 0.38);
+        pathEl.setAttribute('stroke', ann.color);
+        pathEl.setAttribute('stroke-width', '1');
+      }
       pathEl.dataset.annId = ann.id;
 
       pathEl.addEventListener('click', (e) => {
@@ -522,7 +539,15 @@ export class VirtualViewer {
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
 
-    if (stroke.isSnapped || stroke.points.length === 2) {
+    if (stroke.isSnapped && stroke.points.length === 2) {
+      const p1 = toPx(stroke.points[1]);
+      ctx.lineTo(p1.x, p1.y);
+    } else if (stroke.isSnapped && stroke.points.length > 2) {
+      for (let i = 1; i < stroke.points.length; i++) {
+        const pt = toPx(stroke.points[i]);
+        ctx.lineTo(pt.x, pt.y);
+      }
+    } else if (stroke.points.length === 2) {
       const p1 = toPx(stroke.points[1]);
       ctx.lineTo(p1.x, p1.y);
     } else {

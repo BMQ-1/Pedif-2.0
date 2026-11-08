@@ -88,8 +88,14 @@ class LibraryStore {
         const getReq = store.get(stableId);
         getReq.onsuccess = () => {
           try {
-            const existing = getReq.result || null;
-            const finalBuffer = safeBuffer || (existing ? toValidArrayBuffer(existing.buffer) : null);
+            let finalBuffer = safeBuffer || (existing ? toValidArrayBuffer(existing.buffer) : null);
+            if (finalBuffer) {
+              try {
+                finalBuffer = finalBuffer.slice(0);
+              } catch {
+                finalBuffer = null;
+              }
+            }
 
             const record = {
               id: stableId,
@@ -103,9 +109,19 @@ class LibraryStore {
               createdAt: (existing && existing.createdAt) || doc.createdAt || Date.now(),
             };
 
-            store.put(record);
+            try {
+              store.put(record);
+            } catch (putErr) {
+              console.warn('[LibraryStore] Failed to put buffer, retrying metadata-only:', putErr);
+              record.buffer = null;
+              try {
+                store.put(record);
+              } catch (metaErr) {
+                console.warn('[LibraryStore] Metadata-only put failed:', metaErr);
+              }
+            }
           } catch (putErr) {
-            console.warn('[LibraryStore] Safe onsuccess put caught error:', putErr);
+            console.warn('[LibraryStore] Safe onsuccess caught error:', putErr);
           }
         };
 

@@ -262,11 +262,25 @@ class AutosaveEngine {
     if (!this.db) return Promise.resolve(false);
     return new Promise((resolve) => {
       try {
-        if (val && val.buffer && (val.buffer.byteLength === 0 || (typeof val.buffer.detached === 'boolean' && val.buffer.detached))) {
-          val.buffer = null;
+        if (val && val.buffer) {
+          try {
+            val.buffer.slice(0, 0);
+            val.buffer = val.buffer.slice(0);
+          } catch {
+            val.buffer = null;
+          }
         }
         const tx = this.db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).put(val);
+        const store = tx.objectStore(STORE_NAME);
+        try {
+          store.put(val);
+        } catch (putErr) {
+          console.warn('[Autosave] Buffer put failed, retrying metadata only:', putErr);
+          if (val && val.buffer) {
+            val.buffer = null;
+            try { store.put(val); } catch {}
+          }
+        }
         tx.oncomplete = () => resolve(true);
         tx.onerror = () => resolve(false);
       } catch (err) {

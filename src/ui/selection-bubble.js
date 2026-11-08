@@ -11,6 +11,7 @@ export class SelectionBubble {
   constructor(options = {}) {
     this.container = null;
     this.currentSelection = null;
+    this.activeStyle = 'highlight'; // 'highlight' | 'underline' | 'strikethrough'
     this.onSearchRequest = options.onSearchRequest || null;
     this.render();
   }
@@ -30,6 +31,18 @@ export class SelectionBubble {
       <div class="bubble-row" style="display: flex; align-items: center; gap: 4px;">
         <div class="bubble-colors">
           ${chipsHtml}
+        </div>
+        <div class="bubble-divider"></div>
+        <div class="bubble-style-group" style="display: flex; gap: 2px;">
+          <button class="b sm rip style-btn active" data-style="highlight" title="Highlight">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+          </button>
+          <button class="b sm rip style-btn" data-style="underline" title="Underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+          </button>
+          <button class="b sm rip style-btn" data-style="strikethrough" title="Strikethrough">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6a4 4 0 0 0-8 0c0 4 8 2 8 6a4 4 0 0 1-8 0"/></svg>
+          </button>
         </div>
         <div class="bubble-divider"></div>
         <button class="b sm rip" id="bubble-btn-note" title="Add Note">
@@ -66,6 +79,15 @@ export class SelectionBubble {
     `;
 
     document.body.appendChild(this.container);
+
+    // Style toggles
+    this.container.querySelectorAll('.style-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        this.container.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        this.activeStyle = e.currentTarget.dataset.style;
+      });
+    });
 
     // Event listeners
     this.container.querySelectorAll('.color-chip').forEach(chip => {
@@ -261,10 +283,10 @@ export class SelectionBubble {
       });
 
       if (quads.length > 0) {
-        highlightManager.createHighlightFromQuads(pageNum, quads, text || this.getSelectedText(), colorKey, note);
+        highlightManager.createHighlightFromQuads(pageNum, quads, text || this.getSelectedText(), colorKey, note, this.activeStyle || 'highlight');
       }
     } else if (chars && chars.length > 0) {
-      highlightManager.createHighlight(pageNum, chars, colorKey, note);
+      highlightManager.createHighlight(pageNum, chars, colorKey, note, this.activeStyle || 'highlight');
     }
 
     // Dismiss selection cleanly
@@ -276,7 +298,8 @@ export class SelectionBubble {
       navigator.vibrate(6);
     }
 
-    showToast('Highlight added', 'check');
+    const label = (this.activeStyle || 'highlight').charAt(0).toUpperCase() + (this.activeStyle || 'highlight').slice(1);
+    showToast(`${label} added`, 'check');
     this.hide();
 
     // Trigger overlay clear event

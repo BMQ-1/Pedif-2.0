@@ -25,7 +25,7 @@ export class HighlightManager {
   /**
    * Creates an undoable highlight from selected characters
    */
-  createHighlight(pageNum, chars, colorKey = 'yellow', note = '') {
+  createHighlight(pageNum, chars, colorKey = 'yellow', note = '', style = 'highlight') {
     if (!chars || !chars.length) return null;
 
     const paletteItem = PALETTE[colorKey] || PALETTE.yellow;
@@ -54,9 +54,10 @@ export class HighlightManager {
 
     const ann = new Annotation({
       type: 'highlight',
+      style,
       page: pageNum,
       color: paletteItem.color,
-      opacity: 0.35,
+      opacity: style === 'highlight' ? 0.35 : 0.9,
       quads,
       text,
       note,
@@ -81,15 +82,16 @@ export class HighlightManager {
   /**
    * Creates an undoable highlight directly from normalized quads
    */
-  createHighlightFromQuads(pageNum, quads, text = '', colorKey = 'yellow', note = '') {
+  createHighlightFromQuads(pageNum, quads, text = '', colorKey = 'yellow', note = '', style = 'highlight') {
     if (!quads || !quads.length) return null;
     const paletteItem = PALETTE[colorKey] || PALETTE.yellow;
 
     const ann = new Annotation({
       type: 'highlight',
+      style,
       page: pageNum,
       color: paletteItem.color,
-      opacity: 0.35,
+      opacity: style === 'highlight' ? 0.35 : 0.9,
       quads,
       text: text || '',
       note,

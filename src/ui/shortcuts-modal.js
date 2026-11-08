@@ -31,16 +31,21 @@ export class ShortcutsModal {
           <div class="shortcut-group">
             <h4>Tools</h4>
             <div class="shortcut-row"><kbd>V</kbd><span>Text Selection & Highlighting</span></div>
-            <div class="shortcut-row"><kbd>P</kbd><span>Vector Pen</span></div>
+            <div class="shortcut-row"><kbd>P</kbd><span>Vector Pen & Shapes</span></div>
             <div class="shortcut-row"><kbd>H</kbd><span>Freehand Highlighter</span></div>
-            <div class="shortcut-row"><kbd>E</kbd><span>Vector Stroke Eraser</span></div>
+            <div class="shortcut-row"><kbd>E</kbd><span>Eraser (Whole / Segment)</span></div>
+            <div class="shortcut-row"><kbd>L</kbd><span>Vector Lasso Tool</span></div>
             <div class="shortcut-row"><kbd>O</kbd><span>Area OCR Snippet</span></div>
+            <div class="shortcut-row"><kbd>T</kbd><span>Smart Text Scan (Page)</span></div>
+            <div class="shortcut-row"><kbd>C</kbd><span>8-Point Document Cropper</span></div>
           </div>
 
           <div class="shortcut-group">
             <h4>Navigation & Zoom</h4>
             <div class="shortcut-row"><kbd>J</kbd> / <kbd>→</kbd><span>Next page</span></div>
             <div class="shortcut-row"><kbd>K</kbd> / <kbd>←</kbd><span>Previous page</span></div>
+            <div class="shortcut-row"><kbd>G</kbd><span>Go to Page (Jump)</span></div>
+            <div class="shortcut-row"><kbd>W</kbd><span>Toggle Fit Width</span></div>
             <div class="shortcut-row"><kbd>+</kbd> / <kbd>-</kbd><span>Zoom in / out</span></div>
             <div class="shortcut-row"><kbd>0</kbd><span>Reset zoom (100%)</span></div>
             <div class="shortcut-row"><kbd>Home</kbd> / <kbd>End</kbd><span>First / Last page</span></div>
