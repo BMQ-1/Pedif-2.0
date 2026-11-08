@@ -40,9 +40,13 @@ export class SelectionOverlay {
 
   flattenChars(lines) {
     const list = [];
+    if (!Array.isArray(lines)) return list;
     lines.forEach((line, lIdx) => {
+      if (!line || !Array.isArray(line.words)) return;
       line.words.forEach((word, wIdx) => {
-        word.chars.forEach((ch, cIdx) => {
+        if (!word) return;
+        const chars = Array.isArray(word.chars) ? word.chars : [];
+        chars.forEach((ch, cIdx) => {
           list.push({
             char: ch.char,
             quad: ch.quad,

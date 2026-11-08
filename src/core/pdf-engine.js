@@ -32,9 +32,9 @@ export class PdfEngine {
       data: dataForPdfJs,
       url: typeof source === 'string' ? source : undefined,
       password,
-      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapUrl: './cmaps/',
       cMapPacked: true,
-      standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+      standardFontDataUrl: './standard_fonts/',
     });
 
     if (typeof onPasswordNeeded === 'function') {

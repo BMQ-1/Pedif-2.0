@@ -49,18 +49,18 @@ export class PdfExporter {
 
       // Coordinate converter with page rotation invariance
       const toPdfCoord = (sx, sy, isNorm) => {
-        const nx = isNorm ? sx * pdfWidth : sx * scaleX;
-        const ny = isNorm ? sy * pdfHeight : sy * scaleY;
+        const u = isNorm ? sx : (screenWidth ? sx / screenWidth : 0);
+        const v = isNorm ? sy : (screenHeight ? sy / screenHeight : 0);
         switch (pageRotation) {
           case 90:
-            return [ny, nx];
+            return [v * pdfWidth, u * pdfHeight];
           case 180:
-            return [pdfWidth - nx, ny];
+            return [(1 - u) * pdfWidth, v * pdfHeight];
           case 270:
-            return [pdfWidth - ny, pdfHeight - nx];
+            return [(1 - v) * pdfWidth, (1 - u) * pdfHeight];
           case 0:
           default:
-            return [nx, pdfHeight - ny];
+            return [u * pdfWidth, (1 - v) * pdfHeight];
         }
       };
 

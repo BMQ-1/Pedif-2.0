@@ -172,7 +172,7 @@ class PedifApp {
     this.cropTool = new CropTool({ viewer: this.viewer });
     this.lassoTool = new LassoTool({ viewer: this.viewer });
     this.extractDialog = new ExtractDialog({
-      getPdfBuffer: () => this.currentDoc?.buffer || null,
+      getPdfBuffer: async () => await this.getAnnotatedPdfBuffer(),
       getCurrentPage: () => this.viewer?.currentPage || 1,
       getTotalPages: () => pdfEngine.numPages || 1,
       getDocName: () => this.currentDoc?.name || 'Document.pdf',
@@ -187,6 +187,10 @@ class PedifApp {
     this.pageOrganizer = new PageOrganizer({
       onApplied: async (newBytes) => {
         showToast('Updating document layout...', 'check');
+        highlightManager.clearAll();
+        if (this.viewer && this.viewer.pageStrokes) {
+          this.viewer.pageStrokes.clear();
+        }
         await this.loadPdfBuffer(newBytes, this.currentDoc?.name || 'reordered.pdf');
       },
     });
@@ -230,6 +234,13 @@ class PedifApp {
 
     // 12. Check for unsaved session to restore
     await this.checkRestoreSession();
+
+    // 13. Register sovereign Service Worker for PWA offline operation
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('[Pedif SW] Registration non-fatal:', err);
+      });
+    }
 
     console.log('[Pedif] App initialized with full Cupertino Studio UI. Cross-Origin Isolated:', window.crossOriginIsolated);
   }
@@ -381,6 +392,22 @@ class PedifApp {
     }
   }
 
+  async getAnnotatedPdfBuffer() {
+    if (!this.currentDoc || !this.currentDoc.buffer) return null;
+    if (!this.viewer) return this.currentDoc.buffer;
+    try {
+      const bytes = await PdfExporter.exportAnnotatedPdf(
+        this.currentDoc.buffer,
+        this.viewer.pageStrokes,
+        this.viewer.pageMetrics
+      );
+      return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    } catch (e) {
+      console.warn('[Pedif] Annotation export for workflow non-fatal:', e);
+      return this.currentDoc.buffer;
+    }
+  }
+
   setupEventListeners() {
     const btnBackHome = document.getElementById('btn-back-home');
     const btnTheme = document.getElementById('btn-theme');
@@ -390,6 +417,7 @@ class PedifApp {
     const btnSidebar = document.getElementById('btn-sidebar');
     const btnShortcuts = document.getElementById('btn-shortcuts');
     const hHelp = document.getElementById('hHelp');
+    const popover = document.getElementById('workbench-popover');
 
     if (btnBackHome) {
       btnBackHome.addEventListener('click', async () => {
@@ -489,19 +517,19 @@ class PedifApp {
 
     const btnOrganize = document.getElementById('btn-organize');
     if (btnOrganize) {
-      btnOrganize.addEventListener('click', () => {
+      btnOrganize.addEventListener('click', async () => {
         if (!this.currentDoc || !this.currentDoc.buffer) {
           showToast('Please open a PDF document first', 'alert');
           return;
         }
         if (this.pageOrganizer) {
-          this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+          const buf = await this.getAnnotatedPdfBuffer();
+          this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
         }
       });
     }
 
     const btnWorkbench = document.getElementById('btn-workbench');
-    const popover = document.getElementById('workbench-popover');
     if (btnWorkbench && popover) {
       const positionWorkbenchPopover = () => {
         const rect = btnWorkbench.getBoundingClientRect();
@@ -544,13 +572,16 @@ class PedifApp {
 
     const wbItemOrganize = document.getElementById('wb-item-organize');
     if (wbItemOrganize) {
-      wbItemOrganize.addEventListener('click', () => {
+      wbItemOrganize.addEventListener('click', async () => {
         if (popover) popover.hidden = true;
         if (!this.currentDoc || !this.currentDoc.buffer) {
           showToast('Please open a PDF document first', 'alert');
           return;
         }
-        if (this.pageOrganizer) this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+        if (this.pageOrganizer) {
+          const buf = await this.getAnnotatedPdfBuffer();
+          this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
+        }
       });
     }
 
@@ -630,6 +661,49 @@ class PedifApp {
       });
     }
 
+    const wbItemUndo = document.getElementById('wb-item-undo');
+    if (wbItemUndo) {
+      wbItemUndo.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        commandStack.undo();
+      });
+    }
+
+    const wbItemRedo = document.getElementById('wb-item-redo');
+    if (wbItemRedo) {
+      wbItemRedo.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        commandStack.redo();
+      });
+    }
+
+    const wbItemRotate = document.getElementById('wb-item-rotate');
+    if (wbItemRotate) {
+      wbItemRotate.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (this.viewer) {
+          const rot = this.viewer.rotateClockwise();
+          showToast(`Rotated ${rot}°`, 'check');
+        }
+      });
+    }
+
+    const wbItemTheme = document.getElementById('wb-item-theme');
+    if (wbItemTheme) {
+      wbItemTheme.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        this.toggleTheme();
+      });
+    }
+
+    const wbItemShortcuts = document.getElementById('wb-item-shortcuts');
+    if (wbItemShortcuts) {
+      wbItemShortcuts.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (this.shortcutsModal) this.shortcutsModal.toggle();
+      });
+    }
+
     const tools = ['select', 'pen', 'highlighter', 'eraser', 'ocr'];
     tools.forEach(tool => {
       const el = document.getElementById(`tool-${tool}`);
@@ -696,6 +770,23 @@ class PedifApp {
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+      // Escape key to dismiss modals / search bar / workbench popover
+      if (e.key === 'Escape') {
+        if (this.shortcutsModal && this.shortcutsModal.isOpen()) {
+          this.shortcutsModal.close();
+          return;
+        }
+        const popover = document.getElementById('workbench-popover');
+        if (popover && !popover.hidden) {
+          popover.hidden = true;
+          return;
+        }
+        if (this.searchBar && this.searchBar.isOpen) {
+          this.searchBar.close();
+          return;
+        }
+      }
+
       // Undo / Redo
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         e.preventDefault();
@@ -729,7 +820,7 @@ class PedifApp {
       // Find in document Ctrl+F
       if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
         e.preventDefault();
-        if (this.searchBar) this.searchBar.open();
+        if (this.searchBar) this.searchBar.toggle();
         return;
       }
 
@@ -805,7 +896,9 @@ class PedifApp {
         }
       } else if (e.key === 'm' || e.key === 'M') {
         if (this.currentDoc && this.pageOrganizer) {
-          this.pageOrganizer.show(this.currentDoc.buffer, this.currentDoc.name);
+          this.getAnnotatedPdfBuffer().then(buf => {
+            this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
+          });
         } else if (this.mergeTool) {
           this.mergeTool.show();
         }
@@ -820,6 +913,7 @@ class PedifApp {
       } else if (e.key === 'd') {
         this.toggleTheme();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
         if (this.shortcutsModal) this.shortcutsModal.toggle();
       }
     });
@@ -956,6 +1050,9 @@ class PedifApp {
     }
     if (this.scrubber) {
       this.scrubber.updateProgress(current, total);
+    }
+    if (this.sidebar && typeof this.sidebar.onCurrentPageChange === 'function') {
+      this.sidebar.onCurrentPageChange(current);
     }
     if (this.statsModal) {
       this.statsModal.recordPage(current);

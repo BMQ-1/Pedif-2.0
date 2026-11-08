@@ -35,18 +35,18 @@ console.log('✓ Zoom anchor calculation: keeps cursor point stationary during z
 
 // 2. Multi-Orientation PDF Coordinate Transformation
 function toPdfCoord(sx, sy, pdfWidth, pdfHeight, pageRotation) {
-  const nx = sx * pdfWidth;
-  const ny = sy * pdfHeight;
+  const u = sx;
+  const v = sy;
   switch (pageRotation % 360) {
     case 90:
-      return [ny, nx];
+      return [v * pdfWidth, u * pdfHeight];
     case 180:
-      return [pdfWidth - nx, ny];
+      return [(1 - u) * pdfWidth, v * pdfHeight];
     case 270:
-      return [pdfWidth - ny, pdfHeight - nx];
+      return [(1 - v) * pdfWidth, (1 - u) * pdfHeight];
     case 0:
     default:
-      return [nx, pdfHeight - ny];
+      return [u * pdfWidth, (1 - v) * pdfHeight];
   }
 }
 
@@ -58,6 +58,10 @@ console.assert(pt0[0] === 0 && pt0[1] === 800, '0 deg top-left mapping failed');
 const pt90 = toPdfCoord(0, 0, 600, 800, 90);
 console.assert(pt90[0] === 0 && pt90[1] === 0, '90 deg mapping failed');
 
+// 90 deg non-square: screen (0.5, 0.25) on 600x800 -> pdfX = 0.25 * 600 = 150, pdfY = 0.5 * 800 = 400
+const pt90NonSquare = toPdfCoord(0.5, 0.25, 600, 800, 90);
+console.assert(pt90NonSquare[0] === 150 && pt90NonSquare[1] === 400, '90 deg non-square mapping failed');
+
 // 180 deg: top-left (0, 0) should be (pdfWidth, 0)
 const pt180 = toPdfCoord(0, 0, 600, 800, 180);
 console.assert(pt180[0] === 600 && pt180[1] === 0, '180 deg mapping failed');
@@ -65,6 +69,10 @@ console.assert(pt180[0] === 600 && pt180[1] === 0, '180 deg mapping failed');
 // 270 deg: top-left (0, 0) should be (pdfWidth, pdfHeight)
 const pt270 = toPdfCoord(0, 0, 600, 800, 270);
 console.assert(pt270[0] === 600 && pt270[1] === 800, '270 deg mapping failed');
+
+// 270 deg non-square: screen (0.5, 0.25) on 600x800 -> pdfX = (1 - 0.25) * 600 = 450, pdfY = (1 - 0.5) * 800 = 400
+const pt270NonSquare = toPdfCoord(0.5, 0.25, 600, 800, 270);
+console.assert(pt270NonSquare[0] === 450 && pt270NonSquare[1] === 400, '270 deg non-square mapping failed');
 console.log('✓ Rotated page coordinates: 0°, 90°, 180°, 270° transform verified');
 
 // 3. PasswordDialog instantiation

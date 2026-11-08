@@ -170,22 +170,34 @@ export class CropTool {
     });
 
     this.container.querySelector('#btn-crop-cancel')?.addEventListener('click', () => {
-      this.close();
+      this.cancel();
     });
   }
 
   open(pageNum = (this.viewer && this.viewer.currentPage) || 1) {
     this.isActive = true;
     this.activePageNum = pageNum;
-    this.cropRect = this.viewer.margins ? { ...this.viewer.margins } : { left: 0.05, top: 0.05, right: 0.05, bottom: 0.05 };
+    this.originalMargins = this.viewer && this.viewer.margins ? { ...this.viewer.margins } : { left: 0, top: 0, right: 0, bottom: 0 };
+    this.cropRect = this.viewer && this.viewer.margins ? { ...this.viewer.margins } : { left: 0.05, top: 0.05, right: 0.05, bottom: 0.05 };
 
-    this.container.style.display = 'block';
-    this.updateView();
+    if (this.container) {
+      this.container.style.display = 'block';
+      this.updateView();
+    }
+  }
+
+  cancel() {
+    if (this.viewer && this.originalMargins && typeof this.viewer.setCropMargins === 'function') {
+      this.viewer.setCropMargins(this.originalMargins);
+    }
+    this.close();
   }
 
   close() {
     this.isActive = false;
-    this.container.style.display = 'none';
+    if (this.container) {
+      this.container.style.display = 'none';
+    }
   }
 
   updateView() {

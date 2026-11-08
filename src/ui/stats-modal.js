@@ -126,17 +126,25 @@ export class StatsModal {
       if (e.target === modal) close();
     });
 
-    const onKey = (e) => {
+    if (this._onKey) {
+      window.removeEventListener('keydown', this._onKey);
+      this._onKey = null;
+    }
+
+    this._onKey = (e) => {
       if (e.key === 'Escape') {
         close();
-        window.removeEventListener('keydown', onKey);
       }
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', this._onKey);
   }
 
   hide() {
     this.isOpen = false;
+    if (this._onKey && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this._onKey);
+    }
+    this._onKey = null;
     if (this.modalEl) {
       this.modalEl.classList.remove('on');
     }

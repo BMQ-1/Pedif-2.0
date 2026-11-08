@@ -139,12 +139,30 @@ async function processPageImage({ imageData, pageNum }) {
         if (text && text.trim()) {
           const cleanText = text.trim();
           fullText += cleanText + ' ';
+
+          // Subdivide recognized line quad across characters for pixel-accurate selection
+          const chars = [];
+          const numChars = cleanText.length;
+          for (let c = 0; c < numChars; c++) {
+            const t0 = c / numChars;
+            const t1 = (c + 1) / numChars;
+            chars.push({
+              char: cleanText[c],
+              quad: {
+                p1: { x: q.p1.x + (q.p2.x - q.p1.x) * t0, y: q.p1.y + (q.p2.y - q.p1.y) * t0 },
+                p2: { x: q.p1.x + (q.p2.x - q.p1.x) * t1, y: q.p1.y + (q.p2.y - q.p1.y) * t1 },
+                p3: { x: q.p4.x + (q.p3.x - q.p4.x) * t1, y: q.p4.y + (q.p3.y - q.p4.y) * t1 },
+                p4: { x: q.p4.x + (q.p3.x - q.p4.x) * t0, y: q.p4.y + (q.p3.y - q.p4.y) * t0 },
+              },
+            });
+          }
+
           recognizedLines.push({
             lineIdx: recognizedLines.length,
             text: cleanText,
             confidence,
             quad: q,
-            words: [{ text: cleanText, quad: q }],
+            words: [{ text: cleanText, quad: q, chars }],
           });
         }
       }

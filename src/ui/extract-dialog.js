@@ -159,16 +159,20 @@ export class ExtractDialog {
       if (e.target === modal) this.hide();
     });
 
-    const onKeyDown = (e) => {
+    if (this._onKeyDown) {
+      window.removeEventListener('keydown', this._onKeyDown);
+      this._onKeyDown = null;
+    }
+
+    this._onKeyDown = (e) => {
       if (e.key === 'Escape') {
         this.hide();
-        window.removeEventListener('keydown', onKeyDown);
       } else if (e.key === 'Enter' && e.target === input) {
         e.preventDefault();
         submitBtn.click();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', this._onKeyDown);
 
     submitBtn.addEventListener('click', async () => {
       const indices = ExtractDialog.parsePageRanges(input.value, totalPages);
@@ -221,6 +225,10 @@ export class ExtractDialog {
 
   hide() {
     this.isOpen = false;
+    if (this._onKeyDown && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this._onKeyDown);
+    }
+    this._onKeyDown = null;
     if (this.modalEl) {
       this.modalEl.classList.remove('on');
     }

@@ -191,13 +191,20 @@ export class WatermarkDialog {
         const textWidth = font.widthOfTextAtSize(text, size);
         const textHeight = font.heightAtSize(size);
 
-        // Center calculation
+        // Center calculation with true 2D affine pivot compensation
         const centerX = width / 2;
         const centerY = height / 2;
+        const rad = (angle * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        // Offset from rotation pivot (x, y) to text bounding center (textWidth/2, textHeight/2)
+        const dx = (textWidth / 2) * cos - (textHeight / 2) * sin;
+        const dy = (textWidth / 2) * sin + (textHeight / 2) * cos;
 
         page.drawText(text, {
-          x: centerX - (textWidth / 2) * Math.cos((angle * Math.PI) / 180),
-          y: centerY - (textHeight / 2) * Math.sin((angle * Math.PI) / 180),
+          x: centerX - dx,
+          y: centerY - dy,
           size,
           font,
           color: colorRgb,

@@ -116,14 +116,6 @@ export class SearchBar {
       }
     });
 
-    // Global shortcut Ctrl+F / Cmd+F
-    window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
-        e.preventDefault();
-        this.toggle();
-      }
-    });
-
     // Dismiss search bar on click outside if search input is blank
     document.addEventListener('click', (e) => {
       if (this.isOpen && !this.container.contains(e.target)) {

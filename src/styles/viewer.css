@@ -16,7 +16,10 @@
 .page-container {
   position: relative;
   background: var(--page-bg, #ffffff);
-  box-shadow: var(--sh);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05),
+              0 8px 24px -4px rgba(0, 0, 0, 0.12),
+              0 20px 48px -12px rgba(0, 0, 0, 0.14);
+  outline: 1px solid var(--ln2);
   border-radius: 4px;
   overflow: hidden;
   user-select: none;
@@ -25,7 +28,26 @@
   margin-right: auto;
   margin-bottom: var(--s6);
   flex: none;
-  transition: box-shadow .2s var(--e), clip-path .25s var(--e);
+  transition: box-shadow .2s var(--e), clip-path .25s var(--e), outline-color .2s var(--e);
+}
+
+[data-theme="dark"] .page-container,
+[data-theme="oled"] .page-container {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4),
+              0 12px 36px -6px rgba(0, 0, 0, 0.65),
+              0 24px 60px -12px rgba(0, 0, 0, 0.85);
+  outline: 1px solid var(--ln);
+}
+
+/* Spread Mode: Simulated Open-Book Depth */
+#viewport-container.mode-spread .page-container:nth-child(odd) {
+  box-shadow: -2px 1px 4px rgba(0, 0, 0, 0.04),
+              8px 14px 32px -6px rgba(0, 0, 0, 0.16);
+}
+
+#viewport-container.mode-spread .page-container:nth-child(even) {
+  box-shadow: 2px 1px 4px rgba(0, 0, 0, 0.04),
+              -8px 14px 32px -6px rgba(0, 0, 0, 0.16);
 }
 
 /* Virtualized Placeholder Skeleton State */

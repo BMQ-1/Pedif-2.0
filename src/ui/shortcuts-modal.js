@@ -77,17 +77,6 @@ export class ShortcutsModal {
     this.modalEl.addEventListener('click', (e) => {
       if (e.target === this.modalEl) this.close();
     });
-
-    window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
-        e.preventDefault();
-        this.toggle();
-      }
-      if (e.key === 'Escape' && this.isOpen()) {
-        this.close();
-      }
-    });
   }
 
   open() {

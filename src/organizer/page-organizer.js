@@ -62,59 +62,65 @@ export class PageOrganizer {
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'page-organizer-modal';
-      modal.className = 'extract-modal-backdrop organizer-backdrop';
+      modal.className = 'workbench-modal organizer-backdrop';
       document.body.appendChild(modal);
     }
     this.modalEl = modal;
-    modal.classList.add('on');
+    modal.classList.add('visible', 'on');
+    modal.hidden = false;
 
     modal.innerHTML = `
-      <div class="organizer-card glass">
-        <div class="organizer-header">
-          <div class="organizer-header-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="extract-icon">
+      <div class="workbench-dialog organizer-dialog">
+        <header class="workbench-header">
+          <div class="wb-header-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wb-icon" width="22" height="22">
               <rect x="3" y="3" width="7" height="9" rx="1"/>
               <rect x="14" y="3" width="7" height="5" rx="1"/>
               <rect x="14" y="12" width="7" height="9" rx="1"/>
               <rect x="3" y="16" width="7" height="5" rx="1"/>
             </svg>
             <div>
-              <h3>${t('organizerTitle')}</h3>
-              <p>${t('organizerSubtitle')}</p>
+              <h3 class="wb-title">${t('organizerTitle')}</h3>
+              <p class="wb-subtitle">${t('organizerSubtitle')}</p>
             </div>
           </div>
-          <div class="organizer-actions">
-            <button class="b sm rip" id="btn-org-add-blank" title="${t('insertBlank')}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-            <button class="b sm rip" id="btn-org-close" title="${t('close')}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <button type="button" class="wb-btn-close" id="btn-org-close" aria-label="${t('close')}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </header>
+
+        <div class="org-toolbar">
+          <div class="org-toolbar-left">
+            <span class="org-page-badge" id="org-count-summary">
+              ${this.pageItems.length} pages
+            </span>
+          </div>
+          <div class="org-toolbar-right">
+            <button type="button" class="btn btn-secondary sm rip" id="btn-org-add-blank">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>${t('insertBlank')}</span>
             </button>
           </div>
         </div>
 
-        <div class="organizer-grid-wrap">
-          <div class="organizer-grid" id="org-grid"></div>
-        </div>
+        <main class="workbench-body org-body">
+          <div class="org-grid" id="org-grid"></div>
+        </main>
 
-        <div class="organizer-footer">
-          <div class="org-count-label" id="org-count-summary">
-            ${this.pageItems.length} pages
-          </div>
-          <div class="org-footer-buttons">
-            <button class="btn-cancel rip" id="btn-org-cancel">${t('cancel')}</button>
-            <button class="btn-primary rip" id="btn-org-apply">${t('saveOrganized')}</button>
-          </div>
-        </div>
+        <footer class="workbench-footer">
+          <button type="button" class="btn btn-secondary rip" id="btn-org-cancel">${t('cancel')}</button>
+          <button type="button" class="btn btn-primary rip" id="btn-org-apply">${t('saveOrganized')}</button>
+        </footer>
       </div>
     `;
-
-    modal.classList.add('on');
 
     modal.querySelector('#btn-org-close').addEventListener('click', () => this.hide());
     modal.querySelector('#btn-org-cancel').addEventListener('click', () => this.hide());
     modal.querySelector('#btn-org-add-blank').addEventListener('click', () => this.insertBlankPage());
     modal.querySelector('#btn-org-apply').addEventListener('click', () => this.applyChanges());
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) this.hide();
+    });
 
     this.renderGrid();
   }
@@ -164,23 +170,30 @@ export class PageOrganizer {
       const rotationStyle = `transform: rotate(${item.rotation}deg);`;
 
       card.innerHTML = `
-        <div class="org-card-inner">
-          <div class="org-thumb-container" style="${rotationStyle}">
-            ${item.isBlank 
-              ? `<div class="org-blank-placeholder"><span>Blank Page</span></div>` 
-              : `<img class="org-thumb-img" data-orig="${item.originalIndex}" src="${thumbSrc || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22140%22><rect fill=%22%23eee%22 width=%22100%22 height=%22140%22/></svg>'}" alt="Page ${index + 1}" />`
-            }
-          </div>
-          <div class="org-badge">${index + 1}</div>
-          <div class="org-card-toolbar">
-            <button class="org-btn-rotate" title="${t('rotatePage')}" data-act="rotate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <div class="org-thumb-container" style="${rotationStyle}">
+          ${item.isBlank 
+            ? `<div class="org-thumb-placeholder"><span>Blank Page</span></div>` 
+            : `<img class="org-thumb-img" data-orig="${item.originalIndex}" src="${thumbSrc || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22140%22><rect fill=%22%23eee%22 width=%22100%22 height=%22140%22/></svg>'}" alt="Page ${index + 1}" />`
+          }
+        </div>
+        <div class="org-card-footer">
+          <span class="org-page-badge">${index + 1}</span>
+          ${item.rotation ? `<span class="org-rot-indicator">${item.rotation}°</span>` : ''}
+          <div class="org-card-actions">
+            <button type="button" class="org-btn-action" title="Move Left / Earlier" data-act="move-prev" aria-label="Move Earlier" ${index === 0 ? 'disabled style="opacity:0.25;cursor:not-allowed;"' : ''}>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <button class="org-btn-duplicate" title="${t('duplicatePage')}" data-act="duplicate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <button type="button" class="org-btn-action" title="Move Right / Later" data-act="move-next" aria-label="Move Later" ${index === this.pageItems.length - 1 ? 'disabled style="opacity:0.25;cursor:not-allowed;"' : ''}>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
-            <button class="org-btn-delete" title="${t('deletePage')}" data-act="delete">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button type="button" class="org-btn-action" title="${t('rotatePage')}" data-act="rotate" aria-label="Rotate">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </button>
+            <button type="button" class="org-btn-action" title="${t('duplicatePage')}" data-act="duplicate" aria-label="Duplicate">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button type="button" class="org-btn-action org-btn-del" title="${t('deletePage')}" data-act="delete" aria-label="Delete">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
         </div>
@@ -191,7 +204,9 @@ export class PageOrganizer {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const act = btn.dataset.act;
-          if (act === 'rotate') this.rotatePage(index);
+          if (act === 'move-prev') this.reorderPage(index, index - 1);
+          else if (act === 'move-next') this.reorderPage(index, index + 1);
+          else if (act === 'rotate') this.rotatePage(index);
           else if (act === 'duplicate') this.duplicatePage(index);
           else if (act === 'delete') this.deletePage(index);
         });
@@ -209,16 +224,16 @@ export class PageOrganizer {
 
       card.addEventListener('dragover', (e) => {
         e.preventDefault();
-        card.classList.add('dragover');
+        card.classList.add('drag-over');
       });
 
       card.addEventListener('dragleave', () => {
-        card.classList.remove('dragover');
+        card.classList.remove('drag-over');
       });
 
       card.addEventListener('drop', (e) => {
         e.preventDefault();
-        card.classList.remove('dragover');
+        card.classList.remove('drag-over');
         const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
         const toIdx = index;
         if (!isNaN(fromIdx) && fromIdx !== toIdx) {
@@ -321,7 +336,8 @@ export class PageOrganizer {
   hide() {
     this.isOpen = false;
     if (this.modalEl) {
-      this.modalEl.classList.remove('on');
+      this.modalEl.classList.remove('on', 'visible');
+      this.modalEl.hidden = true;
     }
   }
 }
