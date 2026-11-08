@@ -568,6 +568,38 @@ class PedifApp {
       });
     }
 
+    const wbItemExtract = document.getElementById('wb-item-extract');
+    if (wbItemExtract) {
+      wbItemExtract.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.extractDialog) this.extractDialog.show();
+      });
+    }
+
+    const wbItemStats = document.getElementById('wb-item-stats');
+    if (wbItemStats) {
+      wbItemStats.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.statsModal) this.statsModal.show();
+      });
+    }
+
+    const wbItemReadAloud = document.getElementById('wb-item-read-aloud');
+    if (wbItemReadAloud) {
+      wbItemReadAloud.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        this.readAloudPage();
+      });
+    }
+
     const tools = ['select', 'pen', 'highlighter', 'eraser', 'ocr'];
     tools.forEach(tool => {
       const el = document.getElementById(`tool-${tool}`);

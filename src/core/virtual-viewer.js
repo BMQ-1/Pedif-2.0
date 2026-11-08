@@ -360,11 +360,19 @@ export class VirtualViewer {
       this.renderedPages.set(pageNum, record);
 
       record.renderTask = pdfEngine.renderPageToCanvas(page, canvas0, targetScale, effectiveRotation);
-      await record.renderTask;
+      try {
+        await record.renderTask;
+      } catch (err) {
+        if (err && err.name !== 'RenderingCancelledException') {
+          console.warn(`[VirtualViewer] Page ${pageNum} render error:`, err);
+        }
+      }
 
       // Render native text spans into textLayerDiv for seamless browser selection
       pdfEngine.renderTextLayerToContainer(page, textLayerDiv, targetViewport).catch((err) => {
-        console.warn(`[VirtualViewer] textLayer render error on page ${pageNum}:`, err);
+        if (err && err.name !== 'RenderingCancelledException') {
+          console.warn(`[VirtualViewer] textLayer render error on page ${pageNum}:`, err);
+        }
       });
 
       // Lazy Scanned Page OCR: If page has no digital text, trigger OCR
@@ -701,10 +709,41 @@ export class VirtualViewer {
       }
     }
 
-    // Re-render currently visible active pages at new DPR scale
+    // Update all mounted page layers dynamically without destroying DOM nodes
+    const dpr = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2.5);
     this.renderedPages.forEach((record, pageNum) => {
-      this.unmountPage(pageNum, record.container);
-      this.mountPage(pageNum, record.container);
+      const metrics = this.pageMetrics.get(pageNum);
+      const targetW = metrics ? metrics.width : 600;
+      const targetH = metrics ? metrics.height : 800;
+
+      // 1. Immediately scale Base Canvas styles (preserves current visual without white flash)
+      if (record.layer0) {
+        record.layer0.style.width = `${targetW}px`;
+        record.layer0.style.height = `${targetH}px`;
+      }
+
+      // 2. Immediately scale SVG layer viewBox
+      if (record.layer1) {
+        record.layer1.setAttribute('viewBox', `0 0 ${targetW} ${targetH}`);
+      }
+
+      // 3. Immediately scale native TextLayer
+      if (record.textLayer) {
+        record.textLayer.style.width = `${targetW}px`;
+        record.textLayer.style.height = `${targetH}px`;
+      }
+
+      // 4. Update Inking Layer canvas buffer & redraw strokes at new resolution
+      if (record.layer2) {
+        record.layer2.width = Math.round(targetW * dpr);
+        record.layer2.height = Math.round(targetH * dpr);
+        record.layer2.style.width = `${targetW}px`;
+        record.layer2.style.height = `${targetH}px`;
+        this.redrawPageStrokes(pageNum);
+      }
+
+      this.renderPermanentHighlights(pageNum);
+      this.renderSearchHits(pageNum);
     });
 
     if (this.container) {
@@ -715,6 +754,49 @@ export class VirtualViewer {
     if (typeof this.onZoomChange === 'function') {
       this.onZoomChange(newScale);
     }
+
+    // Debounce the heavy PDF.js high-DPI re-rasterization so zooming stays 120 FPS fluid
+    if (this._zoomDebounceTimer) clearTimeout(this._zoomDebounceTimer);
+    this._zoomDebounceTimer = setTimeout(() => {
+      this.refreshVisiblePagesRaster();
+    }, 120);
+  }
+
+  async renderPageRaster(pageNum) {
+    const record = this.renderedPages.get(pageNum);
+    if (!record || !record.layer0) return;
+
+    try {
+      const page = await pdfEngine.getPage(pageNum);
+      const effectiveRotation = (page.rotate + this.rotation) % 360;
+      const targetScale = this.scale;
+
+      // Cancel any existing in-flight render task for this page
+      if (record.renderTask && typeof record.renderTask.cancel === 'function') {
+        try { record.renderTask.cancel(); } catch {}
+      }
+
+      record.renderTask = pdfEngine.renderPageToCanvas(page, record.layer0, targetScale, effectiveRotation);
+      await record.renderTask;
+
+      // Re-render matching native textLayer
+      if (record.textLayer) {
+        const targetViewport = page.getViewport({ scale: targetScale, rotation: effectiveRotation });
+        pdfEngine.renderTextLayerToContainer(page, record.textLayer, targetViewport).catch((e) => {
+          if (e && e.name !== 'RenderingCancelledException') console.warn(e);
+        });
+      }
+    } catch (err) {
+      if (err && err.name !== 'RenderingCancelledException') {
+        console.warn(`[VirtualViewer] Page ${pageNum} rasterization error:`, err);
+      }
+    }
+  }
+
+  refreshVisiblePagesRaster() {
+    this.renderedPages.forEach((record, pageNum) => {
+      this.renderPageRaster(pageNum);
+    });
   }
 
   fitWidth() {

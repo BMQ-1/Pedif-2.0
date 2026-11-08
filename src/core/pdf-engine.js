@@ -57,16 +57,16 @@ export class PdfEngine {
   }
 
   /**
-   * High-DPI rasterization to canvas (Layer 0)
+   * High-DPI rasterization to canvas (Layer 0) with cancellable task tracking
    */
-  async renderPageToCanvas(page, canvas, scale = 1.5, rotation = 0) {
-    const dpr = window.devicePixelRatio || 1;
+  renderPageToCanvas(page, canvas, scale = 1.5, rotation = 0) {
+    const dpr = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2.5);
     const viewport = page.getViewport({ scale: scale * dpr, rotation });
     
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.width = `${viewport.width / dpr}px`;
-    canvas.style.height = `${viewport.height / dpr}px`;
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    canvas.style.width = `${Math.round(viewport.width / dpr)}px`;
+    canvas.style.height = `${Math.round(viewport.height / dpr)}px`;
 
     const ctx = canvas.getContext('2d', { alpha: false });
     ctx.imageSmoothingEnabled = true;
@@ -77,12 +77,14 @@ export class PdfEngine {
       viewport,
     });
 
-    await renderTask.promise;
-    return {
-      viewport: page.getViewport({ scale, rotation }),
-      dpr,
-      rawViewport: viewport,
-    };
+    renderTask.viewport = page.getViewport({ scale, rotation });
+    renderTask.dpr = dpr;
+    renderTask.rawViewport = viewport;
+
+    renderTask.then = (onFulfilled, onRejected) => renderTask.promise.then(onFulfilled, onRejected);
+    renderTask.catch = (onRejected) => renderTask.promise.catch(onRejected);
+
+    return renderTask;
   }
 
   /**
