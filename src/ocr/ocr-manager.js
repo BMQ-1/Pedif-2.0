@@ -41,10 +41,14 @@ export class OcrManager {
       };
 
       // Send initial init message with verified local PP-OCRv4 model paths
+      const base = (typeof window !== 'undefined' && window.location)
+        ? new URL('.', window.location.href).href
+        : './';
+
       this.send('INIT', {
-        detModelUrl: './models/ch_PP-OCRv4_det.onnx',
-        recModelUrl: './models/ch_PP-OCRv4_rec.onnx',
-        dictUrl: './models/ch_PP-OCR_keys_v1.txt',
+        detModelUrl: new URL('models/ch_PP-OCRv4_det.onnx', base).href,
+        recModelUrl: new URL('models/ch_PP-OCRv4_rec.onnx', base).href,
+        dictUrl: new URL('models/ch_PP-OCR_keys_v1.txt', base).href,
       }).then(() => {
         this.isReady = true;
         console.log('[OcrManager] Worker ready with WebGPU / WASM acceleration');
