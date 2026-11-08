@@ -1,7 +1,7 @@
 import './styles/app.css';
 import './styles/viewer.css';
 import { autosave } from './storage/autosave.js';
-import { libraryStore } from './storage/library.js';
+import { libraryStore, toValidArrayBuffer } from './storage/library.js';
 import { pdfEngine } from './core/pdf-engine.js';
 import { VirtualViewer } from './core/virtual-viewer.js';
 import { searchEngine } from './core/search-engine.js';
@@ -444,11 +444,15 @@ class PedifApp {
 
   async handleFileOpen(file) {
     try {
+      if (!file || file.size === 0) {
+        showToast('Selected file is empty', 'alert');
+        return;
+      }
       const buffer = await file.arrayBuffer();
       await this.loadPdfBuffer(buffer, file.name);
     } catch (err) {
       console.error('[Pedif] File read error:', err);
-      alert('Could not read file: ' + err.message);
+      showToast('Could not read file: ' + err.message, 'alert');
     }
   }
 
@@ -468,18 +472,18 @@ class PedifApp {
     }
   }
 
-  async loadPdfBuffer(buffer, fileName = 'Document.pdf', savedState = null) {
+  async loadPdfBuffer(inputBuffer, fileName = 'Document.pdf', savedState = null) {
     try {
-      if (!buffer || !(buffer instanceof ArrayBuffer) || buffer.byteLength === 0) {
-        throw new Error('PDF file buffer is empty or could not be read.');
-      }
-      if (typeof buffer.detached === 'boolean' && buffer.detached) {
-        throw new Error('PDF file buffer was detached.');
+      const validBuffer = toValidArrayBuffer(inputBuffer);
+      if (!validBuffer) {
+        console.warn('[Pedif] Buffer empty or invalid for:', fileName);
+        showToast('PDF file data could not be read. Please choose a file.', 'alert');
+        return;
       }
 
       // Create independent copies so worker transfers never detach the stored buffer
-      const pdfJsBuffer = buffer.slice(0);
-      const docBuffer = buffer.slice(0);
+      const pdfJsBuffer = validBuffer.slice(0);
+      const docBuffer = validBuffer.slice(0);
 
       const pdf = await pdfEngine.loadDocument(pdfJsBuffer);
       this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages, currentPage: 1 };
@@ -541,7 +545,7 @@ class PedifApp {
 
     } catch (err) {
       console.error('[Pedif] Error opening PDF:', err);
-      alert('Could not open PDF: ' + err.message);
+      showToast('Could not open PDF: ' + err.message, 'alert');
     }
   }
 
@@ -591,6 +595,8 @@ class PedifApp {
       banner.remove();
       if (restored && restored.pdfBuffer) {
         await this.loadPdfBuffer(restored.pdfBuffer, restored.metadata.name, restored.state);
+      } else {
+        showToast('Previous session could not be resumed. Please open a PDF.', 'alert');
       }
     });
 

@@ -4,7 +4,7 @@
  * covers, reading progress, and dropzone.
  */
 
-import { libraryStore } from '../storage/library.js';
+import { libraryStore, toValidArrayBuffer } from '../storage/library.js';
 import { showToast } from './toast.js';
 
 export class HomeLibrary {
@@ -28,9 +28,12 @@ export class HomeLibrary {
   setupDropzone() {
     if (!this.dropzone) return;
 
-    this.dropzone.addEventListener('click', () => {
-      if (this.fileInput) this.fileInput.click();
-    });
+    // Only add programmatic click if dropzone is not a native <label>
+    if (this.dropzone.tagName !== 'LABEL') {
+      this.dropzone.addEventListener('click', () => {
+        if (this.fileInput) this.fileInput.click();
+      });
+    }
 
     this.dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -133,10 +136,11 @@ export class HomeLibrary {
 
         const docId = tile.dataset.id;
         const fullDoc = await libraryStore.getDocument(docId);
-        if (fullDoc && fullDoc.buffer && fullDoc.buffer.byteLength > 0 && !fullDoc.buffer.detached && this.onOpenDocument) {
-          this.onOpenDocument(fullDoc);
+        const validBuf = fullDoc ? toValidArrayBuffer(fullDoc.buffer) : null;
+        if (validBuf && this.onOpenDocument) {
+          this.onOpenDocument({ ...fullDoc, buffer: validBuf });
         } else {
-          showToast('Please open or drop the PDF file to view', 'alert');
+          showToast('Please open or drop the PDF file to read', 'alert');
         }
       });
     });

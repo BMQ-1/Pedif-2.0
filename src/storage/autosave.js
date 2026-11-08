@@ -6,6 +6,8 @@
  * Guarantees zero data loss if tab is closed or reloaded.
  */
 
+import { toValidArrayBuffer } from './library.js';
+
 const DB_NAME = 'pedif_autosave_db';
 const DB_VERSION = 1;
 const STORE_NAME = 'session_store';
@@ -60,19 +62,8 @@ class AutosaveEngine {
    * Saves the raw PDF binary buffer
    */
   async savePdfBuffer(buffer, metadata = {}) {
-    if (!buffer || !(buffer instanceof ArrayBuffer) || buffer.byteLength === 0) {
-      return false;
-    }
-    if (typeof buffer.detached === 'boolean' && buffer.detached) {
-      return false;
-    }
-
-    let bufCopy;
-    try {
-      bufCopy = buffer.slice(0);
-    } catch {
-      return false;
-    }
+    const bufCopy = toValidArrayBuffer(buffer);
+    if (!bufCopy) return false;
 
     const meta = {
       id: 'active_session',
@@ -151,6 +142,13 @@ class AutosaveEngine {
     try {
       if (this.useOpfs && this.opfsRoot) {
         try {
+          const docHandle = await this.opfsRoot.getFileHandle('active_doc.pdf');
+          const docFile = await docHandle.getFile();
+          if (docFile.size === 0) {
+            await this.clearSession();
+            return { hasSession: false };
+          }
+
           const metaHandle = await this.opfsRoot.getFileHandle('active_meta.json');
           const file = await metaHandle.getFile();
           const text = await file.text();
@@ -164,6 +162,11 @@ class AutosaveEngine {
       // Check IDB
       const record = await this._idbGet('active_session');
       if (record && record.buffer) {
+        const validBuf = toValidArrayBuffer(record.buffer);
+        if (!validBuf) {
+          await this.clearSession();
+          return { hasSession: false };
+        }
         return {
           hasSession: true,
           metadata: {
@@ -192,7 +195,9 @@ class AutosaveEngine {
       try {
         const docHandle = await this.opfsRoot.getFileHandle('active_doc.pdf');
         const docFile = await docHandle.getFile();
-        pdfBuffer = await docFile.arrayBuffer();
+        if (docFile.size > 0) {
+          pdfBuffer = toValidArrayBuffer(await docFile.arrayBuffer());
+        }
 
         const metaHandle = await this.opfsRoot.getFileHandle('active_meta.json');
         const metaFile = await metaHandle.getFile();
@@ -207,7 +212,9 @@ class AutosaveEngine {
           state = null;
         }
 
-        return { pdfBuffer, metadata, state };
+        if (pdfBuffer) {
+          return { pdfBuffer, metadata, state };
+        }
       } catch (e) {
         console.warn('[Autosave] OPFS restore error:', e);
       }
@@ -217,18 +224,22 @@ class AutosaveEngine {
     const session = await this._idbGet('active_session');
     const stateRecord = await this._idbGet('active_state');
     if (session && session.buffer) {
-      return {
-        pdfBuffer: session.buffer,
-        metadata: {
-          name: session.name,
-          updatedAt: session.updatedAt,
-          pageCount: session.pageCount,
-          currentPage: session.currentPage,
-        },
-        state: stateRecord ? stateRecord.state : null,
-      };
+      const validBuf = toValidArrayBuffer(session.buffer);
+      if (validBuf) {
+        return {
+          pdfBuffer: validBuf,
+          metadata: {
+            name: session.name,
+            updatedAt: session.updatedAt,
+            pageCount: session.pageCount,
+            currentPage: session.currentPage,
+          },
+          state: stateRecord ? stateRecord.state : null,
+        };
+      }
     }
 
+    await this.clearSession();
     return null;
   }
 

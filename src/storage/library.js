@@ -7,12 +7,38 @@ const DB_NAME = 'pedif_library_db';
 const DB_VERSION = 1;
 const DOC_STORE = 'documents';
 
-function isBufferValid(buf) {
-  if (!buf) return false;
-  if (!(buf instanceof ArrayBuffer)) return false;
-  if (typeof buf.detached === 'boolean' && buf.detached) return false;
-  if (buf.byteLength === 0) return false;
-  return true;
+/**
+ * Realm-independent, safe validation and extraction of ArrayBuffer.
+ * Handles ArrayBuffer, Uint8Array, and cross-realm objects without throwing.
+ */
+export function toValidArrayBuffer(input) {
+  if (!input) return null;
+
+  // Handle TypedArray / DataView
+  if (ArrayBuffer.isView(input)) {
+    if (input.byteLength === 0) return null;
+    try {
+      return input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength);
+    } catch {
+      return null;
+    }
+  }
+
+  // Handle ArrayBuffer (realm-independent check)
+  const isArrayBuffer = input instanceof ArrayBuffer ||
+    Object.prototype.toString.call(input) === '[object ArrayBuffer]' ||
+    (typeof input === 'object' && typeof input.byteLength === 'number' && typeof input.slice === 'function' && !ArrayBuffer.isView(input));
+
+  if (!isArrayBuffer) return null;
+
+  if (typeof input.detached === 'boolean' && input.detached) return null;
+  if (input.byteLength === 0) return null;
+
+  try {
+    return input.slice(0);
+  } catch {
+    return null;
+  }
 }
 
 class LibraryStore {
@@ -55,30 +81,15 @@ class LibraryStore {
         const tx = this.db.transaction(DOC_STORE, 'readwrite');
         const store = tx.objectStore(DOC_STORE);
 
-        // Safely verify buffer is not detached
-        let safeBuffer = null;
-        if (isBufferValid(doc.buffer)) {
-          try {
-            safeBuffer = doc.buffer.slice(0);
-          } catch {
-            safeBuffer = null;
-          }
-        }
-
+        // Safely extract valid ArrayBuffer copy
+        const safeBuffer = toValidArrayBuffer(doc.buffer);
         const stableId = doc.id || ('doc_' + encodeURIComponent(doc.name || 'doc').replace(/[^a-zA-Z0-9_]/g, '_') + '_' + (doc.pageCount || 0));
 
         const getReq = store.get(stableId);
         getReq.onsuccess = () => {
           try {
             const existing = getReq.result || null;
-            let finalBuffer = safeBuffer;
-            if (!finalBuffer && existing && isBufferValid(existing.buffer)) {
-              try {
-                finalBuffer = existing.buffer.slice(0);
-              } catch {
-                finalBuffer = null;
-              }
-            }
+            const finalBuffer = safeBuffer || (existing ? toValidArrayBuffer(existing.buffer) : null);
 
             const record = {
               id: stableId,
@@ -155,8 +166,8 @@ class LibraryStore {
         const req = tx.objectStore(DOC_STORE).get(id);
         req.onsuccess = () => {
           const res = req.result;
-          if (res && res.buffer && !isBufferValid(res.buffer)) {
-            res.buffer = null;
+          if (res) {
+            res.buffer = toValidArrayBuffer(res.buffer);
           }
           resolve(res || null);
         };
