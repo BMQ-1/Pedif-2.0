@@ -573,13 +573,13 @@ export class VirtualViewer {
         const y2 = Math.max(q.lb.y, q.rb.y) * sy;
         const w = Math.max(2, x2 - x1);
         const h = Math.max(2, y2 - y1);
-        const r = Math.min(3.5, h / 3.2);
+        const r = Math.min(2.5, h / 3.5);
 
         const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rectEl.setAttribute('x', (x1 - 1.5).toFixed(1));
-        rectEl.setAttribute('y', (y1 - 1.0).toFixed(1));
-        rectEl.setAttribute('width', (w + 3.0).toFixed(1));
-        rectEl.setAttribute('height', (h + 2.0).toFixed(1));
+        rectEl.setAttribute('x', x1.toFixed(1));
+        rectEl.setAttribute('y', y1.toFixed(1));
+        rectEl.setAttribute('width', w.toFixed(1));
+        rectEl.setAttribute('height', h.toFixed(1));
         rectEl.setAttribute('rx', r.toFixed(1));
         rectEl.setAttribute('ry', r.toFixed(1));
         rectEl.setAttribute('class', isActive ? 'search-hit active-hit' : 'search-hit');

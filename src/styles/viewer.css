@@ -231,47 +231,50 @@
 /* Search Hits in Layer 1 SVG */
 .search-hit {
   fill: #ffd60a;
-  fill-opacity: 0.38;
-  stroke: #ffb300;
-  stroke-width: 0.75;
-  stroke-opacity: 0.75;
-  transition: fill 0.18s ease, fill-opacity 0.18s ease, stroke 0.18s ease;
+  fill-opacity: 0.28;
+  stroke: #ffcc00;
+  stroke-width: 0.5;
+  stroke-opacity: 0.55;
+  filter: none !important;
   cursor: pointer;
   mix-blend-mode: multiply;
+  transition: fill-opacity 0.15s ease, stroke-opacity 0.15s ease;
 }
 
 [data-theme="dark"] .search-hit,
 .dark .search-hit {
   fill: #ffd60a;
-  fill-opacity: 0.48;
+  fill-opacity: 0.22;
   stroke: #ffe066;
-  stroke-width: 0.75;
-  stroke-opacity: 0.85;
+  stroke-width: 0.5;
+  stroke-opacity: 0.65;
+  filter: none !important;
   mix-blend-mode: screen;
 }
 
 .search-hit:hover {
-  fill-opacity: 0.58;
-  stroke-width: 1.2;
+  fill-opacity: 0.40;
 }
 
 .search-hit.active-hit {
   fill: #ff9500;
-  fill-opacity: 0.75;
-  stroke: #ff6d00;
-  stroke-width: 1.5;
-  stroke-opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(255, 149, 0, 0.65));
+  fill-opacity: 0.42;
+  stroke: #ff8800;
+  stroke-width: 0.75;
+  stroke-opacity: 0.85;
+  filter: none !important;
+  mix-blend-mode: multiply;
 }
 
 [data-theme="dark"] .search-hit.active-hit,
 .dark .search-hit.active-hit {
   fill: #ff9f0a;
-  fill-opacity: 0.85;
+  fill-opacity: 0.38;
   stroke: #ffb340;
-  stroke-width: 1.5;
-  stroke-opacity: 1;
-  filter: drop-shadow(0 0 8px rgba(255, 159, 10, 0.85));
+  stroke-width: 0.75;
+  stroke-opacity: 0.90;
+  filter: none !important;
+  mix-blend-mode: screen;
 }
 
 /* Teardrop Selection Pins */

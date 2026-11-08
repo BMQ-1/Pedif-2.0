@@ -126,15 +126,17 @@ export class GlyphExtractor {
     const uAscY = tx[3] / fontScaleY;
 
     // Corner coordinates in PDF user space (origin bottom-left):
-    // pLB: baseline origin (e, f)
-    // pRB: baseline end (e + uBasX * width, f + uBasY * width)
-    // pLT: ascent start (e + uAscX * height, f + uAscY * height)
-    // pRT: ascent end (e + uBasX * width + uAscX * height, f + uBasY * width + uAscY * height)
+    // In standard typographic font metrics, ascent reaches ~0.84*height above baseline
+    // and descent reaches ~0.16*height below baseline.
+    // Centering the bounding box around the baseline ensures true pixel alignment with glyphs.
     const e = tx[4], f = tx[5];
-    const pLB = [e, f];
-    const pRB = [e + uBasX * width, f + uBasY * width];
-    const pLT = [e + uAscX * height, f + uAscY * height];
-    const pRT = [e + uBasX * width + uAscX * height, f + uBasY * width + uAscY * height];
+    const descentFactor = 0.16;
+    const ascentFactor = 0.84;
+
+    const pLB = [e - uAscX * (descentFactor * height), f - uAscY * (descentFactor * height)];
+    const pRB = [e + uBasX * width - uAscX * (descentFactor * height), f + uBasY * width - uAscY * (descentFactor * height)];
+    const pLT = [e + uAscX * (ascentFactor * height), f + uAscY * (ascentFactor * height)];
+    const pRT = [e + uBasX * width + uAscX * (ascentFactor * height), f + uBasY * width + uAscY * (ascentFactor * height)];
 
     const [lbX, lbY] = viewport.convertToViewportPoint(...pLB);
     const [rbX, rbY] = viewport.convertToViewportPoint(...pRB);
@@ -150,7 +152,22 @@ export class GlyphExtractor {
   }
 
   /**
+   * Proportional typographic character advance weight relative to 1em
+   */
+  static getCharacterWeight(char) {
+    const code = char.charCodeAt(0);
+    if (code <= 32) return 0.28;
+    if ('ijl|!I1:;.,\'`'.includes(char)) return 0.28;
+    if ('frtJ()-[]{}'.includes(char)) return 0.35;
+    if ('abcdeghknopquvxyzs$023456789?'.includes(char)) return 0.54;
+    if ('ABCDEFGHIKLNOPQRSTUVXYZ#+*^'.includes(char)) return 0.68;
+    if ('mwMW_@%&~'.includes(char)) return 0.88;
+    return 0.58;
+  }
+
+  /**
    * Subdivides a text item into individual words and characters with their quads
+   * Uses proportional glyph advance weights for pixel-accurate typographic quad mapping.
    */
   static subdivideItemIntoWords(item, itemQuad, viewport) {
     const text = item.str;
@@ -158,29 +175,48 @@ export class GlyphExtractor {
     const totalChars = text.length;
     if (totalChars === 0) return [];
 
+    // Precalculate cumulative character advance weights
+    const weights = new Float32Array(totalChars);
+    let totalWeight = 0;
+    for (let i = 0; i < totalChars; i++) {
+      const w = this.getCharacterWeight(text[i]);
+      weights[i] = w;
+      totalWeight += w;
+    }
+    if (totalWeight <= 0) totalWeight = 1;
+
     const words = [];
     let charOffset = 0;
+    let accumulatedWeight = 0;
 
     for (const token of wordStrings) {
       if (!token) continue;
       const isWhitespace = /^\s+$/.test(token);
       const tokenLen = token.length;
 
+      let tokenWeight = 0;
+      for (let c = 0; c < tokenLen; c++) {
+        tokenWeight += weights[charOffset + c];
+      }
+
       if (!isWhitespace) {
-        const startRatio = charOffset / totalChars;
-        const endRatio = (charOffset + tokenLen) / totalChars;
+        const startRatio = accumulatedWeight / totalWeight;
+        const endRatio = (accumulatedWeight + tokenWeight) / totalWeight;
 
         const wordQuad = this.interpolateQuad(itemQuad, startRatio, endRatio);
         const chars = [];
 
+        let charAcc = accumulatedWeight;
         for (let c = 0; c < tokenLen; c++) {
-          const cStart = (charOffset + c) / totalChars;
-          const cEnd = (charOffset + c + 1) / totalChars;
+          const cW = weights[charOffset + c];
+          const cStart = charAcc / totalWeight;
+          const cEnd = (charAcc + cW) / totalWeight;
           const charQuad = this.interpolateQuad(itemQuad, cStart, cEnd);
           chars.push({
             char: token[c],
             quad: charQuad,
           });
+          charAcc += cW;
         }
 
         words.push({
@@ -190,6 +226,7 @@ export class GlyphExtractor {
         });
       }
 
+      accumulatedWeight += tokenWeight;
       charOffset += tokenLen;
     }
 
