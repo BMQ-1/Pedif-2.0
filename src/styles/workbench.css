@@ -1627,3 +1627,1289 @@
 .page-container[data-tool="eraser"] .layer-annotations * {
   pointer-events: none !important;
 }
+
+
+/* ============================================================
+   PEDIF 2.0 — SOVEREIGN WORKBENCH COMPONENT STYLES
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Master Document Tab Strip
+   ------------------------------------------------------------ */
+.craft-tab-strip {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+  gap: 6px;
+  user-select: none;
+  z-index: 200;
+  box-sizing: border-box;
+}
+
+.craft-strip-home-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  height: 28px;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background var(--d-fast) ease, border-color var(--d-fast) ease;
+}
+
+.craft-strip-home-btn:hover {
+  background: var(--hover);
+  border-color: var(--border);
+}
+
+.craft-strip-home-btn svg {
+  width: 15px;
+  height: 15px;
+  color: var(--icon);
+}
+
+.craft-tabs-scroll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  height: 100%;
+}
+
+.craft-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.craft-tab-item,
+.craft-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  max-width: 200px;
+  min-width: 90px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--d-fast) ease;
+}
+
+.craft-tab-item:hover,
+.craft-tab:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-tab-item.active,
+.craft-tab.active {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.craft-tab-item.active::after,
+.craft-tab.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+.craft-tab-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--icon);
+  flex-shrink: 0;
+}
+
+.craft-tab-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.craft-tab-dirty {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cat-orange);
+  flex-shrink: 0;
+}
+
+.craft-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: var(--text-faint);
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-left: 2px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.craft-tab-close:hover {
+  background: var(--pressed);
+  color: var(--text);
+  opacity: 1;
+}
+
+.craft-tab-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.craft-tab-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: background var(--d-fast) ease;
+}
+
+.craft-tab-add-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-tab-add-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Strip Center / Right Actions */
+.craft-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.craft-cmd-search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 10px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: var(--r-s);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: border-color var(--d-fast) ease, background var(--d-fast) ease;
+}
+
+.craft-cmd-search-trigger:hover {
+  border-color: var(--accent);
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-cmd-search-trigger svg {
+  width: 13px;
+  height: 13px;
+  color: var(--icon);
+}
+
+.craft-cmd-kbd {
+  background: var(--divider);
+  color: var(--text-muted);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.craft-strip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: var(--icon);
+  border: none;
+  cursor: pointer;
+  transition: background var(--d-fast) ease, color var(--d-fast) ease;
+}
+
+.craft-strip-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-strip-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.craft-export-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: var(--r-s);
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: filter var(--d-fast) ease, transform var(--d-fast) ease;
+}
+
+.craft-export-pill:hover {
+  filter: brightness(1.08);
+  transform: translateY(-0.5px);
+}
+
+.craft-export-pill:active {
+  transform: translateY(0.5px);
+}
+
+.craft-export-pill svg {
+  width: 14px;
+  height: 14px;
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------------
+   2. Secondary Mode Bar
+   ------------------------------------------------------------ */
+.craft-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--divider);
+  padding: 0 10px;
+  position: relative;
+  z-index: 150;
+  box-sizing: border-box;
+}
+
+.craft-mode-bar-left,
+.craft-mode-bar-center,
+.craft-mode-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.craft-doc-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: var(--r-s);
+  background: var(--pasteboard);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--d-fast) ease;
+}
+
+.craft-doc-chip:hover {
+  border-color: var(--accent);
+}
+
+.craft-doc-chip b {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.craft-doc-chip small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.craft-alltools-badge-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-s);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--d-fast) ease;
+}
+
+.craft-alltools-badge-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.craft-alltools-badge-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ------------------------------------------------------------
+   3. Floating / Dockable Hotbar
+   ------------------------------------------------------------ */
+.craft-hotbar {
+  position: absolute;
+  z-index: 400;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--sh-lift);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  width: 42px;
+  user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: box-shadow var(--d-fast) ease, opacity var(--d-fast) ease;
+}
+
+.craft-hotbar.dragging {
+  cursor: grabbing;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  opacity: 0.95;
+}
+
+.craft-hotbar-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 14px;
+  cursor: grab;
+  color: var(--text-faint);
+  margin-bottom: 2px;
+}
+
+.craft-hotbar-handle:hover {
+  color: var(--text);
+}
+
+.craft-hotbar-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.craft-hotbar-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: var(--icon);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--d-fast) ease;
+}
+
+.craft-hotbar-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-hotbar-btn.active {
+  background: var(--selected);
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+.craft-hotbar-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.craft-hotbar-divider {
+  height: 1px;
+  background: var(--divider);
+  margin: 3px 2px;
+}
+
+.craft-hotbar-tooltip {
+  position: absolute;
+  left: 100%;
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: var(--text);
+  color: var(--chrome);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 500;
+}
+
+.craft-hotbar-btn:hover .craft-hotbar-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ------------------------------------------------------------
+   4. Global Command Palette Modal
+   ------------------------------------------------------------ */
+.craft-palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  box-sizing: border-box;
+  animation: craftFadeIn 0.16s ease-out;
+}
+
+@keyframes craftFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.craft-palette-box {
+  width: 100%;
+  max-width: 580px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: craftSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes craftSlideDown {
+  from { transform: translateY(-12px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.craft-palette-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  gap: 12px;
+  background: var(--chrome);
+}
+
+.craft-palette-search-icon {
+  color: var(--icon);
+  flex-shrink: 0;
+}
+
+.craft-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  font-weight: 400;
+}
+
+.craft-palette-input::placeholder {
+  color: var(--text-faint);
+}
+
+.craft-palette-esc-kbd {
+  background: var(--divider);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.craft-palette-body {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.craft-palette-category-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cat-accent, var(--text-muted));
+  padding: 8px 12px 4px;
+}
+
+.craft-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--d-fast) ease;
+}
+
+.craft-palette-item:hover,
+.craft-palette-item.selected {
+  background: var(--selected);
+  color: var(--accent);
+}
+
+.craft-palette-item-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.craft-palette-item-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.craft-palette-item-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.craft-palette-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.craft-palette-item.selected .craft-palette-item-title {
+  color: var(--accent);
+}
+
+.craft-palette-item-shortcut {
+  background: var(--field);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.craft-palette-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.craft-palette-empty p {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.craft-palette-empty small {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.craft-palette-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--chrome);
+  border-top: 1px solid var(--divider);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.craft-palette-footer kbd {
+  background: var(--divider);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   5. Expanded "All Tools" Mega-Drawer
+   ------------------------------------------------------------ */
+.craft-alltools-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--panel);
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: craftFadeIn 0.2s ease-out;
+}
+
+.craft-alltools-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.craft-alltools-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 36px 16px;
+  border-bottom: 1px solid var(--divider);
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.craft-alltools-title-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.craft-alltools-title-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--cat-pink);
+  color: #ffffff;
+  border-radius: 10px;
+}
+
+.craft-alltools-title-area h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.craft-alltools-title-area p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.craft-alltools-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: 320px;
+  transition: border-color var(--d-fast) ease, box-shadow var(--d-fast) ease;
+}
+
+.craft-alltools-search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.craft-alltools-search-box svg {
+  color: var(--icon);
+}
+
+.craft-alltools-search-input {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13.5px;
+  outline: none;
+  width: 100%;
+}
+
+.craft-alltools-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--icon);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--d-fast) ease;
+}
+
+.craft-alltools-close-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.craft-alltools-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 36px 48px;
+}
+
+.craft-alltools-category-section {
+  margin-bottom: 32px;
+}
+
+.craft-alltools-category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.craft-alltools-cat-pill {
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--cat-hue);
+}
+
+.craft-alltools-category-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.craft-alltools-cat-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--divider);
+  color: var(--text-muted);
+}
+
+.craft-alltools-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* Card-Lift Physical Hover Elevation */
+.craft-tool-tile {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  min-height: 120px;
+  position: relative;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.craft-tool-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: var(--accent-soft);
+}
+
+.craft-tool-tile:active {
+  transform: translateY(0);
+}
+
+.craft-tool-tile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.craft-tool-tile-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fill);
+}
+
+.craft-tool-tile-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.craft-tool-tile-arrow {
+  color: var(--text-faint);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all var(--d-fast) ease;
+}
+
+.craft-tool-tile:hover .craft-tool-tile-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--accent);
+}
+
+.craft-tool-tile-info strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.craft-tool-tile-info p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.craft-tool-tile-action {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.craft-alltools-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.craft-alltools-empty svg {
+  margin: 0 auto 12px;
+  color: var(--text-faint);
+}
+
+.craft-alltools-empty p {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+/* ------------------------------------------------------------
+   6. Thumbnail Zoom Controls & Grid
+   ------------------------------------------------------------ */
+.craft-thumb-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--pasteboard);
+  border-bottom: 1px solid var(--divider);
+  gap: 8px;
+}
+
+.craft-thumb-zoom-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.craft-thumb-zoom-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.craft-thumb-zoom-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+.craft-thumb-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--icon);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.craft-thumb-zoom-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------
+   7. Home Screen Workbench Styling
+   ------------------------------------------------------------ */
+.craft-home-hero-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--sh-s);
+}
+
+.craft-home-crest {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+}
+
+.craft-home-hero-text h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.craft-home-hero-text p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.craft-home-sovereign-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--selected);
+  border: 1px solid var(--accent-soft);
+  border-radius: 10px;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.craft-home-sovereign-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.craft-home-sovereign-info svg {
+  color: var(--accent);
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.craft-home-sovereign-info strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.craft-home-sovereign-info span {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.craft-home-sovereign-badge {
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+/* 5 Recommended Tools Grid */
+.craft-recommended-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.craft-rec-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 104px;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.craft-rec-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent);
+}
+
+.craft-rec-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.craft-rec-icon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cat-hue, var(--accent));
+}
+
+.craft-rec-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.craft-rec-card strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.craft-rec-card p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.craft-rec-action {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+/* ============================================================
+   8. Bi-Directional RTL Engine Support for Sovereign Workbench
+   ============================================================ */
+[dir="rtl"] .craft-tab,
+.rtl-mode .craft-tab,
+[dir="rtl"] .craft-tab-item,
+.rtl-mode .craft-tab-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-tab-close,
+.rtl-mode .craft-tab-close {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .craft-cmd-search-trigger,
+.rtl-mode .craft-cmd-search-trigger {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-doc-chip,
+.rtl-mode .craft-doc-chip {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-palette-header,
+.rtl-mode .craft-palette-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-palette-input,
+.rtl-mode .craft-palette-input {
+  text-align: right;
+  direction: rtl;
+}
+
+[dir="rtl"] .craft-palette-item,
+.rtl-mode .craft-palette-item {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+[dir="rtl"] .craft-alltools-header,
+.rtl-mode .craft-alltools-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-alltools-search-box,
+.rtl-mode .craft-alltools-search-box {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-alltools-search-input,
+.rtl-mode .craft-alltools-search-input {
+  text-align: right;
+  direction: rtl;
+}
+
+[dir="rtl"] .craft-alltools-category-header,
+.rtl-mode .craft-alltools-category-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-tool-tile,
+.rtl-mode .craft-tool-tile {
+  text-align: right;
+}
+
+[dir="rtl"] .craft-tool-tile-top,
+.rtl-mode .craft-tool-tile-top {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-rec-card,
+.rtl-mode .craft-rec-card {
+  text-align: right;
+}
+
+[dir="rtl"] .craft-rec-card-top,
+.rtl-mode .craft-rec-card-top {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-home-hero-banner,
+.rtl-mode .craft-home-hero-banner {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+[dir="rtl"] .craft-home-sovereign-card,
+.rtl-mode .craft-home-sovereign-card {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .craft-home-sovereign-info,
+.rtl-mode .craft-home-sovereign-info {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* ============================================================
+   9. Mobile & Tablet Responsive Collapsing
+   ============================================================ */
+@media (max-width: 768px) {
+  .craft-cmd-search-trigger span {
+    display: none;
+  }
+  .craft-cmd-search-trigger {
+    padding: 0 6px;
+  }
+  .craft-doc-chip small {
+    display: none;
+  }
+  .craft-doc-chip b {
+    max-width: 120px;
+  }
+  .studio-menu-text {
+    display: none;
+  }
+  .studio-tools-text {
+    display: none;
+  }
+  .craft-hotbar {
+    display: none; /* Mobile uses bottom dock and toolbar */
+  }
+}
+
+@media (max-width: 540px) {
+  .craft-strip-home-btn span {
+    display: none;
+  }
+  .craft-strip-home-btn {
+    padding: 4px 6px;
+  }
+  .export-pill-text {
+    display: none;
+  }
+  .craft-export-pill {
+    padding: 4px 8px;
+  }
+  .craft-cmd-kbd {
+    display: none;
+  }
+  .craft-tab-item,
+  .craft-tab {
+    max-width: 130px;
+    min-width: 70px;
+  }
+}

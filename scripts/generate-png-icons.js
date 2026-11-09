@@ -44,7 +44,7 @@ function generatePedifIcon(size) {
   const rowStride = 1 + width * 4;
   const rawData = Buffer.alloc(rowStride * height);
 
-  const cornerRadius = size * 0.22;
+  const cornerRadius = size * 0.225;
 
   for (let y = 0; y < height; y++) {
     const rowOffset = y * rowStride;
@@ -56,7 +56,7 @@ function generatePedifIcon(size) {
       // Base: transparent
       let r = 0, g = 0, b = 0, a = 0;
 
-      // Check rounded rect boundary
+      // Check squircle boundary
       let inside = true;
       const dx = Math.min(x, width - 1 - x);
       const dy = Math.min(y, height - 1 - y);
@@ -69,41 +69,74 @@ function generatePedifIcon(size) {
       }
 
       if (inside) {
-        // Deep evergreen field gradient
+        // Deep Ultramarine Obsidian gradient
         const t = (x + y) / (width + height);
-        r = Math.round(27 * (1 - t) + 16 * t);
-        g = Math.round(69 * (1 - t) + 46 * t);
-        b = Math.round(65 * (1 - t) + 45 * t);
+        r = Math.round(11 * (1 - t) + 2 * t);
+        g = Math.round(17 * (1 - t) + 5 * t);
+        b = Math.round(32 * (1 - t) + 11 * t);
         a = 255;
 
-        // Paper sheet rect (normalized coordinates)
+        // Subtle squircle border highlight
+        if (dx <= 1.5 || dy <= 1.5) {
+          r = Math.round(r * 0.7 + 56 * 0.3);
+          g = Math.round(g * 0.7 + 189 * 0.3);
+          b = Math.round(b * 0.7 + 248 * 0.3);
+        }
+
         const nx = x / size;
         const ny = y / size;
 
-        // Paper body: nx in [0.34, 0.72], ny in [0.18, 0.82]
-        if (nx >= 0.34 && nx <= 0.72 && ny >= 0.18 && ny <= 0.82) {
-          // Check fold at top right: nx > 0.58 and ny < 0.32
-          const foldCut = (nx - 0.58) + (0.32 - ny) < 0.14;
-          if (nx > 0.58 && ny < 0.32 && !foldCut) {
-            // Fold corner color: warm copper fold
-            r = 200; g = 124; b = 86;
-          } else {
-            // Ivory paper color
-            r = 250; g = 247; b = 240;
+        // Ghosted sub-layer sheet (translucent cyan-blue)
+        // Rotated slightly behind: nx in [0.35, 0.72], ny in [0.26, 0.76]
+        if (nx >= 0.35 && nx <= 0.72 && ny >= 0.26 && ny <= 0.76) {
+          r = Math.round(r * 0.75 + 56 * 0.25);
+          g = Math.round(g * 0.75 + 189 * 0.25);
+          b = Math.round(b * 0.75 + 248 * 0.25);
+        }
 
-            // Content lines on paper
-            if (ny >= 0.42 && ny <= 0.45 && nx >= 0.39 && nx <= 0.62) {
-              // Primary header bar (deep spruce)
-              r = 36; g = 72; b = 69;
-            } else if (ny >= 0.49 && ny <= 0.51 && nx >= 0.39 && nx <= 0.57) {
-              // Line 2
-              r = 169; g = 162; b = 147;
-            } else if (ny >= 0.55 && ny <= 0.57 && nx >= 0.39 && nx <= 0.60) {
-              // Line 3
-              r = 169; g = 162; b = 147;
-            } else if (ny >= 0.66 && ny <= 0.68 && nx >= 0.39 && nx <= 0.50) {
-              // Accent signature line (copper)
-              r = 200; g = 124; b = 86;
+        // Primary Architectural Folio Sheet
+        // nx in [0.28, 0.70], ny in [0.22, 0.80]
+        if (nx >= 0.28 && nx <= 0.70 && ny >= 0.22 && ny <= 0.80) {
+          // Check folded top-right corner: nx > 0.57 and ny < 0.35
+          const isFoldZone = (nx > 0.57 && ny < 0.35);
+          const isFoldCut = isFoldZone && ((nx - 0.57) + (0.35 - ny) > 0.13);
+
+          if (!isFoldCut) {
+            if (isFoldZone) {
+              // Royal Cobalt fold
+              const ft = (nx - 0.57 + ny - 0.22) / 0.26;
+              r = Math.round(56 * (1 - ft) + 37 * ft);
+              g = Math.round(189 * (1 - ft) + 99 * ft);
+              b = Math.round(248 * (1 - ft) + 235 * ft);
+            } else {
+              // Pure Architectural Ivory Sheet
+              const st = (ny - 0.22) / 0.58;
+              r = Math.round(255 * (1 - st) + 236 * st);
+              g = Math.round(255 * (1 - st) + 240 * st);
+              b = Math.round(255 * (1 - st) + 246 * st);
+
+              // Modernist Document Grid Lines
+              // Line 1: Navy
+              if (ny >= 0.44 && ny <= 0.465 && nx >= 0.33 && nx <= 0.58) {
+                r = 30; g = 41; b = 59;
+              }
+              // Line 2: Slate
+              else if (ny >= 0.505 && ny <= 0.525 && nx >= 0.33 && nx <= 0.63) {
+                r = 100; g = 116; b = 139;
+              }
+              // Line 3: Slate
+              else if (ny >= 0.565 && ny <= 0.585 && nx >= 0.33 && nx <= 0.59) {
+                r = 100; g = 116; b = 139;
+              }
+              // Line 4: Electric Cyan
+              else if (ny >= 0.625 && ny <= 0.645 && nx >= 0.33 && nx <= 0.49) {
+                r = 56; g = 189; b = 248;
+              }
+              // Precision Stylus Dot (circle at nx=0.55, ny=0.635)
+              const dotDist = Math.hypot((nx - 0.55) * size, (ny - 0.635) * size);
+              if (dotDist <= size * 0.02) {
+                r = 56; g = 189; b = 248;
+              }
             }
           }
         }

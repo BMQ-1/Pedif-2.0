@@ -1,6 +1,6 @@
 /**
  * Visual Page Organizer Workbench
- * Inspired by PdfCraft's card-based page organizer:
+ * Features:
  * - Interactive visual card grid with page thumbnails
  * - Drag-and-drop page reordering
  * - Per-page rotation (90° increments)

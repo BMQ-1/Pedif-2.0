@@ -309,8 +309,49 @@ export class Sidebar {
       return;
     }
 
+    // Pages inspector 50%-150% thumbnail size slider toolbar
+    const thumbToolbar = document.createElement('div');
+    thumbToolbar.className = 'craft-thumb-toolbar';
+    thumbToolbar.innerHTML = `
+      <div class="craft-thumb-zoom-box">
+        <button type="button" class="craft-thumb-zoom-btn" id="btn-thumb-zoom-out" title="Shrink thumbnails">−</button>
+        <input type="range" class="craft-thumb-zoom-slider" id="thumb-zoom-slider" min="50" max="150" value="100" title="Thumbnail size (50% - 150%)">
+        <button type="button" class="craft-thumb-zoom-btn" id="btn-thumb-zoom-in" title="Enlarge thumbnails">+</button>
+        <span class="craft-thumb-zoom-label" id="thumb-zoom-label">100%</span>
+      </div>
+    `;
+    pane.appendChild(thumbToolbar);
+
     const grid = document.createElement('div');
     grid.className = 'thumbnails-grid';
+
+    const slider = thumbToolbar.querySelector('#thumb-zoom-slider');
+    const label = thumbToolbar.querySelector('#thumb-zoom-label');
+    const btnOut = thumbToolbar.querySelector('#btn-thumb-zoom-out');
+    const btnIn = thumbToolbar.querySelector('#btn-thumb-zoom-in');
+
+    const updateScale = (val) => {
+      const clamped = Math.max(50, Math.min(150, val));
+      if (slider) slider.value = clamped;
+      if (label) label.textContent = `${clamped}%`;
+      grid.style.setProperty('--thumb-scale', (clamped / 100).toFixed(2));
+    };
+
+    if (slider) {
+      slider.addEventListener('input', (e) => updateScale(parseInt(e.target.value, 10)));
+    }
+    if (btnOut) {
+      btnOut.addEventListener('click', () => {
+        const cur = parseInt(slider?.value || '100', 10);
+        updateScale(cur - 15);
+      });
+    }
+    if (btnIn) {
+      btnIn.addEventListener('click', () => {
+        const cur = parseInt(slider?.value || '100', 10);
+        updateScale(cur + 15);
+      });
+    }
 
     const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach(async (entry) => {

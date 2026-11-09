@@ -1,23 +1,34 @@
 /* ============================================================
-   PEDIF · Apple-aligned design system
-   Type: SF Pro via -apple-system · Color: iOS system palette
-   Motion: iOS curves + real spring (WAAPI) · Grid: 8pt rhythm
+   PEDIF 2.0 — Sovereign PDF Workbench Design Tokens
+   Neutral chrome, white panels, royal cobalt accent (#2563eb),
+   electric cyan focus (#38bdf8), and precision 8pt grid.
    ============================================================ */
-:root {
-  /* Motion — Apple curves. --e is the iOS sheet curve */
-  --e: cubic-bezier(.32, .72, 0, 1);
-  --e2: cubic-bezier(.25, .1, .25, 1);
-  --eio: cubic-bezier(.3, .9, .35, 1);
-  --spring: cubic-bezier(.2, .9, .3, 1);
-  --e-press: cubic-bezier(.2, 0, 0, 1);
-  --q: .15s;
-  --d: .35s;
-  --d-instant: .08s;
-  --d-quick: .16s;
-  --d-normal: .26s;
-  --d-slow: .4s;
 
-  /* Spacing — 8pt rhythm */
+:root {
+  /* Brand Constants — International Modernist */
+  --brand-cobalt: #2563eb;
+  --brand-cobalt-dark: #1d4ed8;
+  --brand-cyan: #38bdf8;
+  --brand-obsidian: #0b1120;
+
+  /* Tool Category Hues */
+  --cat-red: #e03e3e;
+  --cat-pink: #d63b8f;
+  --cat-purple: #8e4ee6;
+  --cat-blue: #3a6fe8;
+  --cat-green: #2d9d5b;
+  --cat-orange: #e88a1a;
+  --cat-teal: #149ca8;
+
+  /* Transitions & Motion: Snappy, physical UI feedback */
+  --e-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --e-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-press: cubic-bezier(0.2, 0, 0, 1);
+  --d-fast: 0.12s;
+  --d-base: 0.2s;
+  --d-smooth: 0.32s;
+
+  /* Precision Spacing — 4pt/8pt rhythm */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -27,134 +38,243 @@
   --s8: 32px;
   --s10: 40px;
 
-  /* Typography scale */
-  --t-title: 28px;
-  --t-head: 22px;
-  --t-body: 17px;
-  --t-call: 16px;
-  --t-sub: 15px;
-  --t-foot: 13px;
-  --t-cap: 11px;
-  --r-s: 10px;
-  --r-m: 14px;
-  --r-l: 20px;
-  --r-xl: 24px;
-  --pad: 20px;
-  --maxw: 800px;
+  /* Typography Scale */
+  --t-hero: 28px;
+  --t-title: 22px;
+  --t-head: 18px;
+  --t-subhead: 15px;
+  --t-body: 13.5px;
+  --t-callout: 13px;
+  --t-caption: 11.5px;
+  --t-micro: 10px;
 
+  /* Radii */
+  --r-xs: 4px;
+  --r-s: 6px;
+  --r-m: 8px;
+  --r-l: 12px;
+  --r-xl: 16px;
+  --r-full: 9999px;
+
+  /* Layout dimensions */
+  --topbar-height: 40px;
+  --modebar-height: 42px;
+  --tab-height: 32px;
+  --sidebar-rail-width: 48px;
+  --sidebar-panel-width: 290px;
+  --hotbar-size: 34px;
+
+  /* Safe Area insets */
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
 
-  --brand1: #ff6a5c;
-  --brand2: #ff2d55;
-  --brand3: #c1124a;
-
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, system-ui, sans-serif;
+  /* Font Stack: System-native geometric clarity */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-kerning: normal;
-  letter-spacing: -.01em;
+  letter-spacing: -0.011em;
 }
 
-:root[data-theme=light] {
+/* ============================================================
+   THEME KIND: LIGHT (Classic Studio Palette)
+   ============================================================ */
+:root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f2f2f7;
-  --bg2: #ffffff;
-  --card: #ffffff;
-  --card2: #f2f2f7;
-  --gl: rgba(249, 249, 249, .8);
-  --tx: #000000;
-  --tx2: rgba(60, 60, 67, .72);
-  --tx3: rgba(60, 60, 67, .65);
-  --ln: rgba(60, 60, 67, .29);
-  --ln2: rgba(60, 60, 67, .22);
-  --ac: #007aff;
-  --ac-soft: rgba(0, 122, 255, .14);
-  --grn: #34c759;
-  --red: #ff3b30;
-  --ylw: #ffcc00;
-  --fill: rgba(120, 120, 128, .12);
-  --fill2: rgba(120, 120, 128, .06);
-  --page-bg: #ffffff;
-  --hud: rgba(28, 28, 30, .9);
-  --sh: 0 1px 2px rgba(0,0,0,.05), 0 14px 34px -18px rgba(0,0,0,.35);
-  --sh-s: 0 1px 3px rgba(0,0,0,.07), 0 6px 16px -10px rgba(0,0,0,.22);
+  --titlebar: #E9E9EB;
+  --chrome: #FFFFFF;
+  --panel: #FFFFFF;
+  --pasteboard: #F1F1F3;
+  --card: #FFFFFF;
+  --border: #DADADE;
+  --divider: #E8E8EB;
+  --text: #222226;
+  --text-muted: #5E5E66;
+  --text-faint: #6B6B73;
+  --icon: #44444B;
+  --hover: #F0F0F3;
+  --pressed: #E4E4E9;
+  --selected: #E6EEFD;
+  --accent: #1B63E0;
+  --accent-text: #1755C4;
+  --accent-soft: #E3ECFD;
+  --field: #FFFFFF;
+  --badge-new: #1B63E0;
+  --page-shadow: rgba(0, 0, 0, 0.12);
+  --page-bg: #FFFFFF;
+
+  /* Compatibility Aliases */
+  --bg: #F1F1F3;
+  --bg2: #FFFFFF;
+  --card2: #F7F7FA;
+  --gl: rgba(255, 255, 255, 0.92);
+  --tx: #222226;
+  --tx2: #5E5E66;
+  --tx3: #6B6B73;
+  --ln: #DADADE;
+  --ln2: #E8E8EB;
+  --ac: #1B63E0;
+  --ac-soft: #E3ECFD;
+  --grn: #2D9D5B;
+  --red: #E03E3E;
+  --ylw: #E88A1A;
+  --fill: rgba(34, 34, 38, 0.05);
+  --fill2: rgba(34, 34, 38, 0.025);
+  --hud: rgba(255, 255, 255, 0.96);
+  --sh: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px -10px rgba(0, 0, 0, 0.1);
+  --sh-s: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px -4px rgba(0, 0, 0, 0.08);
+  --sh-lift: 0 6px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-:root[data-theme=dark] {
+/* ============================================================
+   THEME KIND: DARK (Obsidian Studio Palette)
+   ============================================================ */
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1c1c1e;
-  --bg2: #2c2c2e;
-  --card: #2c2c2e;
-  --card2: #3a3a3c;
-  --gl: rgba(44, 44, 46, .78);
-  --tx: #ffffff;
+  --titlebar: #1B1B1E;
+  --chrome: #26262A;
+  --panel: #26262A;
+  --pasteboard: #19191C;
+  --card: #2E2E33;
+  --border: #3C3C43;
+  --divider: #333339;
+  --text: #ECECEF;
+  --text-muted: #AEAEB6;
+  --text-faint: #97979E;
+  --icon: #D4D4DA;
+  --hover: #34343A;
+  --pressed: #3E3E45;
+  --selected: #233A63;
+  --accent: #4B8BF5;
+  --accent-text: #8CB6FA;
+  --accent-soft: #243657;
+  --field: #1E1E22;
+  --badge-new: #3D7DEE;
+  --page-shadow: rgba(0, 0, 0, 0.45);
+  --page-bg: #FFFFFF;
+
+  /* Compatibility Aliases */
+  --bg: #19191C;
+  --bg2: #26262A;
+  --card2: #222226;
+  --gl: rgba(38, 38, 42, 0.92);
+  --tx: #ECECEF;
   --tx2: rgba(235, 235, 245, .72);
   --tx3: rgba(235, 235, 245, .68);
-  --ln: rgba(84, 84, 88, .6);
-  --ln2: rgba(84, 84, 88, .48);
-  --ac: #0a84ff;
-  --ac-soft: rgba(10, 132, 255, .22);
-  --grn: #30d158;
-  --red: #ff453a;
-  --ylw: #ffd60a;
-  --fill: rgba(118, 118, 128, .24);
-  --fill2: rgba(118, 118, 128, .12);
-  --page-bg: #141416;
-  --hud: rgba(28, 28, 30, .92);
-  --sh: 0 1px 2px rgba(0,0,0,.5), 0 18px 44px -20px rgba(0,0,0,.8);
-  --sh-s: 0 1px 3px rgba(0,0,0,.45), 0 8px 20px -12px rgba(0,0,0,.7);
+  --ln: #3C3C43;
+  --ln2: #333339;
+  --ac: #4B8BF5;
+  --ac-soft: #243657;
+  --grn: #30D158;
+  --red: #FF453A;
+  --ylw: #FFD60A;
+  --fill: rgba(236, 236, 239, 0.08);
+  --fill2: rgba(236, 236, 239, 0.04);
+  --hud: rgba(38, 38, 42, 0.96);
+  --sh: 0 1px 3px rgba(0, 0, 0, 0.4), 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  --sh-s: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  --sh-lift: 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-:root[data-theme=oled] {
+/* ============================================================
+   THEME KIND: OLED (Pure Black Studio)
+   ============================================================ */
+:root[data-theme="oled"] {
   color-scheme: dark;
+  --titlebar: #000000;
+  --chrome: #0A0A0B;
+  --panel: #0D0D0F;
+  --pasteboard: #000000;
+  --card: #121215;
+  --border: #242428;
+  --divider: #1C1C20;
+  --text: #F4F4F6;
+  --text-muted: #A0A0A8;
+  --text-faint: #787882;
+  --icon: #E0E0E6;
+  --hover: #1A1A20;
+  --pressed: #24242C;
+  --selected: #1A3052;
+  --accent: #4B8BF5;
+  --accent-text: #8CB6FA;
+  --accent-soft: #1B2B47;
+  --field: #08080A;
+  --badge-new: #3D7DEE;
+  --page-shadow: rgba(0, 0, 0, 0.85);
+  --page-bg: #FFFFFF;
+
+  /* Compatibility Aliases */
   --bg: #000000;
-  --bg2: #0a0a0b;
-  --card: #000000;
-  --card2: #121214;
-  --gl: rgba(10, 10, 11, .72);
-  --tx: #ffffff;
-  --tx2: rgba(235, 235, 245, .72);
-  --tx3: rgba(235, 235, 245, .68);
-  --ln: rgba(84, 84, 88, .52);
-  --ln2: rgba(84, 84, 88, .44);
-  --ac: #0a84ff;
-  --ac-soft: rgba(10, 132, 255, .22);
-  --grn: #30d158;
-  --red: #ff453a;
-  --ylw: #ffd60a;
-  --fill: rgba(118, 118, 128, .2);
-  --fill2: rgba(118, 118, 128, .1);
-  --page-bg: #0e0e10;
-  --hud: rgba(28, 28, 30, .94);
-  --sh: 0 1px 2px rgba(0,0,0,.6), 0 18px 44px -20px rgba(0,0,0,.9);
-  --sh-s: 0 1px 3px rgba(0,0,0,.6), 0 8px 20px -12px rgba(0,0,0,.8);
+  --bg2: #0A0A0B;
+  --card2: #08080A;
+  --gl: rgba(10, 10, 11, 0.94);
+  --tx: #F4F4F6;
+  --tx2: #A0A0A8;
+  --tx3: #787882;
+  --ln: #242428;
+  --ln2: #1C1C20;
+  --ac: #4B8BF5;
+  --ac-soft: #1B2B47;
+  --grn: #30D158;
+  --red: #FF453A;
+  --ylw: #FFD60A;
+  --fill: rgba(244, 244, 246, 0.08);
+  --fill2: rgba(244, 244, 246, 0.04);
+  --hud: rgba(13, 13, 15, 0.98);
+  --sh: 0 1px 3px rgba(0, 0, 0, 0.7), 0 16px 36px -12px rgba(0, 0, 0, 0.9);
+  --sh-s: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px -8px rgba(0, 0, 0, 0.8);
+  --sh-lift: 0 10px 32px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
-:root[data-theme=sepia] {
+/* ============================================================
+   THEME KIND: SEPIA (Warm Archive Studio)
+   ============================================================ */
+:root[data-theme="sepia"] {
   color-scheme: light;
-  --bg: #efe4cd;
-  --bg2: #f7efdd;
-  --card: #fbf4e4;
-  --card2: #f2e8d3;
-  --gl: rgba(250, 243, 228, .82);
-  --tx: #3c3021;
+  --titlebar: #EAE1D2;
+  --chrome: #FAF5EA;
+  --panel: #FAF5EA;
+  --pasteboard: #EFE8DC;
+  --card: #FDF9F0;
+  --border: #D8CFBE;
+  --divider: #E4DCCB;
+  --text: #2C241B;
+  --text-muted: #6E6152;
+  --text-faint: #8A7B6B;
+  --icon: #52473B;
+  --hover: #EFE8DC;
+  --pressed: #E4DCCB;
+  --selected: #E6DCB8;
+  --accent: #B25916;
+  --accent-text: #8E440E;
+  --accent-soft: #F4EAD3;
+  --field: #FDF9F0;
+  --badge-new: #B25916;
+  --page-shadow: rgba(60, 45, 30, 0.15);
+  --page-bg: #FCF7EC;
+
+  /* Compatibility Aliases */
+  --bg: #EFE8DC;
+  --bg2: #FAF5EA;
+  --card2: #EFE8DC;
+  --gl: rgba(250, 245, 234, 0.94);
+  --tx: #2C241B;
   --tx2: rgba(61, 48, 34, .78);
   --tx3: rgba(61, 48, 34, .76);
-  --ln: rgba(61, 48, 34, .28);
-  --ln2: rgba(61, 48, 34, .22);
-  --ac: #a25c17;
-  --ac-soft: rgba(162, 92, 23, .16);
-  --grn: #4b8b3b;
-  --red: #c0392b;
-  --ylw: #e0a800;
-  --fill: rgba(120, 90, 50, .14);
-  --fill2: rgba(120, 90, 50, .07);
-  --page-bg: #f7eed9;
-  --hud: rgba(60, 48, 34, .92);
-  --sh: 0 1px 2px rgba(61,48,34,.1), 0 14px 34px -18px rgba(61,48,34,.4);
-  --sh-s: 0 1px 3px rgba(61,48,34,.12), 0 6px 16px -10px rgba(61,48,34,.3);
+  --ln: #D8CFBE;
+  --ln2: #E4DCCB;
+  --ac: #B25916;
+  --ac-soft: #F4EAD3;
+  --grn: #3F8A3A;
+  --red: #C43D2A;
+  --ylw: #D88E00;
+  --fill: rgba(44, 36, 27, 0.06);
+  --fill2: rgba(44, 36, 27, 0.03);
+  --hud: rgba(250, 245, 234, 0.96);
+  --sh: 0 1px 3px rgba(60, 45, 30, 0.08), 0 8px 24px -10px rgba(60, 45, 30, 0.14);
+  --sh-s: 0 1px 2px rgba(60, 45, 30, 0.05), 0 4px 12px -4px rgba(60, 45, 30, 0.1);
+  --sh-lift: 0 6px 20px rgba(60, 45, 30, 0.18), 0 1px 4px rgba(60, 45, 30, 0.08);
 }

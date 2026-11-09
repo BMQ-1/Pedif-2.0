@@ -38,6 +38,9 @@ import { StatsModal } from './ui/stats-modal.js';
 import { SignatureDialog } from './tools/signature-dialog.js';
 import { StampDialog } from './tools/stamp-dialog.js';
 import { SanitizerDialog } from './tools/sanitizer-dialog.js';
+import { CommandPalette } from './ui/command-palette.js';
+import { AllToolsModal } from './ui/all-tools-modal.js';
+import { Hotbar } from './ui/hotbar.js';
 
 // Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
 if (typeof window !== 'undefined') {
@@ -76,6 +79,11 @@ class PedifApp {
     this.metadataDialog = null;
     this.signatureDialog = null;
     this.stampDialog = null;
+    this.commandPalette = null;
+    this.allToolsModal = null;
+    this.hotbar = null;
+    this.openDocs = [];
+    this.activeDocId = null;
 
     this.init();
   }
@@ -251,6 +259,11 @@ class PedifApp {
       },
     });
 
+    // 13. Initialize Sovereign Workbench Controls: Command Palette, All Tools & Hotbar
+    this.commandPalette = new CommandPalette({ app: this });
+    this.allToolsModal = new AllToolsModal({ app: this });
+    this.hotbar = new Hotbar({ app: this, viewer: this.viewer });
+
     this.setupGlobalization();
 
     // 12. Setup UI interactions, shortcuts & CommandStack
@@ -342,6 +355,248 @@ class PedifApp {
     if (this.lassoTool) {
       this.lassoTool.setMode(mode);
     }
+    if (this.hotbar) {
+      this.hotbar.setActiveTool(mode);
+    }
+  }
+
+  // Sovereign Workbench Action Launchers
+  openOrganize() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      const fileInput = document.getElementById('file-input');
+      if (fileInput) fileInput.click();
+      return;
+    }
+    if (this.pageOrganizer) {
+      this.getAnnotatedPdfBuffer().then(buf => {
+        this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
+      });
+    }
+  }
+
+  openMerge() {
+    if (this.mergeTool) this.mergeTool.show();
+  }
+
+  openWatermark() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.watermarkDialog) this.watermarkDialog.show(this.currentDoc.buffer);
+  }
+
+  openNumbering() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.numberingDialog) this.numberingDialog.show(this.currentDoc.buffer);
+  }
+
+  openMetadata() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
+  }
+
+  openSignature() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.signatureDialog) {
+      this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
+    }
+  }
+
+  openStamp() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.stampDialog) {
+      this.stampDialog.show(this.currentDoc.buffer, this.viewer?.currentPage || 1, this.currentDoc.pageCount || 1);
+    }
+  }
+
+  openSanitize() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.sanitizerDialog) {
+      this.sanitizerDialog.show(this.currentDoc.buffer);
+    }
+  }
+
+  openExtract() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.extractDialog) this.extractDialog.show();
+  }
+
+  openCrop() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.cropTool) this.cropTool.open(this.viewer?.currentPage || 1);
+  }
+
+  openStats() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    if (this.statsModal) this.statsModal.show();
+  }
+
+  async openOcr() {
+    if (!this.currentDoc || !this.currentDoc.buffer) {
+      showToast('Please open a PDF document first', 'alert');
+      const fileInput = document.getElementById('file-input');
+      if (fileInput) fileInput.click();
+      return;
+    }
+    const curPage = (this.viewer && this.viewer.currentPage) || 1;
+    showToast(`Running WebGPU OCR on Page ${curPage}...`, 'info');
+    const res = await this.viewer.runManualOcr(curPage);
+    if (res && res.lines && res.lines.length) {
+      showToast(`OCR Success: Found ${res.lines.length} lines on Page ${curPage}. Text is now selectable!`, 'check');
+    } else {
+      showToast('OCR scan completed', 'check');
+    }
+  }
+
+  openCommandPalette() {
+    if (this.commandPalette) this.commandPalette.toggle();
+  }
+
+  openAllTools() {
+    if (this.allToolsModal) this.allToolsModal.toggle();
+  }
+
+  // Multi-Document Tabs Management (Master Tab Architecture)
+  renderTabs() {
+    const container = document.getElementById('craft-tabs-container');
+    if (!container) return;
+
+    if (!this.openDocs.length) {
+      container.innerHTML = `
+        <div class="craft-tab craft-tab-item active" role="tab" aria-selected="true">
+          <svg class="craft-tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span class="craft-tab-title">No Document</span>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = this.openDocs.map(doc => {
+      const isActive = doc.id === this.activeDocId;
+      const cleanName = (doc.name || 'Document.pdf').replace(/\.pdf$/i, '');
+      return `
+        <div class="craft-tab craft-tab-item ${isActive ? 'active' : ''}" data-doc-id="${doc.id}" role="tab" aria-selected="${isActive}">
+          <svg class="craft-tab-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span class="craft-tab-title" title="${doc.name}">${cleanName}</span>
+          <button type="button" class="craft-tab-close" data-close-id="${doc.id}" title="Close tab (${doc.name})" aria-label="Close tab">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.craft-tab, .craft-tab-item').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        if (e.target.closest('.craft-tab-close')) return;
+        const id = tab.dataset.docId;
+        if (id && id !== this.activeDocId) {
+          this.switchTab(id);
+        }
+      });
+    });
+
+    container.querySelectorAll('.craft-tab-close').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.closeId;
+        if (id) {
+          this.closeTab(id);
+        }
+      });
+    });
+  }
+
+  async switchTab(docId) {
+    const target = this.openDocs.find(d => d.id === docId);
+    if (!target) return;
+
+    if (this.currentDoc && this.viewer) {
+      const activeEntry = this.openDocs.find(d => d.id === this.activeDocId);
+      if (activeEntry) {
+        activeEntry.currentPage = this.viewer.currentPage || 1;
+        activeEntry.state = {
+          annotations: highlightManager.serialize(),
+          strokes: Object.fromEntries(
+            Array.from(this.viewer.pageStrokes.entries()).map(([k, v]) => [k, v.map(s => s.serialize())])
+          )
+        };
+      }
+    }
+
+    highlightManager.clearAll();
+    if (this.viewer && this.viewer.pageStrokes) {
+      this.viewer.pageStrokes.clear();
+    }
+
+    await this.loadPdfBuffer(target.buffer, target.name, target.state, target.id);
+  }
+
+  async closeTab(docId) {
+    const idx = this.openDocs.findIndex(d => d.id === docId);
+    if (idx === -1) return;
+
+    const closingDoc = this.openDocs[idx];
+    if (closingDoc && closingDoc.buffer) {
+      await libraryStore.saveDocument({
+        name: closingDoc.name,
+        pageCount: closingDoc.pageCount,
+        currentPage: closingDoc.currentPage || 1,
+        buffer: closingDoc.buffer.slice(0),
+      }).catch(() => {});
+    }
+
+    this.openDocs.splice(idx, 1);
+
+    if (this.activeDocId === docId) {
+      if (this.openDocs.length > 0) {
+        const nextDoc = this.openDocs[Math.max(0, idx - 1)];
+        await this.switchTab(nextDoc.id);
+      } else {
+        this.activeDocId = null;
+        this.currentDoc = null;
+        document.body.classList.remove('open');
+        this.renderTabs();
+        if (this.homeLibrary) await this.homeLibrary.renderLibrary();
+        return;
+      }
+    }
+
+    this.renderTabs();
   }
 
   setupCommandStack() {
@@ -554,9 +809,28 @@ class PedifApp {
     // Sovereign Workbench Tool Listeners
     const btnQuickOpen = document.getElementById('btn-quick-open');
     if (btnQuickOpen) {
-      btnQuickOpen.addEventListener('click', () => {
-        const fileInput = document.getElementById('file-input');
-        if (fileInput) fileInput.click();
+      const activateQuickInk = () => {
+        if (this.currentDoc && this.currentDoc.buffer) {
+          document.body.classList.add('open');
+          this.setToolMode('pen');
+        } else {
+          const fileInput = document.getElementById('file-input');
+          if (fileInput) {
+            const onFirstLoad = () => {
+              this.setToolMode('pen');
+              window.removeEventListener('pedif:doc-loaded', onFirstLoad);
+            };
+            window.addEventListener('pedif:doc-loaded', onFirstLoad, { once: true });
+            fileInput.click();
+          }
+        }
+      };
+      btnQuickOpen.addEventListener('click', activateQuickInk);
+      btnQuickOpen.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activateQuickInk();
+        }
       });
     }
 
@@ -564,6 +838,12 @@ class PedifApp {
     if (btnHomeMerge) {
       btnHomeMerge.addEventListener('click', () => {
         if (this.mergeTool) this.mergeTool.show();
+      });
+      btnHomeMerge.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (this.mergeTool) this.mergeTool.show();
+        }
       });
     }
 
@@ -581,7 +861,97 @@ class PedifApp {
       });
     }
 
+    // Sovereign Top Tab Strip & Search Listeners
+    const btnTopCmdSearch = document.getElementById('btn-top-cmd-search');
+    if (btnTopCmdSearch) {
+      btnTopCmdSearch.addEventListener('click', () => this.openCommandPalette());
+    }
+
+    const hCmdSearch = document.getElementById('hCmdSearch');
+    if (hCmdSearch) {
+      hCmdSearch.addEventListener('click', () => this.openCommandPalette());
+    }
+
+    const btnTabNew = document.getElementById('btn-tab-new');
+    if (btnTabNew) {
+      btnTabNew.addEventListener('click', () => {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) fileInput.click();
+      });
+    }
+
+    const btnSplitView = document.getElementById('btn-split-view');
+    if (btnSplitView) {
+      btnSplitView.addEventListener('click', () => {
+        if (!this.currentDoc) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.viewer) {
+          const nextMode = this.viewer.mode === 'spread' ? 'continuous' : 'spread';
+          this.viewer.setMode(nextMode);
+          showToast(nextMode === 'spread' ? 'Two-page book spread view enabled' : 'Continuous reading enabled', 'check');
+        }
+      });
+    }
+
+    const btnAllToolsHome = document.getElementById('btn-all-tools-home');
+    if (btnAllToolsHome) {
+      btnAllToolsHome.addEventListener('click', () => this.openAllTools());
+      btnAllToolsHome.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.openAllTools();
+        }
+      });
+    }
+
+    // Recommended Tools Cards on Home Screen
+    const btnRecOrganize = document.getElementById('btn-rec-organize');
+    if (btnRecOrganize) {
+      btnRecOrganize.addEventListener('click', () => this.openOrganize());
+      btnRecOrganize.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.openOrganize();
+        }
+      });
+    }
+
+    const btnRecOcr = document.getElementById('btn-rec-ocr');
+    if (btnRecOcr) {
+      btnRecOcr.addEventListener('click', () => this.openOcr());
+      btnRecOcr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.openOcr();
+        }
+      });
+    }
+
+    const btnRecSanitize = document.getElementById('btn-rec-sanitize');
+    if (btnRecSanitize) {
+      btnRecSanitize.addEventListener('click', () => this.openSanitize());
+      btnRecSanitize.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.openSanitize();
+        }
+      });
+    }
+
+    const btnDockZen = document.getElementById('btn-dock-zen');
+    if (btnDockZen) {
+      btnDockZen.addEventListener('click', () => this.toggleZenMode());
+    }
+
     const btnWorkbench = document.getElementById('btn-workbench');
+    if (btnWorkbench) {
+      btnWorkbench.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openAllTools();
+      });
+    }
     if (btnWorkbench && popover) {
       const positionWorkbenchPopover = () => {
         const rect = btnWorkbench.getBoundingClientRect();
@@ -1359,14 +1729,32 @@ class PedifApp {
         return;
       }
 
-      // Digital Signature shortcut Ctrl+K
+      // Close Document Tab (Ctrl+W)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
+        e.preventDefault();
+        if (this.activeDocId) {
+          this.closeTab(this.activeDocId);
+        }
+        return;
+      }
+
+      // Cycle Document Tabs (Ctrl+Tab)
+      if (e.ctrlKey && e.key === 'Tab') {
+        e.preventDefault();
+        if (this.openDocs.length > 1) {
+          const curIdx = this.openDocs.findIndex(d => d.id === this.activeDocId);
+          const nextIdx = e.shiftKey
+            ? (curIdx - 1 + this.openDocs.length) % this.openDocs.length
+            : (curIdx + 1) % this.openDocs.length;
+          this.switchTab(this.openDocs[nextIdx].id);
+        }
+        return;
+      }
+
+      // Spotlight Command Palette shortcut Ctrl+K
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
-        if (this.signatureDialog && this.currentDoc && this.currentDoc.buffer) {
-          this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
-        } else {
-          showToast('Please open a PDF document first', 'alert');
-        }
+        this.openCommandPalette();
         return;
       }
 
@@ -1527,7 +1915,7 @@ class PedifApp {
     }
   }
 
-  async loadPdfBuffer(inputBuffer, fileName = 'Document.pdf', savedState = null) {
+  async loadPdfBuffer(inputBuffer, fileName = 'Document.pdf', savedState = null, docId = null) {
     try {
       const validBuffer = toValidArrayBuffer(inputBuffer);
       if (!validBuffer) {
@@ -1552,7 +1940,18 @@ class PedifApp {
           }
         }
       );
-      this.currentDoc = { buffer: docBuffer, name: fileName, pageCount: pdf.numPages, currentPage: 1 };
+
+      const id = docId || `doc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const existingIdx = this.openDocs.findIndex(d => d.id === id || (docId ? d.id === docId : d.name === fileName));
+      const docRecord = { id, buffer: docBuffer, name: fileName, pageCount: pdf.numPages, currentPage: 1, state: savedState };
+      if (existingIdx >= 0) {
+        this.openDocs[existingIdx] = docRecord;
+      } else {
+        this.openDocs.push(docRecord);
+      }
+      this.activeDocId = id;
+      this.currentDoc = docRecord;
+      this.renderTabs();
 
       // Switch view to Reader Screen
       document.body.classList.add('open');
@@ -1586,6 +1985,10 @@ class PedifApp {
       }
 
       searchEngine.indexDocument((page, total) => {});
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('pedif:doc-loaded', { detail: { name: fileName, pageCount: pdf.numPages } }));
+      }
 
       // Non-blocking persistent saves
       autosave.savePdfBuffer(docBuffer.slice(0), {
@@ -1637,6 +2040,10 @@ class PedifApp {
     }
     if (this.currentDoc) {
       this.currentDoc.currentPage = current;
+    }
+    const currentEntry = this.openDocs.find(d => d.id === this.activeDocId);
+    if (currentEntry) {
+      currentEntry.currentPage = current;
     }
   }
 

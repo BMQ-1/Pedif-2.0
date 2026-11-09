@@ -1,12 +1,12 @@
 {
-  "name": "Pedif — PDF Editor",
+  "name": "Pedif 2.0 — Sovereign PDF Workbench",
   "short_name": "Pedif",
-  "description": "High-Performance Offline-First PDF Studio with WebGPU PP-OCRv4 & Vector Inking",
+  "description": "High-Performance Offline-First Sovereign PDF Workbench with On-Device AI, WebGPU PP-OCRv4 & Vector Inking",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1c1c1e",
-  "theme_color": "#f2f2f7",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
   "icons": [
     {
       "src": "icon-192.png",

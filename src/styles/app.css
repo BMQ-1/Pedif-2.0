@@ -849,6 +849,8 @@ body.drag .drop {
 
 /* Zen / Focus Reading Mode */
 body.zen-mode #tb,
+body.zen-mode .craft-tab-strip,
+body.zen-mode .craft-hotbar,
 body.zen-mode #dk,
 body.zen-mode #scrub,
 body.zen-mode .app-sidebar,
@@ -864,8 +866,8 @@ body.zen-mode #dk {
 }
 
 body.zen-mode #rd {
-  padding-top: 24px !important;
-  padding-bottom: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* Floating Zen Exit Pill */
@@ -2143,8 +2145,8 @@ body.zen-mode.show-zen-controls .zen-exit-pill {
 /* Thumbnails Grid */
 .thumbnails-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(calc(96px * var(--thumb-scale, 1)), 1fr));
+  gap: calc(14px * var(--thumb-scale, 1));
   padding: 4px;
 }
 

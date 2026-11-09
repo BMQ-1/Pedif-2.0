@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="application-name" content="Pedif">
   <meta name="apple-mobile-web-app-title" content="Pedif">
-  <meta name="description" content="Pedif — High-Performance Offline-First PDF Studio with WebGPU PP-OCRv4 & Vector Inking">
-  <title>Pedif — PDF Studio</title>
+  <meta name="description" content="Pedif 2.0 — Sovereign Offline-First PDF Workbench with On-Device AI, WebGPU PP-OCRv4 & Vector Inking">
+  <title>Pedif 2.0 — Sovereign PDF Workbench</title>
 
   <!-- GitHub Pages Cross-Origin Isolation for SharedArrayBuffer & WebGPU/WASM -->
   <script src="./coi-serviceworker.js"></script>
@@ -46,6 +46,14 @@
           <span class="version-badge">2.0</span>
         </div>
         <div class="topacts">
+          <button type="button" class="craft-cmd-search-trigger" id="hCmdSearch" title="Command Palette (Ctrl+K)" aria-label="Command Palette">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Search tools...</span>
+            <kbd class="craft-cmd-kbd">Ctrl+K</kbd>
+          </button>
           <select id="lang-select" class="lang-selector-select" aria-label="Select Language">
             <option value="en">English (US)</option>
             <option value="ar">العربية (RTL)</option>
@@ -70,13 +78,117 @@
         </div>
       </nav>
 
-      <!-- Hero Section -->
-      <div class="hero">
-        <h1>Read, ink, and annotate.<br>Directly in your browser.</h1>
-        <p>A fast, private, offline-first studio with on-device OCR, vector inking, and precision annotations. Your files never leave your device.</p>
+      <!-- Pedif Sovereign Hero Banner -->
+      <section class="craft-home-hero-banner">
+        <img src="./pedif-logo.svg" alt="Pedif 2.0 Emblem" class="craft-home-crest">
+        <div class="craft-home-hero-text">
+          <h1>Welcome to Pedif 2.0</h1>
+          <p>The Sovereign PDF Workbench — local, private, zero-install, and WebGPU-accelerated. Your files never leave your device.</p>
+        </div>
+      </section>
+
+      <!-- Pedif Sovereign Privacy Guarantee Card -->
+      <div class="craft-home-sovereign-card">
+        <div class="craft-home-sovereign-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <strong>Sovereign Privacy Guarantee</strong>
+            <span>Zero telemetry, zero cloud calls. All AI and PDF operations execute 100% locally on your hardware.</span>
+          </div>
+        </div>
+        <span class="craft-home-sovereign-badge">100% On-Device</span>
       </div>
 
-      <!-- Primary Action — Open PDF -->
+      <!-- Pedif Recommended Tools Grid -->
+      <section class="craft-recommended-section" aria-label="Recommended Workbench Tools">
+        <div class="quick-tools-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <h2>Recommended Tools</h2>
+            <span class="quick-tools-subtitle">Core document workbench operations</span>
+          </div>
+          <button type="button" class="craft-strip-btn" id="btn-all-tools-home" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--text);background:var(--card);cursor:pointer;" title="Explore All Tools Catalog (T)" aria-label="Explore All Tools">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>All Tools</span>
+          </button>
+        </div>
+        <div class="craft-recommended-grid">
+          <div class="craft-rec-card rip" id="btn-rec-organize" role="button" tabindex="0" style="--cat-hue: var(--cat-pink)">
+            <div class="craft-rec-card-top">
+              <div class="craft-rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+              </div>
+              <strong>Organize Pages</strong>
+            </div>
+            <p>Reorder, rotate, delete, insert, or split pages with visual drag-and-drop.</p>
+            <span class="craft-rec-action">Use now →</span>
+          </div>
+
+          <div class="craft-rec-card rip" id="btn-quick-open" role="button" tabindex="0" style="--cat-hue: var(--cat-orange)">
+            <div class="craft-rec-card-top">
+              <div class="craft-rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                </svg>
+              </div>
+              <strong>Ink & Annotate</strong>
+            </div>
+            <p>Vector stylus, magnetic highlights, notes & shape recognition.</p>
+            <span class="craft-rec-action">Use now →</span>
+          </div>
+
+          <div class="craft-rec-card rip" id="btn-home-merge" role="button" tabindex="0" style="--cat-hue: var(--cat-blue)">
+            <div class="craft-rec-card-top">
+              <div class="craft-rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <strong data-i18n="mergeTitle">Combine PDFs</strong>
+            </div>
+            <p>Assemble and combine multiple documents into a single PDF.</p>
+            <span class="craft-rec-action">Use now →</span>
+          </div>
+
+          <div class="craft-rec-card rip" id="btn-rec-ocr" role="button" tabindex="0" style="--cat-hue: var(--cat-orange)">
+            <div class="craft-rec-card-top">
+              <div class="craft-rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/>
+                  <path d="M8 12h8M12 8v8"/>
+                </svg>
+              </div>
+              <strong>On-Device OCR</strong>
+            </div>
+            <p>WebGPU PP-OCRv4 AI text extraction for scanned images & documents.</p>
+            <span class="craft-rec-action">Use now →</span>
+          </div>
+
+          <div class="craft-rec-card rip" id="btn-rec-sanitize" role="button" tabindex="0" style="--cat-hue: var(--cat-teal)">
+            <div class="craft-rec-card-top">
+              <div class="craft-rec-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <strong>Sanitize Document</strong>
+            </div>
+            <p>Audit and purge author metadata, GPS, revisions, and risk vectors.</p>
+            <span class="craft-rec-action">Use now →</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Primary Action — Open PDF / Dropzone -->
       <label class="drop rip" id="drop" tabindex="0" role="button" aria-label="Open a PDF file">
         <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
         <span class="di">
@@ -88,56 +200,15 @@
         </span>
         <b>Open a document</b>
         <small>Drop a PDF here or click to browse</small>
+        <div style="margin-top: 14px;">
+          <button type="button" class="btn-sample rip" id="btn-sample-doc" title="Open Interactive Showcase Document" style="display: inline-flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span data-i18n="openSample">Launch Showcase Demo</span>
+          </button>
+        </div>
       </label>
-
-      <!-- Studio Quick Action Tools Shelf -->
-      <section class="quick-tools-shelf" aria-label="Quick Tools">
-        <div class="quick-tools-header">
-          <h2>Quick Tools</h2>
-          <span class="quick-tools-subtitle">All-in-one local PDF workstation</span>
-        </div>
-        <div class="quick-tools-grid">
-          <button type="button" class="quick-tool-card rip" id="btn-quick-open">
-            <div class="tool-card-icon cat-coral">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-              </svg>
-            </div>
-            <div class="tool-card-info">
-              <strong>Edit & Annotate</strong>
-              <small>Draw, highlight & sign documents</small>
-            </div>
-          </button>
-
-          <button type="button" class="quick-tool-card rip" id="btn-home-merge" title="Combine multiple PDFs">
-            <div class="tool-card-icon cat-teal">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="12" y1="18" x2="12" y2="12"/>
-                <line x1="9" y1="15" x2="15" y2="15"/>
-              </svg>
-            </div>
-            <div class="tool-card-info">
-              <strong data-i18n="mergeTitle">Merge PDFs</strong>
-              <small>Combine files into one document</small>
-            </div>
-          </button>
-
-          <button type="button" class="quick-tool-card rip" id="btn-sample-doc" title="Open Interactive Showcase Document">
-            <div class="tool-card-icon cat-purple">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-            </div>
-            <div class="tool-card-info">
-              <strong data-i18n="openSample">Open Showcase</strong>
-              <small>Explore OCR, tools & markup demo</small>
-            </div>
-          </button>
-        </div>
-      </section>
 
       <!-- Library Section -->
       <div id="libwrap"></div>
@@ -216,14 +287,93 @@
 
   <!-- ============ READER SCREEN ============ -->
   <section id="rd">
-    <!-- Top Action & Navigation Bar -->
-    <header class="top-bar glass" id="tb">
-      <div class="top-bar-left">
-        <button class="b rip" id="btn-back-home" title="Back to Library" aria-label="Back to Library">
+    <!-- 1. Pedif Document Tab Strip -->
+    <div class="craft-tab-strip">
+      <button type="button" class="craft-strip-home-btn" id="btn-back-home" title="Back to Library (Home)" aria-label="Back to Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Home</span>
+      </button>
+
+      <div class="craft-tabs-scroll" id="craft-tabs-container" role="tablist" aria-label="Document Tabs">
+        <div class="craft-tab-item active" id="craft-active-tab" role="tab" aria-selected="true">
+          <svg class="craft-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span class="craft-tab-title" id="craft-tab-active-title">Document</span>
+          <span class="craft-tab-dirty" id="craft-tab-dirty-dot" style="display:none;"></span>
+          <button type="button" class="craft-tab-close" id="craft-tab-close-btn" title="Close document (Ctrl+W)" aria-label="Close document">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="craft-tab-add-btn" id="btn-tab-new" title="Open or add PDF document" aria-label="Open document">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+
+      <div class="craft-strip-actions">
+        <button type="button" class="craft-cmd-search-trigger" id="btn-top-cmd-search" title="Command Palette (Ctrl+K)" aria-label="Command Palette">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Search tools...</span>
+          <kbd class="craft-cmd-kbd">Ctrl+K</kbd>
+        </button>
+
+        <button type="button" class="craft-strip-btn" id="btn-split-view" title="Split Document View (Side-by-side)" aria-label="Split View">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="12" y1="3" x2="12" y2="21"/>
           </svg>
         </button>
+
+        <button class="craft-strip-btn" id="btn-theme" title="Toggle Theme (D)" aria-label="Toggle Theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <button class="craft-strip-btn" id="btn-shortcuts" title="Shortcuts (?)" aria-label="Keyboard Shortcuts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+
+        <button class="craft-export-pill rip" id="btn-export" title="Export PDF with Standard Annotations (Ctrl+S)" aria-label="Export PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="export-pill-text" data-i18n="export">Export</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Pedif Secondary Mode Bar -->
+    <header class="top-bar glass craft-mode-bar" id="tb">
+      <div class="top-bar-left craft-mode-bar-left">
         <!-- Studio Application Menu Button -->
         <button class="b rip studio-menu-btn" id="btn-app-menu" title="Application Menu (File, Edit, View, Tools)" aria-label="Application Menu" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
@@ -240,13 +390,17 @@
             <line x1="9" y1="3" x2="9" y2="21"></line>
           </svg>
         </button>
-        <div class="title" id="btn-doc-title-props" role="button" tabindex="0" title="View Document Technical Properties" aria-label="View Document Technical Properties">
+        <div class="craft-doc-chip" id="btn-doc-title-props" role="button" tabindex="0" title="View Document Technical Properties" aria-label="View Document Technical Properties">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
           <b id="ti" dir="auto">—</b>
           <small id="sub" dir="auto">—</small>
         </div>
       </div>
 
-      <div class="top-bar-center">
+      <div class="top-bar-center craft-mode-bar-center">
         <!-- Tool Selectors -->
         <button class="b rip active" id="tool-select" title="Text Select & Highlight (V)" aria-label="Text Select & Highlight">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -280,16 +434,16 @@
         </button>
       </div>
 
-      <div class="top-bar-right">
+      <div class="top-bar-right craft-mode-bar-right">
         <button class="b rip" id="btn-search" title="Find in Document (Ctrl+F)" aria-label="Find in Document">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </button>
-        <button class="b rip studio-tools-pill" id="btn-workbench" title="Studio Tools (Organizer, Merge, Watermark, Bates, Metadata)" aria-label="Studio Tools" aria-haspopup="true" aria-expanded="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        <button class="b rip craft-alltools-badge-btn" id="btn-workbench" title="All Tools Catalog (T)" aria-label="All Tools Catalog" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
           </svg>
           <span class="studio-tools-text">All tools</span>
         </button>
@@ -310,34 +464,6 @@
             <path d="M21 7v6h-6"></path>
             <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path>
           </svg>
-        </button>
-        <button class="b rip" id="btn-theme" title="Toggle Theme (D)" aria-label="Toggle Theme">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-        </button>
-        <button class="b rip" id="btn-shortcuts" title="Shortcuts (?)" aria-label="Keyboard Shortcuts">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </button>
-        <button class="b rip btn-export-pill" id="btn-export" title="Export PDF (Ctrl+S)" aria-label="Export PDF">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span class="export-pill-text" data-i18n="export">Export</span>
         </button>
       </div>
 
@@ -793,6 +919,10 @@
       <button class="zt rip" id="btn-dock-zoom-reset" title="Reset zoom (0)" aria-label="Reset zoom">100%</button>
       <button class="b rip sm" id="btn-dock-zoom-in" title="Zoom in (+)" aria-label="Zoom in">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <s></s>
+      <button class="b rip sm" id="btn-dock-zen" title="Zen Focus Mode (Z)" aria-label="Zen Focus Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
       </button>
     </nav>
   </section>

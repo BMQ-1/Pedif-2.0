@@ -1,22 +1,134 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
-  <title id="title">Pedif — PDF Editor</title>
-  <desc id="desc">Pedif: an ivory reading page with a copper page fold on a deep evergreen field.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Pedif 2.0 — Sovereign PDF Workbench</title>
+  <desc id="desc">Pedif 2.0 emblem: an international modernist geometric folio with royal cobalt fold and electric cyan precision indicator.</desc>
   <defs>
-    <linearGradient id="field" x1="128" y1="80" x2="896" y2="944" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1B4541"/>
-      <stop offset="1" stop-color="#102E2D"/>
+    <!-- Background: Deep Ultramarine Obsidian -->
+    <linearGradient id="pedif-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="50%" stop-color="#070c18"/>
+      <stop offset="100%" stop-color="#02050b"/>
     </linearGradient>
-    <linearGradient id="paper" x1="340" y1="196" x2="700" y2="832" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFCF5"/>
-      <stop offset="1" stop-color="#F0E9DC"/>
+
+    <!-- Royal Cobalt Horizon Gradient -->
+    <linearGradient id="pedif-cobalt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="30%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
     </linearGradient>
+
+    <!-- Pristine Architectural Sheet Gradient -->
+    <linearGradient id="pedif-sheet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+
+    <!-- Translucent Sub-layer Sheet Gradient -->
+    <linearGradient id="pedif-subsheet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- Fold Corner Vibrant Horizon -->
+    <linearGradient id="pedif-fold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1e40af"/>
+    </linearGradient>
+
+    <!-- Standard SVG Filters for Cross-Engine Fidelity -->
+    <filter id="pedif-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#2563eb" flood-opacity="0.45"/>
+    </filter>
+
+    <filter id="pedif-fold-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="-4" dy="8" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.4"/>
+    </filter>
+
+    <filter id="pedif-ambient-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="45"/>
+    </filter>
   </defs>
-  <rect width="1024" height="1024" rx="224" fill="url(#field)"/>
-  <path d="M353 190h220l147 147v435a62 62 0 0 1-62 62H353a62 62 0 0 1-62-62V252a62 62 0 0 1 62-62Z" fill="url(#paper)"/>
-  <path d="M573 190v103a44 44 0 0 0 44 44h103L573 190Z" fill="#DED3C0"/>
-  <path d="M573 190v103a44 44 0 0 0 44 44h103" fill="none" stroke="#C87C56" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
-  <path d="M389 439h226" fill="none" stroke="#244845" stroke-linecap="round" stroke-width="24"/>
-  <path d="M389 505h174" fill="none" stroke="#A9A293" stroke-linecap="round" stroke-width="18"/>
-  <path d="M389 566h198" fill="none" stroke="#A9A293" stroke-linecap="round" stroke-width="18"/>
-  <path d="M389 684h112" fill="none" stroke="#C87C56" stroke-linecap="round" stroke-width="18"/>
+
+  <!-- Squircle Base -->
+  <rect width="512" height="512" rx="115" fill="url(#pedif-bg)"/>
+  <rect width="510" height="510" x="1" y="1" rx="114" fill="none" stroke="#38bdf8" stroke-opacity="0.18" stroke-width="2"/>
+
+  <!-- Ambient Volumetric Lighting Glow -->
+  <circle cx="256" cy="230" r="170" fill="url(#pedif-cobalt)" opacity="0.22" filter="url(#pedif-ambient-glow)"/>
+  <circle cx="340" cy="170" r="90" fill="#38bdf8" opacity="0.25" filter="url(#pedif-ambient-glow)"/>
+
+  <!-- Icon Composite Geometry -->
+  <g filter="url(#pedif-glow)">
+    <!-- Layer 1: Ghosted Sub-Folio (Representing Sovereign Multi-Document Tabs) -->
+    <path d="M184 140
+             H312
+             L368 196
+             V380
+             C368 393 357 404 344 404
+             H184
+             C171 404 160 393 160 380
+             V164
+             C160 151 171 140 184 140 Z"
+          fill="url(#pedif-subsheet)"
+          stroke="#38bdf8"
+          stroke-opacity="0.3"
+          stroke-width="1.5"
+          transform="rotate(6 264 272)"/>
+
+    <!-- Layer 2: Main Primary Architectural Folio -->
+    <path d="M148 112
+             H296
+             L364 180
+             V388
+             C364 401 353 412 340 412
+             H148
+             C135 412 124 401 124 388
+             V136
+             C124 123 135 112 148 112 Z"
+          fill="url(#pedif-sheet)"/>
+
+    <!-- Precision Chamfer Border on Main Folio -->
+    <path d="M148 112
+             H296
+             L364 180
+             V388
+             C364 401 353 412 340 412
+             H148
+             C135 412 124 401 124 388
+             V136
+             C124 123 135 112 148 112 Z"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="2"/>
+
+    <!-- Folded Corner Geometry with Ambient Drop Shadow -->
+    <path d="M296 112
+             V164
+             C296 173 303 180 312 180
+             H364
+             L296 112 Z"
+          fill="url(#pedif-fold)"
+          filter="url(#pedif-fold-shadow)"/>
+
+    <path d="M296 112
+             V164
+             C296 173 303 180 312 180
+             H364
+             L296 112 Z"
+          fill="none"
+          stroke="#60a5fa"
+          stroke-opacity="0.6"
+          stroke-width="1.5"/>
+
+    <!-- Modernist Document Grid Lines (Deep Navy Cutouts) -->
+    <rect x="168" y="228" width="120" height="12" rx="6" fill="#1e293b"/>
+    <rect x="168" y="258" width="154" height="10" rx="5" fill="#64748b" opacity="0.65"/>
+    <rect x="168" y="284" width="132" height="10" rx="5" fill="#64748b" opacity="0.65"/>
+    <rect x="168" y="310" width="80" height="10" rx="5" fill="#38bdf8"/>
+
+    <!-- Electric Cyan Horizon Focus Indicator -->
+    <circle cx="280" cy="315" r="7" fill="#2563eb"/>
+    <circle cx="280" cy="315" r="4" fill="#38bdf8"/>
+    <circle cx="280" cy="315" r="12" fill="#38bdf8" opacity="0.35"/>
+  </g>
 </svg>
