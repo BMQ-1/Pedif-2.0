@@ -611,6 +611,7 @@ class PedifApp {
           appMenu.hidden = false;
           btnAppMenu.setAttribute('aria-expanded', 'true');
           positionAppMenu();
+          this.updateMenuRecents();
         } else {
           appMenu.hidden = true;
           btnAppMenu.setAttribute('aria-expanded', 'false');
@@ -1525,6 +1526,46 @@ class PedifApp {
       await autosave.clearSession();
       banner.remove();
     });
+  }
+
+  async updateMenuRecents() {
+    if (typeof document === 'undefined') return;
+    const container = document.getElementById('app-menu-recents');
+    if (!container) return;
+    try {
+      const docs = await libraryStore.listDocuments();
+      if (!docs || !docs.length) {
+        container.innerHTML = '';
+        return;
+      }
+      const recents = docs.slice(0, 3);
+      container.innerHTML = recents.map(d => `
+        <button type="button" class="app-menu-recent-item" data-id="${d.id}" title="${d.name}">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="recent-name">${d.name}</span>
+          <span class="recent-badge">${d.pageCount}p</span>
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.app-menu-recent-item').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          const appMenu = document.getElementById('app-menu-dropdown');
+          if (appMenu) appMenu.hidden = true;
+          const btnAppMenu = document.getElementById('btn-app-menu');
+          if (btnAppMenu) btnAppMenu.setAttribute('aria-expanded', 'false');
+          const doc = await libraryStore.getDocument(id);
+          if (doc && doc.buffer) {
+            await this.loadPdfBuffer(doc.buffer, doc.name);
+          } else {
+            showToast('Document buffer not found in library', 'alert');
+          }
+        });
+      });
+    } catch {
+      container.innerHTML = '';
+    }
   }
 }
 

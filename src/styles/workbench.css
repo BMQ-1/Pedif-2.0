@@ -767,6 +767,60 @@
   margin: 4px 8px;
 }
 
+.app-menu-recents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0;
+}
+
+.app-menu-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--tx2);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.app-menu-recent-item:hover {
+  background: var(--fill, rgba(120, 120, 128, 0.2));
+  color: var(--tx);
+}
+
+.app-menu-recent-item svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.app-menu-recent-item:hover svg {
+  opacity: 1;
+  color: var(--ac);
+}
+
+.app-menu-recent-item .recent-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.app-menu-recent-item .recent-badge {
+  font-size: 10px;
+  color: var(--tx3);
+  background: var(--fill2);
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
 /* ============================================================
    Studio "All Tools" Mega Command Center
    ============================================================ */
