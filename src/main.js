@@ -277,6 +277,13 @@ class PedifApp {
     document.documentElement.dataset.theme = this.activeTheme;
     localStorage.setItem('pedif:theme', this.activeTheme);
     showToast(`Theme: ${this.activeTheme.toUpperCase()}`, 'star');
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.theme-choice-btn').forEach(b => {
+        if (b.classList && typeof b.classList.toggle === 'function') {
+          b.classList.toggle('active', b.dataset.theme === this.activeTheme);
+        }
+      });
+    }
   }
 
   setToolMode(mode) {
