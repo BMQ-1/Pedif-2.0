@@ -49,6 +49,25 @@ export class MetadataDialog {
         </header>
 
         <main class="workbench-body">
+          <div class="meta-tech-strip">
+            <div class="meta-tech-item">
+              <span class="meta-tech-lbl">Pages</span>
+              <strong class="meta-tech-val" id="meta-stat-pages">—</strong>
+            </div>
+            <div class="meta-tech-item">
+              <span class="meta-tech-lbl">File Size</span>
+              <strong class="meta-tech-val" id="meta-stat-size">—</strong>
+            </div>
+            <div class="meta-tech-item">
+              <span class="meta-tech-lbl">Dimensions</span>
+              <strong class="meta-tech-val" id="meta-stat-dims">—</strong>
+            </div>
+            <div class="meta-tech-item">
+              <span class="meta-tech-lbl">Compliance</span>
+              <strong class="meta-tech-val">ISO 32000-1</strong>
+            </div>
+          </div>
+
           <div class="wm-form">
             <div class="form-group">
               <label class="form-label" for="meta-field-title" data-i18n="metaDocTitle">${i18n.t('metaDocTitle')}</label>
@@ -119,6 +138,21 @@ export class MetadataDialog {
       this.modal.querySelector('#meta-field-subject').value = pdfDoc.getSubject() || '';
       this.modal.querySelector('#meta-field-keywords').value = (pdfDoc.getKeywords() || []).join(', ');
       this.modal.querySelector('#meta-field-producer').value = pdfDoc.getProducer() || 'Pedif Sovereign PDF Studio';
+
+      const pageCount = pdfDoc.getPageCount();
+      const pagesEl = this.modal.querySelector('#meta-stat-pages');
+      if (pagesEl) pagesEl.textContent = `${pageCount}`;
+
+      const bytes = pdfBytes.byteLength || 0;
+      const sizeStr = bytes > 1048576 ? `${(bytes / 1048576).toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+      const sizeEl = this.modal.querySelector('#meta-stat-size');
+      if (sizeEl) sizeEl.textContent = sizeStr;
+
+      const firstPage = pageCount > 0 ? pdfDoc.getPage(0) : null;
+      const dimsEl = this.modal.querySelector('#meta-stat-dims');
+      if (dimsEl && firstPage) {
+        dimsEl.textContent = `${Math.round(firstPage.getWidth())} × ${Math.round(firstPage.getHeight())} pt`;
+      }
     } catch (err) {
       console.warn('Error reading metadata:', err);
     }

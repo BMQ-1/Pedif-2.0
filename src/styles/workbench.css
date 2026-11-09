@@ -676,6 +676,43 @@
   }
 }
 
+.meta-tech-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: var(--fill2);
+  border: 1px solid var(--ln2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 500px) {
+  .meta-tech-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.meta-tech-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta-tech-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tx3);
+}
+
+.meta-tech-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx);
+}
+
 /* ============================================================
    Studio Desktop Application Menu Dropdown (File / Edit / View / Tools)
    ============================================================ */
