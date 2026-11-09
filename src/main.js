@@ -1004,13 +1004,24 @@ class PedifApp {
         return;
       }
 
-      // Navigation: J/K or Arrow keys
-      if (e.key === 'j' || e.key === 'ArrowRight' || e.key === ' ') {
+      // Fullscreen toggle (F11)
+      if (e.key === 'F11') {
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.().catch(() => {});
+        } else {
+          document.exitFullscreen?.().catch(() => {});
+        }
+        return;
+      }
+
+      // Navigation: J/K, Arrow keys, PageUp/PageDown, Space
+      if (e.key === 'j' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
         e.preventDefault();
         if (this.viewer && this.viewer.currentPage < pdfEngine.numPages) {
           this.viewer.scrollToPage(this.viewer.currentPage + 1);
         }
-      } else if (e.key === 'k' || e.key === 'ArrowLeft') {
+      } else if (e.key === 'k' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
         if (this.viewer && this.viewer.currentPage > 1) {
           this.viewer.scrollToPage(this.viewer.currentPage - 1);

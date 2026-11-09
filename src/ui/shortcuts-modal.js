@@ -44,11 +44,13 @@ export class ShortcutsModal {
             <h4>Navigation & Zoom</h4>
             <div class="shortcut-row"><kbd>J</kbd> / <kbd>→</kbd><span>Next page</span></div>
             <div class="shortcut-row"><kbd>K</kbd> / <kbd>←</kbd><span>Previous page</span></div>
+            <div class="shortcut-row"><kbd>PgUp</kbd> / <kbd>PgDn</kbd><span>Previous / Next page</span></div>
             <div class="shortcut-row"><kbd>G</kbd><span>Go to Page (Jump)</span></div>
             <div class="shortcut-row"><kbd>W</kbd><span>Toggle Fit Width</span></div>
             <div class="shortcut-row"><kbd>+</kbd> / <kbd>-</kbd><span>Zoom in / out</span></div>
             <div class="shortcut-row"><kbd>0</kbd><span>Reset zoom (100%)</span></div>
             <div class="shortcut-row"><kbd>Home</kbd> / <kbd>End</kbd><span>First / Last page</span></div>
+            <div class="shortcut-row"><kbd>F11</kbd><span>Toggle Fullscreen</span></div>
           </div>
 
           <div class="shortcut-group">
