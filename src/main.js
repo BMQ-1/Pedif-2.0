@@ -644,6 +644,13 @@ class PedifApp {
       if (fileInput) fileInput.click();
     });
     bindMenuAction('app-menu-export', () => this.handleExportPdf());
+    bindMenuAction('app-menu-print', () => {
+      if (!this.currentDoc) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      window.print();
+    });
     bindMenuAction('app-menu-extract', () => {
       if (!this.currentDoc) {
         showToast('Please open a PDF document first', 'alert');
