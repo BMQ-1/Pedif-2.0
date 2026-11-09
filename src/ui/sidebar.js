@@ -513,15 +513,29 @@ export class Sidebar {
       return;
     }
 
-    // Annotations search bar
+    // Annotations search & export bar
     const searchWrap = document.createElement('div');
-    searchWrap.className = 'sidebar-search-box';
+    searchWrap.className = 'sidebar-search-box ann-search-row';
     searchWrap.style.marginBottom = '8px';
+    searchWrap.style.display = 'flex';
+    searchWrap.style.alignItems = 'center';
+    searchWrap.style.gap = '6px';
     searchWrap.innerHTML = `
       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" class="sidebar-search-input" id="ann-search-input" placeholder="Search highlights & notes..." aria-label="Search highlights and notes">
+      <input type="text" class="sidebar-search-input" id="ann-search-input" placeholder="Search highlights & notes..." aria-label="Search highlights and notes" style="flex:1;">
+      <button class="b sm ann-export-btn" id="btn-export-annotations" title="Export Highlights & Notes Summary (Markdown)" aria-label="Export Highlights and Notes Summary" style="padding:4px 6px; border-radius:6px; flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
     `;
     pane.appendChild(searchWrap);
+
+    const exportBtn = searchWrap.querySelector('#btn-export-annotations');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.exportAnnotationsSummary(allAnnotations);
+      });
+    }
 
     // Filter toolbar
     const filterBar = document.createElement('div');
@@ -612,6 +626,56 @@ export class Sidebar {
           card.style.display = !q || text.includes(q) ? '' : 'none';
         });
       });
+    }
+  }
+
+  exportAnnotationsSummary(annotations) {
+    if (!annotations || !annotations.length) {
+      showToast('No annotations to export', 'info');
+      return;
+    }
+    const docTitle = (typeof document !== 'undefined' && document.title) ? document.title.replace(' - Pedif', '').trim() : 'Document';
+    const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    let md = `# Highlights & Notes Summary: ${docTitle}\n`;
+    md += `*Exported from Pedif on ${dateStr} • ${annotations.length} annotation(s)*\n\n---\n\n`;
+
+    // Group by page
+    const byPage = new Map();
+    annotations.forEach(a => {
+      const p = a.page || 1;
+      if (!byPage.has(p)) byPage.set(p, []);
+      byPage.get(p).push(a);
+    });
+
+    const sortedPages = Array.from(byPage.keys()).sort((a, b) => a - b);
+    sortedPages.forEach(p => {
+      md += `## Page ${p}\n\n`;
+      byPage.get(p).forEach((ann) => {
+        md += `> "${ann.text || ''}"\n\n`;
+        if (ann.note) {
+          md += `**Note:** ${ann.note}\n\n`;
+        }
+        if (ann.style && ann.style !== 'highlight') {
+          md += `*Style: ${ann.style}*\n\n`;
+        }
+      });
+      md += `---\n\n`;
+    });
+
+    try {
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${docTitle.toLowerCase().replace(/[^a-z0-9_-]/gi, '_')}_annotations.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Annotations summary exported!', 'check');
+    } catch (e) {
+      console.error('Export annotations failed:', e);
+      showToast('Export failed', 'alert');
     }
   }
 
