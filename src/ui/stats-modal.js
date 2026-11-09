@@ -120,11 +120,17 @@ export class StatsModal {
     const okBtn = modal.querySelector('#btn-stats-ok');
     const close = () => this.hide();
 
-    closeBtn.addEventListener('click', close);
-    okBtn.addEventListener('click', close);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) close();
-    });
+    if (closeBtn && typeof closeBtn.addEventListener === 'function') {
+      closeBtn.addEventListener('click', close);
+    }
+    if (okBtn && typeof okBtn.addEventListener === 'function') {
+      okBtn.addEventListener('click', close);
+    }
+    if (modal && typeof modal.addEventListener === 'function') {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) close();
+      });
+    }
 
     if (this._onKey) {
       window.removeEventListener('keydown', this._onKey);
