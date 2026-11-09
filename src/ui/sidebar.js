@@ -696,9 +696,32 @@ export class Sidebar {
     const isSpread = this.viewer && this.viewer.mode === 'spread';
     const margins = this.viewer && this.viewer.margins;
     const hasCrop = margins && (margins.left > 0 || margins.top > 0 || margins.right > 0 || margins.bottom > 0);
+    const curTheme = (typeof document !== 'undefined' && document.documentElement.dataset.theme) || 'dark';
 
     pane.innerHTML = `
       <div class="view-settings-panel">
+        <div class="panel-section">
+          <h3 class="panel-section-title">Color Theme</h3>
+          <div class="theme-picker-grid">
+            <button type="button" class="theme-choice-btn ${curTheme === 'light' ? 'active' : ''}" data-theme="light">
+              <span class="theme-swatch swatch-light"></span>
+              <span>Light</span>
+            </button>
+            <button type="button" class="theme-choice-btn ${curTheme === 'dark' ? 'active' : ''}" data-theme="dark">
+              <span class="theme-swatch swatch-dark"></span>
+              <span>Dark</span>
+            </button>
+            <button type="button" class="theme-choice-btn ${curTheme === 'sepia' ? 'active' : ''}" data-theme="sepia">
+              <span class="theme-swatch swatch-sepia"></span>
+              <span>Sepia</span>
+            </button>
+            <button type="button" class="theme-choice-btn ${curTheme === 'oled' ? 'active' : ''}" data-theme="oled">
+              <span class="theme-swatch swatch-oled"></span>
+              <span>OLED</span>
+            </button>
+          </div>
+        </div>
+
         <div class="panel-section">
           <h3 class="panel-section-title">Reading Mode</h3>
           <div class="segmented-control" role="group" aria-label="Reading layout mode">
@@ -796,6 +819,22 @@ export class Sidebar {
     pane.querySelector('#btn-reset-crop')?.addEventListener('click', () => {
       this.viewer.resetCropMargins();
       this.renderViewSettings();
+    });
+
+    pane.querySelectorAll('.theme-choice-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const t = e.currentTarget.dataset.theme;
+        if (typeof document !== 'undefined') {
+          document.documentElement.dataset.theme = t;
+          localStorage.setItem('pedif:theme', t);
+        }
+        pane.querySelectorAll('.theme-choice-btn').forEach(b => {
+          if (b.classList && typeof b.classList.toggle === 'function') {
+            b.classList.toggle('active', b.dataset.theme === t);
+          }
+        });
+        showToast(`Theme: ${t.toUpperCase()}`, 'star');
+      });
     });
   }
 

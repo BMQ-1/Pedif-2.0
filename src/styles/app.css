@@ -2511,6 +2511,50 @@ body.zen-mode.show-zen-controls .zen-exit-pill {
   margin: 0 0 10px 0;
 }
 
+.theme-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.theme-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--card2);
+  border: 1px solid var(--ln);
+  border-radius: 8px;
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-choice-btn:hover {
+  background: var(--fill);
+}
+
+.theme-choice-btn.active {
+  border-color: var(--ac);
+  background: var(--fill2);
+  box-shadow: 0 0 0 1px var(--ac);
+}
+
+.theme-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  flex-shrink: 0;
+}
+
+.swatch-light { background: #ffffff; }
+.swatch-dark { background: #1c1c1e; }
+.swatch-sepia { background: #fbf0d9; }
+.swatch-oled { background: #000000; }
+
 .segmented-control {
   display: flex;
   gap: 4px;
