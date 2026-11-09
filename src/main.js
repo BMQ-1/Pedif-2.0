@@ -1141,68 +1141,75 @@ class PedifApp {
         e.preventDefault();
         this.viewer.setScale(1.25);
         if (this.dock) this.dock.updateZoom(1.25);
-      } else if (e.key === 'v') {
-        this.setToolMode('select');
-      } else if (e.key === 'p') {
-        this.setToolMode('pen');
-      } else if (e.key === 'h') {
-        this.setToolMode('highlighter');
-      } else if (e.key === 'e') {
-        this.setToolMode('eraser');
-      } else if (e.key === 'o') {
-        this.setToolMode('ocr');
-      } else if (e.key === 'l' || e.key === 'L') {
-        this.setToolMode('lasso');
-      } else if (e.key === 'c' || e.key === 'C') {
-        if (this.cropTool) this.cropTool.open(this.viewer.currentPage);
-      } else if (e.key === 't' || e.key === 'T') {
-        if (this.smartScanner) this.smartScanner.toggleScanCurrentPage();
-      } else if (e.key === 'w' || e.key === 'W') {
-        if (this.viewer) {
-          const newScale = this.viewer.fitWidth();
-          if (this.dock) this.dock.updateZoom(newScale);
-        }
-      } else if (e.key === 'g' || e.key === 'G') {
-        e.preventDefault();
-        const pageBtn = document.getElementById('btn-dock-page');
-        if (pageBtn) pageBtn.click();
-      } else if (e.key === 'r' || e.key === 'R') {
-        if (this.viewer) {
-          const rot = this.viewer.rotateClockwise();
-          showToast(`Rotated ${rot}°`, 'check');
-        }
-      } else if (e.key === 'x' || e.key === 'X') {
-        if (this.currentDoc && this.extractDialog) {
-          this.extractDialog.show();
-        } else {
-          showToast('Please open a PDF document first', 'alert');
-        }
-      } else if (e.key === 'm' || e.key === 'M') {
-        if (this.currentDoc && this.pageOrganizer) {
-          this.getAnnotatedPdfBuffer().then(buf => {
-            this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
-          });
-        } else if (this.mergeTool) {
-          this.mergeTool.show();
-        }
-      } else if (e.key === 'a' || e.key === 'A') {
-        this.readAloudPage();
-      } else if (!e.ctrlKey && !e.metaKey && (e.key === 's' || e.key === 'S')) {
-        if (this.currentDoc && this.statsModal) {
-          this.statsModal.show();
-        } else {
-          showToast('Please open a PDF document first', 'alert');
-        }
-      } else if (e.key === 'b' || e.key === 'B') {
-        if (this.sidebar && this.viewer) {
+      }
+
+      // Single-Key Tool & Action Shortcuts (Protected from Ctrl / Meta / Alt chord collisions)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'v' || e.key === 'V') {
+          this.setToolMode('select');
+        } else if (e.key === 'p' || e.key === 'P') {
+          this.setToolMode('pen');
+        } else if (e.key === 'h' || e.key === 'H') {
+          this.setToolMode('highlighter');
+        } else if (e.key === 'e' || e.key === 'E') {
+          this.setToolMode('eraser');
+        } else if (e.key === 'o' || e.key === 'O') {
+          this.setToolMode('ocr');
+        } else if (e.key === 'l' || e.key === 'L') {
+          this.setToolMode('lasso');
+        } else if (e.key === 'c' || e.key === 'C') {
+          if (this.cropTool) this.cropTool.open(this.viewer.currentPage);
+        } else if (e.key === 't' || e.key === 'T') {
+          if (this.smartScanner) this.smartScanner.toggleScanCurrentPage();
+        } else if (e.key === 'w' || e.key === 'W') {
+          if (this.viewer) {
+            const newScale = this.viewer.fitWidth();
+            if (this.dock) this.dock.updateZoom(newScale);
+          }
+        } else if (e.key === 'g' || e.key === 'G') {
           e.preventDefault();
-          this.sidebar.toggleBookmark(this.viewer.currentPage || 1);
+          const pageBtn = document.getElementById('btn-dock-page');
+          if (pageBtn) pageBtn.click();
+        } else if (e.key === 'r' || e.key === 'R') {
+          if (this.viewer) {
+            const rot = this.viewer.rotateClockwise();
+            showToast(`Rotated ${rot}°`, 'check');
+          }
+        } else if (e.key === 'x' || e.key === 'X') {
+          if (this.currentDoc && this.extractDialog) {
+            this.extractDialog.show();
+          } else {
+            showToast('Please open a PDF document first', 'alert');
+          }
+        } else if (e.key === 'm' || e.key === 'M') {
+          if (this.currentDoc && this.pageOrganizer) {
+            this.getAnnotatedPdfBuffer().then(buf => {
+              this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
+            });
+          } else if (this.mergeTool) {
+            this.mergeTool.show();
+          }
+        } else if (e.key === 'a' || e.key === 'A') {
+          this.readAloudPage();
+        } else if (e.key === 's' || e.key === 'S') {
+          if (this.currentDoc && this.statsModal) {
+            this.statsModal.show();
+          } else {
+            showToast('Please open a PDF document first', 'alert');
+          }
+        } else if (e.key === 'b' || e.key === 'B') {
+          if (this.sidebar && this.viewer) {
+            e.preventDefault();
+            this.sidebar.toggleBookmark(this.viewer.currentPage || 1);
+          }
+        } else if (e.key === 'd' || e.key === 'D') {
+          this.toggleTheme();
+        } else if (e.key === 'z' || e.key === 'Z') {
+          this.toggleZenMode();
         }
-      } else if (e.key === 'd') {
-        this.toggleTheme();
-      } else if (!e.ctrlKey && !e.metaKey && (e.key === 'z' || e.key === 'Z')) {
-        this.toggleZenMode();
-      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+      }
+
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         if (this.shortcutsModal) this.shortcutsModal.toggle();
       }
