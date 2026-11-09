@@ -46,7 +46,7 @@ export class WatermarkDialog {
           </button>
         </header>
 
-        <main class="workbench-body">
+        <main class="workbench-body dialog-split-body">
           <div class="wm-form">
             <div class="form-group">
               <label class="form-label" for="wm-text" data-i18n="wmText">${i18n.t('wmText')}</label>
@@ -91,6 +91,11 @@ export class WatermarkDialog {
               </div>
             </div>
           </div>
+
+          <div class="dialog-preview-col">
+            <span class="dialog-preview-title">Real-Time Preview</span>
+            <canvas id="wm-preview-canvas" class="dialog-preview-paper" width="180" height="240"></canvas>
+          </div>
         </main>
 
         <footer class="workbench-footer">
@@ -122,21 +127,102 @@ export class WatermarkDialog {
       if (e.target === this.modal) this.hide();
     });
 
+    const angleSelect = this.modal.querySelector('#wm-angle');
+    const colorSelect = this.modal.querySelector('#wm-color');
+
+    const updatePreviewHandler = () => this._updatePreview();
+
     opacitySlider.addEventListener('input', (e) => {
       opacityVal.textContent = `${e.target.value}%`;
+      updatePreviewHandler();
     });
 
     sizeSlider.addEventListener('input', (e) => {
       sizeVal.textContent = `${e.target.value} pt`;
+      updatePreviewHandler();
     });
+
+    textInput.addEventListener('input', updatePreviewHandler);
+    if (angleSelect) angleSelect.addEventListener('change', updatePreviewHandler);
+    if (colorSelect) colorSelect.addEventListener('change', updatePreviewHandler);
 
     this.modal.querySelectorAll('.chip-preset').forEach(chip => {
       chip.addEventListener('click', () => {
         textInput.value = chip.dataset.val;
+        updatePreviewHandler();
       });
     });
 
     applyBtn.addEventListener('click', () => this.applyWatermark());
+    this._updatePreview();
+  }
+
+  _updatePreview() {
+    if (!this.modal) return;
+    const canvas = this.modal.querySelector('#wm-preview-canvas');
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // 1. Draw paper background
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Draw subtle simulated document text skeleton lines
+    ctx.fillStyle = '#e5e5ea';
+    const lines = [
+      [20, 24, 70, 7],
+      [20, 36, 140, 5],
+      [20, 46, 130, 5],
+      [20, 56, 135, 5],
+      [20, 70, 60, 6],
+      [20, 82, 140, 5],
+      [20, 92, 125, 5],
+      [20, 102, 138, 5],
+      [20, 112, 110, 5],
+      [20, 130, 140, 5],
+      [20, 140, 130, 5],
+      [20, 150, 120, 5],
+      [20, 165, 140, 5],
+      [20, 175, 135, 5],
+      [20, 190, 80, 5],
+      [20, 200, 135, 5],
+      [20, 210, 120, 5],
+    ];
+    lines.forEach(([lx, ly, lw, lh]) => {
+      ctx.fillRect(lx, ly, lw, lh);
+    });
+
+    // 3. Draw Watermark Text
+    const text = (this.modal.querySelector('#wm-text')?.value || 'CONFIDENTIAL').trim();
+    if (!text) return;
+
+    const opacity = (parseInt(this.modal.querySelector('#wm-opacity')?.value || '18', 10)) / 100;
+    const ptSize = parseInt(this.modal.querySelector('#wm-size')?.value || '52', 10);
+    const angle = parseInt(this.modal.querySelector('#wm-angle')?.value || '45', 10);
+    const colorKey = this.modal.querySelector('#wm-color')?.value || 'red';
+
+    let colorRgb = '255, 59, 48'; // red
+    if (colorKey === 'gray') colorRgb = '100, 100, 105';
+    if (colorKey === 'blue') colorRgb = '10, 132, 255';
+    if (colorKey === 'amber') colorRgb = '255, 159, 10';
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate((-angle * Math.PI) / 180);
+
+    const scaledSize = Math.max(10, Math.min(32, ptSize * 0.32));
+    ctx.font = `bold ${scaledSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(${colorRgb}, ${opacity * 1.5})`;
+    ctx.fillText(text, 0, 0);
+
+    ctx.restore();
   }
 
   show(pdfBytes) {
@@ -147,6 +233,7 @@ export class WatermarkDialog {
     this.currentDocBytes = pdfBytes;
     this.modal.hidden = false;
     this.modal.classList.add('visible');
+    this._updatePreview();
   }
 
   hide() {

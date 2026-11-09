@@ -49,7 +49,7 @@ export class NumberingDialog {
           </button>
         </header>
 
-        <main class="workbench-body">
+        <main class="workbench-body dialog-split-body">
           <div class="wm-form">
             <div class="form-row">
               <div class="form-group col">
@@ -107,6 +107,11 @@ export class NumberingDialog {
               <strong id="num-preview-text" class="preview-text">Page 1 of 12</strong>
             </div>
           </div>
+
+          <div class="dialog-preview-col">
+            <span class="dialog-preview-title">Real-Time Preview</span>
+            <canvas id="num-preview-canvas" class="dialog-preview-paper" width="180" height="240"></canvas>
+          </div>
         </main>
 
         <footer class="workbench-footer">
@@ -157,14 +162,99 @@ export class NumberingDialog {
       } else {
         previewText.textContent = `${start}`;
       }
+
+      this._updatePreview();
     };
 
+    const posSelect = this.modal.querySelector('#num-position');
+    const sizeSelect = this.modal.querySelector('#num-size');
+
     formatSelect.addEventListener('change', updatePreview);
+    if (posSelect) posSelect.addEventListener('change', updatePreview);
+    if (sizeSelect) sizeSelect.addEventListener('change', updatePreview);
     batesPrefix.addEventListener('input', updatePreview);
     batesDigits.addEventListener('input', updatePreview);
     startInput.addEventListener('input', updatePreview);
 
     applyBtn.addEventListener('click', () => this.applyNumbering());
+    this._updatePreview();
+  }
+
+  _updatePreview() {
+    if (!this.modal) return;
+    const canvas = this.modal.querySelector('#num-preview-canvas');
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // 1. Draw paper background
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. Draw subtle simulated document lines
+    ctx.fillStyle = '#e5e5ea';
+    const lines = [
+      [20, 24, 70, 7],
+      [20, 36, 140, 5],
+      [20, 46, 130, 5],
+      [20, 56, 135, 5],
+      [20, 70, 60, 6],
+      [20, 82, 140, 5],
+      [20, 92, 125, 5],
+      [20, 102, 138, 5],
+      [20, 112, 110, 5],
+      [20, 130, 140, 5],
+      [20, 140, 130, 5],
+      [20, 150, 120, 5],
+      [20, 165, 140, 5],
+      [20, 175, 135, 5],
+      [20, 190, 80, 5],
+      [20, 200, 135, 5],
+      [20, 210, 120, 5],
+    ];
+    lines.forEach(([lx, ly, lw, lh]) => {
+      ctx.fillRect(lx, ly, lw, lh);
+    });
+
+    // 3. Compute sample text
+    const format = this.modal.querySelector('#num-format')?.value || 'page_x_of_y';
+    const pos = this.modal.querySelector('#num-position')?.value || 'bottom-center';
+    const start = parseInt(this.modal.querySelector('#num-start')?.value, 10) || 1;
+    let sampleText = `Page ${start} of 12`;
+    if (format === 'x_of_y') sampleText = `${start} / 12`;
+    else if (format === 'page_x') sampleText = `Page ${start}`;
+    else if (format === 'just_x') sampleText = `${start}`;
+    else if (format === 'bates') {
+      const prefix = this.modal.querySelector('#num-bates-prefix')?.value || 'DOC-';
+      const digits = parseInt(this.modal.querySelector('#num-bates-digits')?.value, 10) || 5;
+      sampleText = `${prefix}${String(start).padStart(digits, '0')}`;
+    }
+
+    ctx.font = '600 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#1c1c1e';
+
+    let tx = w / 2;
+    let ty = h - 14;
+    let align = 'center';
+
+    if (pos.startsWith('top-')) {
+      ty = 16;
+    }
+    if (pos.endsWith('-left')) {
+      tx = 16;
+      align = 'left';
+    } else if (pos.endsWith('-right')) {
+      tx = w - 16;
+      align = 'right';
+    }
+
+    ctx.textAlign = align;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(sampleText, tx, ty);
   }
 
   show(pdfBytes) {
@@ -175,6 +265,7 @@ export class NumberingDialog {
     this.currentDocBytes = pdfBytes;
     this.modal.hidden = false;
     this.modal.classList.add('visible');
+    this._updatePreview();
   }
 
   hide() {
