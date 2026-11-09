@@ -300,7 +300,7 @@ export class WatermarkDialog {
         });
       }
 
-      const modifiedBytes = await pdfDoc.save();
+      const modifiedBytes = await pdfDoc.save({ useObjectStreams: true });
       toast.show(`Applied watermark to ${pages.length} page(s)!`, 'success');
       this.hide();
 

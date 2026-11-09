@@ -167,7 +167,7 @@ export class MetadataDialog {
       if (producer) pdfDoc.setProducer(producer);
       pdfDoc.setModificationDate(new Date());
 
-      const updatedBytes = await pdfDoc.save();
+      const updatedBytes = await pdfDoc.save({ useObjectStreams: true });
       toast.show('Document metadata saved successfully!', 'success');
       this.hide();
 

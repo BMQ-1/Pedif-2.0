@@ -193,7 +193,7 @@ export class ExtractDialog {
         const copiedPages = await newDoc.copyPages(srcDoc, indices);
         copiedPages.forEach(p => newDoc.addPage(p));
 
-        const extractedBytes = await newDoc.save();
+        const extractedBytes = await newDoc.save({ useObjectStreams: true });
         const blob = new Blob([extractedBytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
 

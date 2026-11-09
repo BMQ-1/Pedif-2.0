@@ -188,7 +188,7 @@ export class PdfExporter {
       }
     }
 
-    return await pdfDoc.save();
+    return await pdfDoc.save({ useObjectStreams: true });
   }
 
   /**

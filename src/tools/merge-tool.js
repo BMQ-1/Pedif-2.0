@@ -330,7 +330,7 @@ export class MergeTool {
         }
       }
 
-      const mergedBytes = await mergedPdf.save();
+      const mergedBytes = await mergedPdf.save({ useObjectStreams: true });
       const outputFilename = `merged-${Date.now()}.pdf`;
 
       toast.show(`Successfully merged ${this.files.length} documents (${mergedPdf.getPageCount()} pages)!`, 'success');

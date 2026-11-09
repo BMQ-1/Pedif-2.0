@@ -317,7 +317,7 @@ export class PageOrganizer {
         }
       }
 
-      const newPdfBytes = await newDoc.save();
+      const newPdfBytes = await newDoc.save({ useObjectStreams: true });
       const isolatedBuffer = newPdfBytes.buffer.slice(newPdfBytes.byteOffset, newPdfBytes.byteOffset + newPdfBytes.byteLength);
 
       this.hide();

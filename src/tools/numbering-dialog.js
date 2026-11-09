@@ -342,7 +342,7 @@ export class NumberingDialog {
         });
       }
 
-      const modifiedBytes = await pdfDoc.save();
+      const modifiedBytes = await pdfDoc.save({ useObjectStreams: true });
       toast.show(`Added numbering to ${totalPages} page(s)!`, 'success');
       this.hide();
 
