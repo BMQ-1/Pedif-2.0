@@ -69,6 +69,12 @@ export class SelectionBubble {
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
           </svg>
         </button>
+        <button class="b sm rip btn-danger" id="bubble-btn-delete" title="Remove Highlight (Delete)" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#ff3b30;">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
       </div>
       <div class="bubble-note-row" id="bubble-note-row" style="display: none; padding-top: 6px; width: 100%;">
         <div class="note-input-wrap">
@@ -165,6 +171,42 @@ export class SelectionBubble {
         showToast('Reading selection', 'star');
       }
     });
+
+    const deleteBtn = this.container.querySelector('#bubble-btn-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        this.deleteOverlappingHighlights();
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (!this.container || this.container.style.display === 'none') return;
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          const noteInp = this.container.querySelector('#bubble-note-input');
+          if (noteInp && document.activeElement === noteInp) return;
+          if (this.overlappingHighlights && this.overlappingHighlights.length > 0) {
+            e.preventDefault();
+            this.deleteOverlappingHighlights();
+          }
+        }
+      });
+    }
+  }
+
+  deleteOverlappingHighlights() {
+    if (this.overlappingHighlights && this.overlappingHighlights.length > 0) {
+      const count = this.overlappingHighlights.length;
+      highlightManager.removeHighlights(this.overlappingHighlights);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(8);
+      }
+      showToast(`Removed ${count} highlight${count > 1 ? 's' : ''} (Ctrl+Z to undo)`, 'trash');
+      if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+      }
+      this.hide();
+    }
   }
 
   getSelectedText() {
@@ -182,10 +224,21 @@ export class SelectionBubble {
       return;
     }
 
+    // Detect if selection intersects any existing highlights on this page
+    const pageEl = data.pageEl || (typeof document !== 'undefined' ? document.getElementById(`page-${data.pageNum}`) : null);
+    const pageRect = pageEl ? pageEl.getBoundingClientRect() : null;
+    const itemsToCheck = (data.chars && data.chars.length) ? data.chars : (data.rects || (data.range ? Array.from(data.range.getClientRects()) : []));
+    this.overlappingHighlights = highlightManager.findOverlappingHighlights(data.pageNum, itemsToCheck, pageRect);
+
+    const deleteBtn = this.container.querySelector('#bubble-btn-delete');
+    if (deleteBtn) {
+      deleteBtn.style.display = (this.overlappingHighlights && this.overlappingHighlights.length > 0) ? 'inline-flex' : 'none';
+    }
+
     const bounds = data.bounds;
     this.container.style.display = 'flex';
 
-    const bubbleWidth = this.container.offsetWidth || 330;
+    const bubbleWidth = this.container.offsetWidth || 340;
     const bubbleHeight = this.container.offsetHeight || 46;
     let left = bounds.left + bounds.width / 2 - bubbleWidth / 2;
     let top = bounds.top - bubbleHeight - 14;

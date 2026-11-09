@@ -139,6 +139,95 @@ export class HighlightManager {
     return null;
   }
 
+  /**
+   * Finds all highlights on pageNum that intersect with a given set of client rects or character quads
+   */
+  findOverlappingHighlights(pageNum, items, pageRect = null) {
+    if (!items || !items.length) return [];
+    const list = this.getAnnotationsForPage(pageNum);
+    if (!list.length) return [];
+
+    // Normalize input boxes to [0.0, 1.0]
+    const searchBoxes = [];
+    items.forEach(it => {
+      if (pageRect && it.left !== undefined && it.top !== undefined) {
+        // DOM ClientRect
+        const minX = Math.max(0, Math.min(1, (it.left - pageRect.left) / pageRect.width));
+        const maxX = Math.max(0, Math.min(1, (it.right - pageRect.left) / pageRect.width));
+        const minY = Math.max(0, Math.min(1, (it.top - pageRect.top) / pageRect.height));
+        const maxY = Math.max(0, Math.min(1, (it.bottom - pageRect.top) / pageRect.height));
+        if (maxX > minX && maxY > minY) {
+          searchBoxes.push({ minX, maxX, minY, maxY });
+        }
+      } else if (it.quad) {
+        // Char quad
+        const q = it.quad;
+        const pLt = q.lt || q.p1 || { x: 0, y: 0 };
+        const pRt = q.rt || q.p2 || { x: 0, y: 0 };
+        const pRb = q.rb || q.p3 || { x: 0, y: 0 };
+        const pLb = q.lb || q.p4 || { x: 0, y: 0 };
+        const minX = Math.min(pLt.x, pLb.x);
+        const maxX = Math.max(pRt.x, pRb.x);
+        const minY = Math.min(pLt.y, pRt.y);
+        const maxY = Math.max(pLb.y, pRb.y);
+        if (maxX > minX && maxY > minY) {
+          searchBoxes.push({ minX, maxX, minY, maxY });
+        }
+      }
+    });
+
+    if (!searchBoxes.length) return [];
+
+    const overlapping = [];
+    list.forEach(ann => {
+      if (!ann.quads || !ann.quads.length) return;
+      const isOverlap = ann.quads.some(q => {
+        const pLt = q.lt || q.p1 || { x: 0, y: 0 };
+        const pRt = q.rt || q.p2 || { x: 0, y: 0 };
+        const pRb = q.rb || q.p3 || { x: 0, y: 0 };
+        const pLb = q.lb || q.p4 || { x: 0, y: 0 };
+        const aMinX = Math.min(pLt.x, pLb.x);
+        const aMaxX = Math.max(pRt.x, pRb.x);
+        const aMinY = Math.min(pLt.y, pRt.y);
+        const aMaxY = Math.max(pLb.y, pRb.y);
+
+        return searchBoxes.some(b => {
+          return !(b.maxX <= aMinX + 0.002 || b.minX >= aMaxX - 0.002 || b.maxY <= aMinY + 0.002 || b.minY >= aMaxY - 0.002);
+        });
+      });
+
+      if (isOverlap) {
+        overlapping.push(ann);
+      }
+    });
+
+    return overlapping;
+  }
+
+  /**
+   * Batch deletes multiple highlights with single atomic Undo/Redo command
+   */
+  removeHighlights(targets) {
+    if (!targets || !targets.length) return;
+    const annList = targets.map(t => typeof t === 'string' ? this.annotations.get(t) : (t && t.id ? this.annotations.get(t.id) : null)).filter(Boolean);
+    if (!annList.length) return;
+
+    const count = annList.length;
+    commandStack.execute({
+      description: `Delete ${count} Highlight${count > 1 ? 's' : ''}`,
+      execute: () => {
+        annList.forEach(a => this.annotations.delete(a.id));
+        const pages = new Set(annList.map(a => a.page));
+        pages.forEach(p => this._notify(p));
+      },
+      undo: () => {
+        annList.forEach(a => this.annotations.set(a.id, a));
+        const pages = new Set(annList.map(a => a.page));
+        pages.forEach(p => this._notify(p));
+      },
+    });
+  }
+
   removeHighlightSilently(id) {
     const ann = this.annotations.get(id);
     if (!ann) return null;
