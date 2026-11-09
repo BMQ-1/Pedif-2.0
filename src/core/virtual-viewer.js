@@ -1077,7 +1077,21 @@ export class VirtualViewer {
 
   setupScrollTracker() {
     let scrollTimeout = null;
+    let hudHideTimer = null;
+    const hudEl = typeof document !== 'undefined' ? document.getElementById('reading-hud') : null;
+    const hudText = typeof document !== 'undefined' ? document.getElementById('reading-hud-text') : null;
+
     this.container.addEventListener('scroll', () => {
+      if (hudEl && hudText && pdfEngine.numPages > 1) {
+        hudText.textContent = `Page ${this.currentPage} of ${pdfEngine.numPages} • ${Math.round(this.scale * 100)}%`;
+        hudEl.classList.add('visible');
+
+        if (hudHideTimer) clearTimeout(hudHideTimer);
+        hudHideTimer = setTimeout(() => {
+          hudEl.classList.remove('visible');
+        }, 1200);
+      }
+
       if (scrollTimeout) return;
       scrollTimeout = setTimeout(() => {
         scrollTimeout = null;

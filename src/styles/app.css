@@ -838,6 +838,34 @@ body.drag .drop {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Floating Reading HUD Pill — Smooth Fade On-Scroll */
+.reading-hud {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 68px);
+  z-index: 79;
+  transform: translateX(-50%) translateY(8px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--gl);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--ln);
+  color: var(--tx);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 14px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reading-hud.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 /* Floating Glass Bottom Dock — Physical Instrument Capsule */
 .dock {
   position: fixed;
