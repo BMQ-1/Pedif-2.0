@@ -532,6 +532,9 @@ export class VirtualViewer {
         pathEl.setAttribute('stroke-opacity', '0.6');
       }
       pathEl.dataset.annId = ann.id;
+      if (ann.note) {
+        pathEl.setAttribute('title', `Note: ${ann.note}`);
+      }
 
       pathEl.addEventListener('click', (e) => {
         e.stopPropagation();
