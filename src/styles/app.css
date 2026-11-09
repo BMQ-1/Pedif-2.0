@@ -833,6 +833,63 @@ body.drag .drop {
   transition: opacity .2s var(--e2), transform .22s var(--spring);
 }
 
+/* Zen / Focus Reading Mode */
+body.zen-mode #tb,
+body.zen-mode #dk,
+body.zen-mode #scrub,
+body.zen-mode .app-sidebar,
+body.zen-mode .sidebar-backdrop {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+body.zen-mode #dk {
+  transform: translateX(-50%) translateY(40px) !important;
+}
+
+body.zen-mode #rd {
+  padding-top: 24px !important;
+  padding-bottom: 40px !important;
+}
+
+/* Floating Zen Exit Pill */
+.zen-exit-pill {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--gl);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--ln);
+  color: var(--tx);
+  font-size: 0.76rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+body.zen-mode .zen-exit-pill {
+  pointer-events: auto;
+}
+
+body.zen-mode:hover .zen-exit-pill,
+body.zen-mode.show-zen-controls .zen-exit-pill {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .scrub-bub.on {
   opacity: 1;
   transform: translateX(-50%) translateY(0);

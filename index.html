@@ -417,6 +417,11 @@
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
             <span>Toggle Two-Page Spread</span>
           </button>
+          <button type="button" class="app-menu-item" id="app-menu-zen">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span>Zen Focus Mode</span>
+            <kbd class="menu-kbd">Z</kbd>
+          </button>
           <button type="button" class="app-menu-item" id="app-menu-theme">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <span data-i18n="toggleTheme">Toggle Theme</span>
@@ -585,6 +590,16 @@
                 <small>Switch between continuous scroll and dual-page book view</small>
               </div>
             </button>
+
+            <button type="button" class="wb-card-item wb-menu-item" id="wb-item-zen">
+              <div class="wb-card-icon cat-purple">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              </div>
+              <div class="wb-card-text">
+                <strong>Zen Focus Mode</strong>
+                <small>Distraction-free reading view hiding all toolbars</small>
+              </div>
+            </button>
           </div>
 
           <div class="wb-menu-sep wb-collapsed-item"></div>
@@ -622,6 +637,12 @@
 
     <!-- Main Viewport Scroll Container -->
     <main id="viewport-container"></main>
+
+    <!-- Zen Mode Floating Exit Pill -->
+    <button type="button" class="zen-exit-pill" id="btn-zen-exit" aria-label="Exit Zen Reading Mode">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <span>Exit Zen Mode (Esc)</span>
+    </button>
 
     <!-- Floating Reading HUD Pill (Fades in on scroll) -->
     <div class="reading-hud" id="reading-hud" aria-hidden="true">

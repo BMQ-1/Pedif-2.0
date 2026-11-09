@@ -705,6 +705,7 @@ class PedifApp {
         showToast(nextMode === 'spread' ? 'Two-page book spread enabled' : 'Continuous reading enabled', 'check');
       }
     });
+    bindMenuAction('app-menu-zen', () => this.toggleZenMode());
     bindMenuAction('app-menu-theme', () => this.toggleTheme());
     bindMenuAction('app-menu-stats', () => {
       if (!this.currentDoc) {
@@ -885,6 +886,21 @@ class PedifApp {
       });
     }
 
+    const wbItemZen = document.getElementById('wb-item-zen');
+    if (wbItemZen) {
+      wbItemZen.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        this.toggleZenMode();
+      });
+    }
+
+    const btnZenExit = document.getElementById('btn-zen-exit');
+    if (btnZenExit) {
+      btnZenExit.addEventListener('click', () => {
+        this.toggleZenMode();
+      });
+    }
+
     const wbItemUndo = document.getElementById('wb-item-undo');
     if (wbItemUndo) {
       wbItemUndo.addEventListener('click', () => {
@@ -990,12 +1006,29 @@ class PedifApp {
     }
   }
 
+  toggleZenMode() {
+    if (!this.currentDoc) {
+      showToast('Please open a PDF document first', 'alert');
+      return;
+    }
+    const isZen = document.body.classList.toggle('zen-mode');
+    if (isZen) {
+      showToast('Zen Mode enabled (Press Z or Esc to exit)', 'check', 2200);
+    } else {
+      showToast('Exited Zen Mode', 'check', 1500);
+    }
+  }
+
   setupKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-      // Escape key to dismiss modals / search bar / workbench popover / app menu
+      // Escape key to dismiss modals / search bar / workbench popover / app menu / zen mode
       if (e.key === 'Escape') {
+        if (typeof document !== 'undefined' && document.body.classList.contains('zen-mode')) {
+          this.toggleZenMode();
+          return;
+        }
         const appMenu = document.getElementById('app-menu-dropdown');
         if (appMenu && !appMenu.hidden) {
           appMenu.hidden = true;
@@ -1167,6 +1200,8 @@ class PedifApp {
         }
       } else if (e.key === 'd') {
         this.toggleTheme();
+      } else if (!e.ctrlKey && !e.metaKey && (e.key === 'z' || e.key === 'Z')) {
+        this.toggleZenMode();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         if (this.shortcutsModal) this.shortcutsModal.toggle();
