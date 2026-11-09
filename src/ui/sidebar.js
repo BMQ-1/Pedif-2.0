@@ -737,6 +737,22 @@ export class Sidebar {
         </div>
 
         <div class="panel-section">
+          <h3 class="panel-section-title">Zoom & Page Fit</h3>
+          <div class="panel-btn-grid">
+            <button type="button" class="b sm btn-panel-action" id="btn-view-fit-width">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg>
+              <span>Fit Width</span>
+            </button>
+            <button type="button" class="b sm btn-panel-secondary" id="btn-view-fit-page">
+              Fit Page
+            </button>
+            <button type="button" class="b sm btn-panel-secondary" id="btn-view-zoom-100">
+              100%
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-section">
           <h3 class="panel-section-title">Smart Margin Cropping</h3>
           <p class="panel-desc">
             Automatically scans and crops borders so scanned documents fill the reader area cleanly.
@@ -807,6 +823,27 @@ export class Sidebar {
     pane.querySelector('#btn-mode-spread')?.addEventListener('click', () => {
       this.viewer.setMode('spread');
       this.renderViewSettings();
+    });
+
+    pane.querySelector('#btn-view-fit-width')?.addEventListener('click', () => {
+      if (this.viewer && typeof this.viewer.fitWidth === 'function') {
+        this.viewer.fitWidth();
+        showToast('Fit Width', 'check');
+      }
+    });
+
+    pane.querySelector('#btn-view-fit-page')?.addEventListener('click', () => {
+      if (this.viewer && typeof this.viewer.fitPage === 'function') {
+        this.viewer.fitPage();
+        showToast('Fit Page', 'check');
+      }
+    });
+
+    pane.querySelector('#btn-view-zoom-100')?.addEventListener('click', () => {
+      if (this.viewer && typeof this.viewer.setScale === 'function') {
+        this.viewer.setScale(1.0);
+        showToast('Zoom 100%', 'check');
+      }
     });
 
     pane.querySelector('#btn-auto-crop')?.addEventListener('click', async () => {
