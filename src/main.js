@@ -270,10 +270,9 @@ class PedifApp {
     document.documentElement.dataset.theme = this.activeTheme;
   }
 
-  toggleTheme() {
-    const currentIndex = this.themes.indexOf(this.activeTheme);
-    const nextIndex = (currentIndex + 1) % this.themes.length;
-    this.activeTheme = this.themes[nextIndex];
+  setTheme(themeName) {
+    if (!this.themes.includes(themeName)) return;
+    this.activeTheme = themeName;
     document.documentElement.dataset.theme = this.activeTheme;
     localStorage.setItem('pedif:theme', this.activeTheme);
     showToast(`Theme: ${this.activeTheme.toUpperCase()}`, 'star');
@@ -284,6 +283,12 @@ class PedifApp {
         }
       });
     }
+  }
+
+  toggleTheme() {
+    const currentIndex = this.themes.indexOf(this.activeTheme);
+    const nextIndex = (currentIndex + 1) % this.themes.length;
+    this.setTheme(this.themes[nextIndex]);
   }
 
   setToolMode(mode) {
@@ -619,6 +624,13 @@ class PedifApp {
           btnAppMenu.setAttribute('aria-expanded', 'true');
           positionAppMenu();
           this.updateMenuRecents();
+          if (typeof document !== 'undefined') {
+            document.querySelectorAll('.menu-theme-btn').forEach(b => {
+              if (b.classList && typeof b.classList.toggle === 'function') {
+                b.classList.toggle('active', b.dataset.theme === this.activeTheme);
+              }
+            });
+          }
         } else {
           appMenu.hidden = true;
           btnAppMenu.setAttribute('aria-expanded', 'false');
@@ -723,6 +735,15 @@ class PedifApp {
     });
     bindMenuAction('app-menu-zen', () => this.toggleZenMode());
     bindMenuAction('app-menu-theme', () => this.toggleTheme());
+    document.querySelectorAll('.menu-theme-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const th = btn.dataset.theme;
+        if (th) {
+          this.setTheme(th);
+        }
+      });
+    });
     bindMenuAction('app-menu-stats', () => {
       if (!this.currentDoc) {
         showToast('Please open a PDF document first', 'alert');
