@@ -125,9 +125,19 @@ export class MetadataDialog {
 
     this.modal.hidden = false;
     this.modal.classList.add('visible');
+
+    if (this.keyHandler) window.removeEventListener('keydown', this.keyHandler);
+    this.keyHandler = (e) => {
+      if (e.key === 'Escape' && !this.modal.hidden) this.hide();
+    };
+    window.addEventListener('keydown', this.keyHandler);
   }
 
   hide() {
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
     this.modal.classList.remove('visible');
     this.modal.hidden = true;
   }
