@@ -724,6 +724,20 @@ class PedifApp {
       }
       if (this.numberingDialog) this.numberingDialog.show(this.currentDoc.buffer);
     });
+    bindMenuAction('app-menu-ocr', async () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      const curPage = (this.viewer && this.viewer.currentPage) || 1;
+      showToast(`Running WebGPU OCR on Page ${curPage}...`, 'info');
+      const res = await this.viewer.runManualOcr(curPage);
+      if (res && res.lines && res.lines.length) {
+        showToast(`OCR Success: Found ${res.lines.length} lines on Page ${curPage}. Text is now selectable!`, 'check');
+      } else {
+        showToast('OCR scan completed', 'check');
+      }
+    });
     bindMenuAction('app-menu-shortcuts', () => {
       if (this.shortcutsModal) this.shortcutsModal.toggle();
     });
@@ -830,6 +844,25 @@ class PedifApp {
       wbItemReadAloud.addEventListener('click', () => {
         if (popover) popover.hidden = true;
         this.readAloudPage();
+      });
+    }
+
+    const wbItemOcr = document.getElementById('wb-item-ocr');
+    if (wbItemOcr) {
+      wbItemOcr.addEventListener('click', async () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        const curPage = (this.viewer && this.viewer.currentPage) || 1;
+        showToast(`Running WebGPU OCR on Page ${curPage}...`, 'info');
+        const res = await this.viewer.runManualOcr(curPage);
+        if (res && res.lines && res.lines.length) {
+          showToast(`OCR Success: Found ${res.lines.length} lines on Page ${curPage}. Text is now selectable!`, 'check');
+        } else {
+          showToast('OCR scan completed', 'check');
+        }
       });
     }
 
