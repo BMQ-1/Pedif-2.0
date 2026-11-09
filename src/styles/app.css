@@ -3072,7 +3072,7 @@ kbd {
     overflow: visible !important;
     background: #fff !important;
   }
-  #tb, #dk, .app-sidebar, .toast, .restore-banner, .ink-subtoolbar, #home, .selection-bubble {
+  #tb, #dk, .app-sidebar, .toast, .restore-banner, .ink-subtoolbar, #home, .selection-bubble, .reading-hud, .zen-exit-pill, .modal-backdrop, .shortcuts-modal-backdrop {
     display: none !important;
   }
   #rd {
