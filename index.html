@@ -649,6 +649,26 @@
       <span id="reading-hud-text">Page 1 of 1 • 100%</span>
     </div>
 
+    <!-- Floating Speech Playback HUD Capsule -->
+    <aside class="tts-hud glass" id="tts-hud" aria-label="Speech playback controls" hidden>
+      <div class="tts-equalizer" id="tts-equalizer" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="tts-hud-text" id="tts-hud-text">Reading Page 1...</span>
+      <button type="button" class="b sm rip tts-hud-btn" id="btn-tts-pause" title="Pause / Resume Speech" aria-label="Pause or Resume Speech">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" id="icon-tts-playpause">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+      </button>
+      <button type="button" class="b sm rip tts-hud-btn" id="btn-tts-stop" title="Stop Speech" aria-label="Stop Speech">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </aside>
+
     <!-- Floating Bottom Dock -->
     <nav class="dock glass" id="dk" aria-label="Page navigation and zoom controls">
       <button class="b rip sm" id="btn-dock-prev" title="Previous page (K or ←)" aria-label="Previous page">

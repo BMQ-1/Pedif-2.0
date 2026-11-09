@@ -421,6 +421,10 @@ class PedifApp {
 
     if (btnBackHome) {
       btnBackHome.addEventListener('click', async () => {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          this.hideTtsHud();
+        }
         if (this.currentDoc && this.currentDoc.buffer) {
           await libraryStore.saveDocument({
             name: this.currentDoc.name,
@@ -666,6 +670,10 @@ class PedifApp {
       if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
     });
     bindMenuAction('app-menu-close', async () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        this.hideTtsHud();
+      }
       if (this.currentDoc && this.currentDoc.buffer) {
         await libraryStore.saveDocument({
           name: this.currentDoc.name,
@@ -944,6 +952,40 @@ class PedifApp {
       });
     }
 
+    // Floating TTS Speech HUD controls
+    const btnTtsPause = document.getElementById('btn-tts-pause');
+    const btnTtsStop = document.getElementById('btn-tts-stop');
+    const ttsEq = document.getElementById('tts-equalizer');
+    const playPauseIcon = document.getElementById('icon-tts-playpause');
+
+    if (btnTtsPause) {
+      btnTtsPause.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+          if (ttsEq) ttsEq.classList.remove('paused');
+          if (playPauseIcon) playPauseIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+          btnTtsPause.setAttribute('title', 'Pause Speech');
+        } else if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.pause();
+          if (ttsEq) ttsEq.classList.add('paused');
+          if (playPauseIcon) playPauseIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+          btnTtsPause.setAttribute('title', 'Resume Speech');
+        }
+      });
+    }
+
+    if (btnTtsStop) {
+      btnTtsStop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window !== 'undefined' && ('speechSynthesis' in window)) {
+          window.speechSynthesis.cancel();
+        }
+        this.hideTtsHud();
+      });
+    }
+
     const tools = ['select', 'pen', 'highlighter', 'eraser', 'ocr'];
     tools.forEach(tool => {
       const el = document.getElementById(`tool-${tool}`);
@@ -1025,6 +1067,10 @@ class PedifApp {
 
       // Escape key to dismiss modals / search bar / workbench popover / app menu / zen mode
       if (e.key === 'Escape') {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          this.hideTtsHud();
+        }
         if (typeof document !== 'undefined' && document.body.classList.contains('zen-mode')) {
           this.toggleZenMode();
           return;
@@ -1367,6 +1413,7 @@ class PedifApp {
 
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
+      this.hideTtsHud();
       showToast('Speech stopped', 'check');
       return;
     }
@@ -1393,15 +1440,50 @@ class PedifApp {
     const utterance = new SpeechSynthesisUtterance(pageText);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
-    utterance.onstart = () => showToast(`Reading Page ${p} aloud… Click Read Aloud to stop`, 'star');
-    utterance.onend = () => showToast(`Finished reading Page ${p}`, 'check');
+    this.showTtsHud(p);
+
+    utterance.onstart = () => {
+      this.showTtsHud(p);
+      showToast(`Reading Page ${p} aloud…`, 'star');
+    };
+    utterance.onend = () => {
+      this.hideTtsHud();
+      showToast(`Finished reading Page ${p}`, 'check');
+    };
     utterance.onerror = (e) => {
+      this.hideTtsHud();
       if (e.error !== 'canceled') {
         showToast('Speech error: ' + e.error, 'alert');
       }
     };
 
     window.speechSynthesis.speak(utterance);
+  }
+
+  showTtsHud(pageNum) {
+    if (typeof document === 'undefined') return;
+    const hud = document.getElementById('tts-hud');
+    if (!hud) return;
+    const txt = document.getElementById('tts-hud-text');
+    if (txt) txt.textContent = `Reading Page ${pageNum}...`;
+    const eq = document.getElementById('tts-equalizer');
+    if (eq) eq.classList.remove('paused');
+    const playPauseIcon = document.getElementById('icon-tts-playpause');
+    if (playPauseIcon) {
+      playPauseIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    }
+    hud.hidden = false;
+    requestAnimationFrame(() => hud.classList.add('visible'));
+  }
+
+  hideTtsHud() {
+    if (typeof document === 'undefined') return;
+    const hud = document.getElementById('tts-hud');
+    if (!hud) return;
+    hud.classList.remove('visible');
+    setTimeout(() => {
+      if (!hud.classList.contains('visible')) hud.hidden = true;
+    }, 240);
   }
 
   async checkRestoreSession() {

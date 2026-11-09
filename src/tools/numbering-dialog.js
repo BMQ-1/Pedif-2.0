@@ -80,6 +80,13 @@ export class NumberingDialog {
               <div class="form-group col">
                 <label class="form-label" for="num-bates-prefix">Bates Prefix</label>
                 <input type="text" id="num-bates-prefix" class="input-text" value="DOC-" placeholder="e.g. CASE-, EXHIBIT-" />
+                <div class="wm-presets" style="margin-top: 6px;">
+                  <button type="button" class="chip-preset" data-bates="DOC-">DOC-</button>
+                  <button type="button" class="chip-preset" data-bates="CONFIDENTIAL-">CONFIDENTIAL-</button>
+                  <button type="button" class="chip-preset" data-bates="EXHIBIT-">EXHIBIT-</button>
+                  <button type="button" class="chip-preset" data-bates="CASE-">CASE-</button>
+                  <button type="button" class="chip-preset" data-bates="PLAINTIFF-">PLAINTIFF-</button>
+                </div>
               </div>
               <div class="form-group col">
                 <label class="form-label" for="num-bates-digits">Zero Padding Digits</label>
@@ -177,6 +184,14 @@ export class NumberingDialog {
     startInput.addEventListener('input', updatePreview);
 
     applyBtn.addEventListener('click', () => this.applyNumbering());
+
+    this.modal.querySelectorAll('.chip-preset[data-bates]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        batesPrefix.value = chip.dataset.bates;
+        updatePreview();
+      });
+    });
+
     this._updatePreview();
   }
 
