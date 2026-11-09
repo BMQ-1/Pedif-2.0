@@ -508,6 +508,14 @@ class PedifApp {
     if (hTheme) hTheme.addEventListener('click', () => this.toggleTheme());
 
     // Sovereign Workbench Tool Listeners
+    const btnQuickOpen = document.getElementById('btn-quick-open');
+    if (btnQuickOpen) {
+      btnQuickOpen.addEventListener('click', () => {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) fileInput.click();
+      });
+    }
+
     const btnHomeMerge = document.getElementById('btn-home-merge');
     if (btnHomeMerge) {
       btnHomeMerge.addEventListener('click', () => {
@@ -567,6 +575,163 @@ class PedifApp {
         if (!popover.hidden && !popover.contains(e.target) && e.target !== btnWorkbench) {
           popover.hidden = true;
         }
+      });
+    }
+
+    const btnAppMenu = document.getElementById('btn-app-menu');
+    const appMenu = document.getElementById('app-menu-dropdown');
+    if (btnAppMenu && appMenu) {
+      const positionAppMenu = () => {
+        const rect = btnAppMenu.getBoundingClientRect();
+        const menuW = appMenu.offsetWidth || 560;
+        let left = rect.left;
+        if (document.documentElement.dir === 'rtl' || document.body.classList.contains('rtl-mode')) {
+          left = rect.right - menuW;
+        }
+        if (left < 16) left = 16;
+        if (left + menuW > window.innerWidth - 16) {
+          left = window.innerWidth - menuW - 16;
+        }
+        appMenu.style.position = 'fixed';
+        appMenu.style.top = `${rect.bottom + 8}px`;
+        appMenu.style.left = `${left}px`;
+        appMenu.style.right = 'auto';
+      };
+
+      btnAppMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = appMenu.hidden;
+        if (popover && !popover.hidden) popover.hidden = true;
+        if (this.searchBar && this.searchBar.isOpen) this.searchBar.close();
+        if (willOpen) {
+          appMenu.hidden = false;
+          btnAppMenu.setAttribute('aria-expanded', 'true');
+          positionAppMenu();
+        } else {
+          appMenu.hidden = true;
+          btnAppMenu.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (!appMenu.hidden) positionAppMenu();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!appMenu.hidden && !appMenu.contains(e.target) && e.target !== btnAppMenu) {
+          appMenu.hidden = true;
+          btnAppMenu.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Studio Application Menu Item Actions
+    const bindMenuAction = (id, action) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', () => {
+          if (appMenu) {
+            appMenu.hidden = true;
+            if (btnAppMenu) btnAppMenu.setAttribute('aria-expanded', 'false');
+          }
+          action();
+        });
+      }
+    };
+
+    bindMenuAction('app-menu-open', () => {
+      const fileInput = document.getElementById('file-input');
+      if (fileInput) fileInput.click();
+    });
+    bindMenuAction('app-menu-export', () => this.handleExportPdf());
+    bindMenuAction('app-menu-extract', () => {
+      if (!this.currentDoc) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.extractDialog) this.extractDialog.show();
+    });
+    bindMenuAction('app-menu-metadata', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
+    });
+    bindMenuAction('app-menu-close', async () => {
+      if (this.currentDoc && this.currentDoc.buffer) {
+        await libraryStore.saveDocument({
+          name: this.currentDoc.name,
+          pageCount: this.currentDoc.pageCount,
+          currentPage: this.currentDoc.currentPage || 1,
+          buffer: this.currentDoc.buffer.slice(0),
+        }).catch(() => {});
+      }
+      document.body.classList.remove('open');
+      if (this.homeLibrary) await this.homeLibrary.renderLibrary();
+    });
+    bindMenuAction('app-menu-undo', () => commandStack.undo());
+    bindMenuAction('app-menu-redo', () => commandStack.redo());
+    bindMenuAction('app-menu-find', () => {
+      if (this.searchBar) this.searchBar.open();
+    });
+    bindMenuAction('app-menu-organize', async () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.pageOrganizer) {
+        const buf = await this.getAnnotatedPdfBuffer();
+        this.pageOrganizer.show(buf || this.currentDoc.buffer, this.currentDoc.name);
+      }
+    });
+    bindMenuAction('app-menu-rotate', () => {
+      if (this.viewer) {
+        const rot = this.viewer.rotateClockwise();
+        showToast(`Rotated ${rot}°`, 'check');
+      }
+    });
+    bindMenuAction('app-menu-theme', () => this.toggleTheme());
+    bindMenuAction('app-menu-stats', () => {
+      if (!this.currentDoc) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.statsModal) this.statsModal.show();
+    });
+    bindMenuAction('app-menu-read-aloud', () => this.readAloudPage());
+    bindMenuAction('app-menu-merge', () => {
+      if (this.mergeTool) this.mergeTool.show();
+    });
+    bindMenuAction('app-menu-watermark', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.watermarkDialog) this.watermarkDialog.show(this.currentDoc.buffer);
+    });
+    bindMenuAction('app-menu-numbering', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.numberingDialog) this.numberingDialog.show(this.currentDoc.buffer);
+    });
+    bindMenuAction('app-menu-shortcuts', () => {
+      if (this.shortcutsModal) this.shortcutsModal.toggle();
+    });
+
+    // Real-Time Tool Search Filter
+    const wbToolsSearch = document.getElementById('wb-tools-search');
+    if (wbToolsSearch && popover) {
+      wbToolsSearch.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        const cards = popover.querySelectorAll('.wb-card-item');
+        cards.forEach((card) => {
+          const text = (card.textContent || '').toLowerCase();
+          const matches = !q || text.includes(q);
+          card.style.display = matches ? '' : 'none';
+        });
       });
     }
 
@@ -770,8 +935,15 @@ class PedifApp {
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-      // Escape key to dismiss modals / search bar / workbench popover
+      // Escape key to dismiss modals / search bar / workbench popover / app menu
       if (e.key === 'Escape') {
+        const appMenu = document.getElementById('app-menu-dropdown');
+        if (appMenu && !appMenu.hidden) {
+          appMenu.hidden = true;
+          const btnAppMenu = document.getElementById('btn-app-menu');
+          if (btnAppMenu) btnAppMenu.setAttribute('aria-expanded', 'false');
+          return;
+        }
         if (this.shortcutsModal && this.shortcutsModal.isOpen()) {
           this.shortcutsModal.close();
           return;
@@ -785,6 +957,14 @@ class PedifApp {
           this.searchBar.close();
           return;
         }
+      }
+
+      // Open Document (Ctrl+O)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) fileInput.click();
+        return;
       }
 
       // Undo / Redo

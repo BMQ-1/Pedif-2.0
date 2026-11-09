@@ -4,7 +4,7 @@
  * and vector ink strokes into native /Subtype /Ink annotations via pdf-lib.
  *
  * Fully recognized as selectable, native highlights in:
- * - Adobe Acrobat Reader
+ * - Desktop PDF Viewers
  * - Apple Preview & Apple Books
  * - Google Chrome PDF Viewer
  */

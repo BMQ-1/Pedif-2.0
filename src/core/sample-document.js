@@ -62,7 +62,7 @@ export async function createShowcasePdf() {
     'Pedif 2.0 introduces zero-lag native text selection with scale-invariant quadrilateral geometry.',
     'Drag your cursor across any text in this paragraph to summon the floating action bubble.',
     'Choose from 5 pastel color chips (Yellow, Coral, Emerald, Sky Blue, Lilac) to create a permanent highlight.',
-    'All highlights conform strictly to ISO 32000-1 §12.5.6.10, remaining fully editable in Adobe Acrobat & Apple Books.'
+    'All highlights conform strictly to ISO 32000-1 §12.5.6.10, remaining fully editable in standard PDF viewers & Apple Books.'
   ];
   let curY = p1H - 152;
   sec1Lines.forEach(line => {

@@ -247,6 +247,117 @@ body.drag .drop {
   justify-content: center;
 }
 
+/* Studio Quick Action Tools Shelf */
+.quick-tools-shelf {
+  margin: 22px 0 26px;
+}
+
+.quick-tools-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.quick-tools-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tx);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.quick-tools-subtitle {
+  font-size: 12px;
+  color: var(--tx3);
+}
+
+.quick-tools-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 580px) {
+  .quick-tools-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 780px) {
+  .quick-tools-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.quick-tool-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--ln2);
+  border-radius: var(--r-m, 14px);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.quick-tool-card:hover {
+  background: var(--card2);
+  border-color: var(--ac);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.quick-tool-card:active {
+  transform: scale(0.98);
+}
+
+.tool-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.tool-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tool-card-info strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-card-info small {
+  font-size: 11.5px;
+  color: var(--tx2);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[dir="rtl"] .quick-tool-card,
+.rtl-mode .quick-tool-card {
+  text-align: right;
+  flex-direction: row-reverse;
+}
+
 .btn-sample {
   display: inline-flex;
   align-items: center;
