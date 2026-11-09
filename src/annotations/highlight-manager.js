@@ -14,6 +14,7 @@ export const PALETTE = {
   green:  { id: 'green',  label: 'Mint',   color: '#34c759', fill: 'rgba(52, 199, 89, 0.34)',  stroke: 'rgba(52, 199, 89, 0.70)' },
   blue:   { id: 'blue',   label: 'Sky',    color: '#007aff', fill: 'rgba(0, 122, 255, 0.32)', stroke: 'rgba(0, 122, 255, 0.70)' },
   purple: { id: 'purple', label: 'Violet', color: '#af52de', fill: 'rgba(175, 82, 222, 0.34)', stroke: 'rgba(175, 82, 222, 0.70)' },
+  charcoal: { id: 'charcoal', label: 'Blackout', color: '#000000', fill: '#000000', stroke: '#000000' },
 };
 
 export class HighlightManager {
@@ -72,8 +73,8 @@ export class HighlightManager {
       type: 'highlight',
       style,
       page: pageNum,
-      color: paletteItem.color,
-      opacity: style === 'highlight' ? 0.35 : 0.9,
+      color: style === 'redact' ? '#000000' : paletteItem.color,
+      opacity: style === 'redact' ? 1.0 : (style === 'highlight' ? 0.35 : 0.9),
       quads,
       text,
       note,
@@ -106,8 +107,8 @@ export class HighlightManager {
       type: 'highlight',
       style,
       page: pageNum,
-      color: paletteItem.color,
-      opacity: style === 'highlight' ? 0.35 : 0.9,
+      color: style === 'redact' ? '#000000' : paletteItem.color,
+      opacity: style === 'redact' ? 1.0 : (style === 'highlight' ? 0.35 : 0.9),
       quads,
       text: text || '',
       note,

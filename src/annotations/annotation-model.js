@@ -7,10 +7,10 @@ export class Annotation {
   constructor(options = {}) {
     this.id = options.id || ('ann_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
     this.type = options.type || 'highlight'; // 'highlight' | 'note' | 'box'
-    this.style = options.style || 'highlight'; // 'highlight' | 'underline' | 'strikethrough'
+    this.style = options.style || 'highlight'; // 'highlight' | 'underline' | 'strikethrough' | 'redact'
     this.page = options.page || 1;
-    this.color = options.color || '#ffcc00';
-    this.opacity = options.opacity !== undefined ? options.opacity : 0.35;
+    this.color = options.style === 'redact' ? '#000000' : (options.color || '#ffcc00');
+    this.opacity = options.style === 'redact' ? 1.0 : (options.opacity !== undefined ? options.opacity : 0.35);
     this.quads = options.quads || []; // Array of Quads
     this.text = options.text || '';
     this.note = options.note || '';

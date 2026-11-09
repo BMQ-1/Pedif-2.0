@@ -43,6 +43,9 @@ export class SelectionBubble {
           <button class="b sm rip style-btn" data-style="strikethrough" title="Strikethrough">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6a4 4 0 0 0-8 0c0 4 8 2 8 6a4 4 0 0 1-8 0"/></svg>
           </button>
+          <button class="b sm rip style-btn" data-style="redact" title="Redact / Blackout Text (Confidential)">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:13px;height:13px;"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>
+          </button>
         </div>
         <div class="bubble-divider"></div>
         <button class="b sm rip" id="bubble-btn-note" title="Add Note">
@@ -92,6 +95,10 @@ export class SelectionBubble {
         this.container.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
         e.currentTarget.classList.add('active');
         this.activeStyle = e.currentTarget.dataset.style;
+        if (this.activeStyle === 'redact') {
+          this.applyHighlight('charcoal', '', 'redact');
+          showToast('Text redacted (Blackout applied)', 'check');
+        }
       });
     });
 
@@ -310,13 +317,15 @@ export class SelectionBubble {
     };
   }
 
-  applyHighlight(colorKey, note = '') {
+  applyHighlight(colorKey, note = '', overrideStyle = null) {
     if (!this.currentSelection) return;
     const { pageNum, range, pageEl, chars, text } = this.currentSelection;
+    const effectiveStyle = overrideStyle || this.activeStyle || 'highlight';
+    const effectiveColor = effectiveStyle === 'redact' ? '#000000' : colorKey;
 
     if (chars && chars.length > 0) {
       // 1. Prioritize precision normalized character quads from glyph engine
-      highlightManager.createHighlight(pageNum, chars, colorKey, note, this.activeStyle || 'highlight');
+      highlightManager.createHighlight(pageNum, chars, effectiveColor, note, effectiveStyle);
     } else if (range && pageEl) {
       // 2. Fallback: Calculate normalized scale-invariant quads from browser selection rects
       const pageRect = pageEl.getBoundingClientRect();
@@ -339,7 +348,7 @@ export class SelectionBubble {
       });
 
       if (quads.length > 0) {
-        highlightManager.createHighlightFromQuads(pageNum, quads, text || this.getSelectedText(), colorKey, note, this.activeStyle || 'highlight');
+        highlightManager.createHighlightFromQuads(pageNum, quads, text || this.getSelectedText(), effectiveColor, note, effectiveStyle);
       }
     }
 

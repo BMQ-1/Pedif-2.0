@@ -121,6 +121,17 @@ export class PdfExporter {
 
         const highlightRef = context.register(highlightDict);
         annotsArray.push(highlightRef);
+
+        if (ann.style === 'redact') {
+          page.drawRectangle({
+            x: minX,
+            y: minY,
+            width: Math.max(1, maxX - minX),
+            height: Math.max(1, maxY - minY),
+            color: rgb(0, 0, 0),
+            opacity: 1.0,
+          });
+        }
       }
 
       // ─────────────────────────────────────────────────────────────

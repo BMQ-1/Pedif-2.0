@@ -613,6 +613,11 @@ export class VirtualViewer {
         pathEl.setAttribute('stroke', ann.color);
         pathEl.setAttribute('stroke-width', isUnderline ? '2.5' : '2');
         pathEl.setAttribute('stroke-linecap', 'round');
+      } else if (ann.style === 'redact') {
+        pathEl.setAttribute('fill', '#000000');
+        pathEl.setAttribute('fill-opacity', '1.0');
+        pathEl.setAttribute('stroke', '#000000');
+        pathEl.setAttribute('stroke-width', '0');
       } else {
         pathEl.setAttribute('fill', ann.color);
         pathEl.setAttribute('fill-opacity', ann.opacity || 0.38);
