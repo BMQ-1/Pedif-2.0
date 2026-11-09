@@ -93,6 +93,76 @@ export class Dock {
     }
 
     if (this.zoomResetBtn) {
+      this.zoomResetBtn.title = "Toggle zoom (100% / Fit Width) — Right-click for presets";
+
+      // Zoom preset popover
+      const zoomMenu = document.createElement('div');
+      zoomMenu.className = 'dock-zoom-popover';
+      zoomMenu.style.display = 'none';
+      zoomMenu.innerHTML = `
+        <div class="dock-zoom-title">Zoom Presets</div>
+        <button type="button" class="dock-zoom-item" data-preset="fit-width">Fit Width (W)</button>
+        <button type="button" class="dock-zoom-item" data-preset="fit-page">Fit Page (0)</button>
+        <div class="dock-zoom-sep"></div>
+        <button type="button" class="dock-zoom-item" data-scale="0.5">50%</button>
+        <button type="button" class="dock-zoom-item" data-scale="0.75">75%</button>
+        <button type="button" class="dock-zoom-item" data-scale="1.0">100%</button>
+        <button type="button" class="dock-zoom-item" data-scale="1.25">125%</button>
+        <button type="button" class="dock-zoom-item" data-scale="1.5">150%</button>
+        <button type="button" class="dock-zoom-item" data-scale="2.0">200%</button>
+        <button type="button" class="dock-zoom-item" data-scale="3.0">300%</button>
+      `;
+      document.body.appendChild(zoomMenu);
+
+      const closeZoomMenu = () => {
+        zoomMenu.style.display = 'none';
+      };
+
+      const openZoomMenu = () => {
+        const rect = this.zoomResetBtn.getBoundingClientRect();
+        zoomMenu.style.position = 'fixed';
+        zoomMenu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+        zoomMenu.style.left = `${rect.left + rect.width / 2}px`;
+        zoomMenu.style.transform = 'translateX(-50%)';
+        zoomMenu.style.display = 'flex';
+      };
+
+      this.zoomResetBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (zoomMenu.style.display === 'none') openZoomMenu();
+        else closeZoomMenu();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!zoomMenu.contains(e.target) && e.target !== this.zoomResetBtn) {
+          closeZoomMenu();
+        }
+      });
+
+      zoomMenu.querySelectorAll('.dock-zoom-item').forEach(item => {
+        item.addEventListener('click', () => {
+          closeZoomMenu();
+          if (!this.viewer) return;
+          if (item.dataset.preset === 'fit-width') {
+            if (typeof this.viewer.fitWidth === 'function') {
+              const s = this.viewer.fitWidth();
+              this.updateZoom(s || this.viewer.scale);
+              showToast('Fit Width', 'check');
+            }
+          } else if (item.dataset.preset === 'fit-page') {
+            this.viewer.setScale(1.25);
+            this.updateZoom(1.25);
+            showToast('Fit Page (100%)', 'check');
+          } else if (item.dataset.scale) {
+            const factor = parseFloat(item.dataset.scale);
+            const newScale = factor * 1.25;
+            this.viewer.setScale(newScale);
+            this.updateZoom(newScale);
+            showToast(`${Math.round(factor * 100)}%`, 'check');
+          }
+        });
+      });
+
       this.zoomResetBtn.addEventListener('click', () => {
         if (this.viewer) {
           const curScale = this.viewer.scale;
