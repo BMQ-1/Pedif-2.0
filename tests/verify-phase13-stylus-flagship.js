@@ -7,7 +7,7 @@ import { highlightManager } from '../src/annotations/highlight-manager.js';
 import { PdfExporter } from '../src/annotations/pdf-exporter.js';
 import { toValidArrayBuffer } from '../src/storage/library.js';
 
-console.log('--- Phase 13 Samsung Galaxy Flagship & Storage Verification ---');
+console.log('--- Phase 13 Precision Stylus & Flagship Storage Verification ---');
 
 // 1. Test ShapeRecognizer: Line
 {
@@ -146,4 +146,4 @@ console.log('--- Phase 13 Samsung Galaxy Flagship & Storage Verification ---');
   console.log('✓ Sovereign storage detached ArrayBuffer guards verified');
 }
 
-console.log('All Phase 13 Samsung Galaxy Flagship tests passed successfully!');
+console.log('All Phase 13 Precision Stylus & Flagship tests passed successfully!');

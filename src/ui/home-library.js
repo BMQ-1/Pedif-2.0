@@ -139,13 +139,30 @@ export class HomeLibrary {
     }).join('');
 
     this.container.innerHTML = `
-      <div class="sect">
+      <div class="sect" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <h2>Your Library (${docs.length})</h2>
+        ${docs.length >= 3 ? `
+          <div class="lib-search-box" style="display: flex; align-items: center; gap: 6px; background: var(--fill2); border: 1px solid var(--ln); border-radius: 20px; padding: 4px 12px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="lib-search-input" placeholder="Search saved documents..." style="background: transparent; border: none; color: var(--tx); font-size: 0.8rem; outline: none; width: 170px;" aria-label="Search saved documents">
+          </div>
+        ` : ''}
       </div>
       <div class="lib">
         ${itemsHtml}
       </div>
     `;
+
+    const searchInput = this.container.querySelector('#lib-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        this.container.querySelectorAll('.libtile').forEach(tile => {
+          const title = (tile.querySelector('b')?.textContent || '').toLowerCase();
+          tile.style.display = !q || title.includes(q) ? '' : 'none';
+        });
+      });
+    }
 
     // Bind click events
     this.container.querySelectorAll('.libtile').forEach(tile => {

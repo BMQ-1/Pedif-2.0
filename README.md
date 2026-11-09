@@ -24,7 +24,7 @@
   <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Engine-WebGPU%20%7C%20WASM-38B2AC?style=flat-square&logo=webgpu" alt="WebGPU Engine"></a>
   <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Privacy-100%25%20On--Device-276749?style=flat-square" alt="100% Local"></a>
   <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Languages-7_Languages_%7C_RTL-0A84FF?style=flat-square" alt="7 Languages RTL"></a>
-  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Tests-17_Passing-brightgreen?style=flat-square" alt="Tests 17 Passing"></a>
+  <a href="https://github.com/BMQ-1/Pedif-2.0"><img src="https://img.shields.io/badge/Tests-19_Passing-brightgreen?style=flat-square" alt="Tests 19 Passing"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-4A5568?style=flat-square" alt="MIT License"></a>
 </p>
 
@@ -132,7 +132,7 @@ Pedif isolates document rendering across three dedicated coordinate-synchronized
 * **Native Annotation Dictionaries:** Rather than flattening handwriting into destructive page pixels, Pedif serializes annotations into native PDF objects via `pdf-lib`:
   - **Highlights:** Standard `/Subtype /Highlight` annotations with 8-point `/QuadPoints` arrays and author metadata conformant with ISO 32000-1 §12.5.6.10.
   - **Inking:** Standard `/Subtype /Ink` annotations with `/InkList` point coordinate streams.
-* **Universal Interoperability:** Highlights and handwriting remain fully selectable, editable, and searchable in Adobe Acrobat, Apple Books, Preview, and standard PDF readers.
+* **Universal Interoperability:** Highlights and handwriting remain fully selectable, editable, and searchable across desktop PDF readers, Apple Books, Preview, and standard ISO-compliant PDF software.
 
 ### 🎯 5. Zero-Drift Coordinate Space Invariance
 * User annotations and ink strokes are **never** persisted in volatile screen pixels.
