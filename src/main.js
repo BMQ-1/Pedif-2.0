@@ -807,6 +807,26 @@ class PedifApp {
         this.stampDialog.show(this.currentDoc.buffer, this.viewer?.currentPage || 1, this.currentDoc.pageCount || 1);
       }
     });
+    bindMenuAction('app-menu-forms', async () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      try {
+        showToast('Flattening interactive AcroForms...', 'check');
+        const flattenedBytes = await PdfExporter.exportAnnotatedPdf(
+          this.currentDoc.buffer,
+          this.viewer?.pageStrokes || new Map(),
+          this.viewer?.pageMetrics || new Map(),
+          { flattenForms: true }
+        );
+        await this.loadPdfBuffer(flattenedBytes, this.currentDoc?.name || 'flattened.pdf');
+        showToast('Form fields flattened successfully', 'check');
+      } catch (err) {
+        console.error('[Forms] Flatten error:', err);
+        showToast('Failed to flatten form fields', 'alert');
+      }
+    });
     bindMenuAction('app-menu-ocr', async () => {
       if (!this.currentDoc || !this.currentDoc.buffer) {
         showToast('Please open a PDF document first', 'alert');
@@ -937,6 +957,31 @@ class PedifApp {
         }
         if (this.stampDialog) {
           this.stampDialog.show(this.currentDoc.buffer, this.viewer?.currentPage || 1, this.currentDoc.pageCount || 1);
+        }
+      });
+    }
+
+    const wbItemForms = document.getElementById('wb-item-forms');
+    if (wbItemForms) {
+      wbItemForms.addEventListener('click', async () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        try {
+          showToast('Flattening interactive AcroForms...', 'check');
+          const flattenedBytes = await PdfExporter.exportAnnotatedPdf(
+            this.currentDoc.buffer,
+            this.viewer?.pageStrokes || new Map(),
+            this.viewer?.pageMetrics || new Map(),
+            { flattenForms: true }
+          );
+          await this.loadPdfBuffer(flattenedBytes, this.currentDoc?.name || 'flattened.pdf');
+          showToast('Form fields flattened successfully', 'check');
+        } catch (err) {
+          console.error('[Forms] Flatten error:', err);
+          showToast('Failed to flatten form fields', 'alert');
         }
       });
     }
