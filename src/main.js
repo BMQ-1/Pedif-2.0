@@ -787,6 +787,21 @@ class PedifApp {
       if (this.shortcutsModal) this.shortcutsModal.toggle();
     });
 
+    const docTitlePropsBtn = document.getElementById('btn-doc-title-props');
+    if (docTitlePropsBtn) {
+      const openProps = () => {
+        if (!this.currentDoc || !this.currentDoc.buffer) return;
+        if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
+      };
+      docTitlePropsBtn.addEventListener('click', openProps);
+      docTitlePropsBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openProps();
+        }
+      });
+    }
+
     // Real-Time Tool Search Filter
     const wbToolsSearch = document.getElementById('wb-tools-search');
     if (wbToolsSearch && popover) {

@@ -717,6 +717,20 @@ body.drag .drop {
   margin: 0 4px 0 6px;
   text-align: left;
   min-width: 0;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+}
+
+.top-bar-left .title:hover {
+  background: var(--fill2);
+}
+
+.top-bar-left .title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .top-bar-left .title b {
@@ -2737,13 +2751,60 @@ body.zen-mode.show-zen-controls .zen-exit-pill {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-.shortcuts-header h3 {
+.shortcuts-title-wrap h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.shortcuts-subtitle {
+  font-size: 11px;
+  color: var(--tx3);
+}
+
+.shortcuts-subtitle kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  background: var(--fill2);
+  border: 1px solid var(--ln);
+  border-radius: 4px;
+}
+
+.shortcuts-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--fill);
+  border: 1px solid var(--ln);
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-bottom: 18px;
+  color: var(--tx3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shortcuts-search-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-alpha);
+  color: var(--accent);
+}
+
+.shortcuts-search-input {
+  border: none;
+  background: transparent;
+  color: var(--tx);
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.shortcuts-search-input::placeholder {
+  color: var(--tx3);
 }
 
 .shortcuts-grid {

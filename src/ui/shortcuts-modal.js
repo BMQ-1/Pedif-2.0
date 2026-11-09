@@ -18,13 +18,21 @@ export class ShortcutsModal {
     this.modalEl.innerHTML = `
       <div class="shortcuts-card">
         <div class="shortcuts-header">
-          <h3>Keyboard Shortcuts</h3>
-          <button class="b sm" id="shortcuts-close-btn">
+          <div class="shortcuts-title-wrap">
+            <h3>Keyboard Shortcuts</h3>
+            <span class="shortcuts-subtitle">Press <kbd>?</kbd> anytime to open</span>
+          </div>
+          <button class="b sm" id="shortcuts-close-btn" title="Close" aria-label="Close shortcuts">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
+        </div>
+
+        <div class="shortcuts-search-wrap">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="shortcuts-search-input" id="shortcuts-search" placeholder="Search shortcuts (e.g. ocr, pen, zoom, export)..." aria-label="Search keyboard shortcuts">
         </div>
 
         <div class="shortcuts-grid">
@@ -78,14 +86,54 @@ export class ShortcutsModal {
   }
 
   setupListeners() {
-    this.modalEl.querySelector('#shortcuts-close-btn').addEventListener('click', () => this.close());
-    this.modalEl.addEventListener('click', (e) => {
-      if (e.target === this.modalEl) this.close();
+    const closeBtn = this.modalEl.querySelector('#shortcuts-close-btn');
+    if (closeBtn && typeof closeBtn.addEventListener === 'function') {
+      closeBtn.addEventListener('click', () => this.close());
+    }
+    if (typeof this.modalEl.addEventListener === 'function') {
+      this.modalEl.addEventListener('click', (e) => {
+        if (e.target === this.modalEl) this.close();
+      });
+    }
+    const searchInput = this.modalEl.querySelector('#shortcuts-search');
+    if (searchInput && typeof searchInput.addEventListener === 'function') {
+      searchInput.addEventListener('input', (e) => {
+        const query = (e.target.value || '').trim().toLowerCase();
+        this.filterShortcuts(query);
+      });
+    }
+  }
+
+  filterShortcuts(query) {
+    const groups = this.modalEl.querySelectorAll ? this.modalEl.querySelectorAll('.shortcut-group') : [];
+    if (!groups || !groups.forEach) return;
+    groups.forEach(group => {
+      let visibleInGroup = 0;
+      const rows = group.querySelectorAll ? group.querySelectorAll('.shortcut-row') : [];
+      if (rows && rows.forEach) {
+        rows.forEach(row => {
+          const text = (row.textContent || '').toLowerCase();
+          const matches = !query || text.includes(query);
+          if (row.style) row.style.display = matches ? 'flex' : 'none';
+          if (matches) visibleInGroup++;
+        });
+      }
+      if (group.style) {
+        group.style.display = (visibleInGroup > 0 || !query) ? 'block' : 'none';
+      }
     });
   }
 
   open() {
     this.modalEl.style.display = 'grid';
+    const searchInput = this.modalEl.querySelector ? this.modalEl.querySelector('#shortcuts-search') : null;
+    if (searchInput) {
+      searchInput.value = '';
+      this.filterShortcuts('');
+      setTimeout(() => {
+        if (typeof searchInput.focus === 'function') searchInput.focus();
+      }, 50);
+    }
   }
 
   close() {
