@@ -858,6 +858,20 @@ class PedifApp {
         showToast('OCR scan completed', 'check');
       }
     });
+    bindMenuAction('app-menu-crop', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.cropTool) this.cropTool.open(this.viewer?.currentPage || 1);
+    });
+    bindMenuAction('app-menu-smart-scan', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.smartScanner) this.smartScanner.toggleScanCurrentPage();
+    });
     bindMenuAction('app-menu-shortcuts', () => {
       if (this.shortcutsModal) this.shortcutsModal.toggle();
     });
@@ -1065,6 +1079,30 @@ class PedifApp {
         } else {
           showToast('OCR scan completed', 'check');
         }
+      });
+    }
+
+    const wbItemCrop = document.getElementById('wb-item-crop');
+    if (wbItemCrop) {
+      wbItemCrop.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.cropTool) this.cropTool.open(this.viewer?.currentPage || 1);
+      });
+    }
+
+    const wbItemSmartScan = document.getElementById('wb-item-smart-scan');
+    if (wbItemSmartScan) {
+      wbItemSmartScan.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.smartScanner) this.smartScanner.toggleScanCurrentPage();
       });
     }
 

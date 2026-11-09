@@ -405,6 +405,11 @@
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
             <span data-i18n="organizePages">Organize Pages...</span>
           </button>
+          <button type="button" class="app-menu-item" id="app-menu-crop">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></svg>
+            <span>Interactive Crop...</span>
+            <kbd class="menu-kbd">C</kbd>
+          </button>
         </div>
 
         <div class="app-menu-col">
@@ -493,6 +498,11 @@
             <span>Scan Page with OCR</span>
             <kbd class="menu-kbd">O</kbd>
           </button>
+          <button type="button" class="app-menu-item" id="app-menu-smart-scan">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            <span>Smart Text Scanner...</span>
+            <kbd class="menu-kbd">T</kbd>
+          </button>
           <div class="app-menu-sep"></div>
           <button type="button" class="app-menu-item" id="app-menu-shortcuts">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -546,6 +556,16 @@
               <div class="wb-card-text">
                 <strong data-i18n="mergeTitle">Merge Multiple PDFs</strong>
                 <small>Combine files into one document</small>
+              </div>
+            </button>
+
+            <button type="button" class="wb-card-item wb-menu-item" id="wb-item-crop">
+              <div class="wb-card-icon cat-amber">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></svg>
+              </div>
+              <div class="wb-card-text">
+                <strong>Interactive Crop</strong>
+                <small>8-point margins & edge detection</small>
               </div>
             </button>
           </div>
@@ -654,6 +674,16 @@
               <div class="wb-card-text">
                 <strong>Recognize Text (OCR)</strong>
                 <small>Run on-device WebGPU PP-OCRv4 AI text extraction</small>
+              </div>
+            </button>
+
+            <button type="button" class="wb-card-item wb-menu-item" id="wb-item-smart-scan">
+              <div class="wb-card-icon cat-blue">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              </div>
+              <div class="wb-card-text">
+                <strong>Smart Text Scanner</strong>
+                <small>Extract readable text blocks with AI</small>
               </div>
             </button>
 
