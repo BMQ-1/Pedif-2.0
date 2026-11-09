@@ -35,6 +35,7 @@ import { CropTool } from './ui/crop-tool.js';
 import { LassoTool } from './inking/lasso-tool.js';
 import { ExtractDialog } from './ui/extract-dialog.js';
 import { StatsModal } from './ui/stats-modal.js';
+import { SignatureDialog } from './tools/signature-dialog.js';
 
 // Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
 if (typeof window !== 'undefined') {
@@ -71,6 +72,7 @@ class PedifApp {
     this.watermarkDialog = null;
     this.numberingDialog = null;
     this.metadataDialog = null;
+    this.signatureDialog = null;
 
     this.init();
   }
@@ -220,6 +222,15 @@ class PedifApp {
       onApplied: async (metaBytes) => {
         showToast('Updating document metadata...', 'check');
         await this.loadPdfBuffer(metaBytes, this.currentDoc?.name || 'metadata.pdf');
+      },
+    });
+
+    this.signatureDialog = new SignatureDialog({
+      viewer: this.viewer,
+      onSignaturePlaced: (pageNum) => {
+        if (this.currentDoc) {
+          this.currentDoc.currentPage = pageNum;
+        }
       },
     });
 
@@ -769,6 +780,15 @@ class PedifApp {
       }
       if (this.numberingDialog) this.numberingDialog.show(this.currentDoc.buffer);
     });
+    bindMenuAction('app-menu-signature', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.signatureDialog) {
+        this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
+      }
+    });
     bindMenuAction('app-menu-ocr', async () => {
       if (!this.currentDoc || !this.currentDoc.buffer) {
         showToast('Please open a PDF document first', 'alert');
@@ -872,6 +892,20 @@ class PedifApp {
           return;
         }
         if (this.metadataDialog) this.metadataDialog.show(this.currentDoc.buffer);
+      });
+    }
+
+    const wbItemSignature = document.getElementById('wb-item-signature');
+    if (wbItemSignature) {
+      wbItemSignature.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.signatureDialog) {
+          this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
+        }
       });
     }
 
@@ -1176,6 +1210,17 @@ class PedifApp {
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         this.handleExportPdf();
+        return;
+      }
+
+      // Digital Signature shortcut Ctrl+K
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        if (this.signatureDialog && this.currentDoc && this.currentDoc.buffer) {
+          this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
+        } else {
+          showToast('Please open a PDF document first', 'alert');
+        }
         return;
       }
 
