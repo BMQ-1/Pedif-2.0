@@ -108,18 +108,25 @@ export class SelectionOverlay {
    * Magnetic character snapping using Euclidean projection to character midpoints
    * Returns -1 if click is too far from any character (e.g. blank margins)
    */
-  findNearestChar(px, py, width = 1, height = 1, maxDistance = 65) {
+  findNearestChar(px, py, width = 1, height = 1, maxDistance = 140) {
     let bestDist = Infinity;
     let bestIdx = -1;
 
-    const isNorm = this.allChars.length > 0 && (this.allChars[0].quad.isNormalized || (this.allChars[0].quad.lt.x <= 1.0 && this.allChars[0].quad.lt.y <= 1.0));
+    const isNorm = this.allChars.length > 0 && (this.allChars[0].quad && (this.allChars[0].quad.isNormalized || (this.allChars[0].quad.lt && this.allChars[0].quad.lt.x <= 1.0)));
     const targetW = (isNorm && width > 1) ? width : 1;
     const targetH = (isNorm && height > 1) ? height : 1;
 
     for (let i = 0; i < this.allChars.length; i++) {
       const q = this.allChars[i].quad;
-      const cx = ((q.lt.x + q.rt.x + q.rb.x + q.lb.x) / 4) * targetW;
-      const cy = ((q.lt.y + q.rt.y + q.rb.y + q.lb.y) / 4) * targetH;
+      if (!q) continue;
+      const pLt = q.lt || q.p1;
+      const pRt = q.rt || q.p2;
+      const pRb = q.rb || q.p3;
+      const pLb = q.lb || q.p4;
+      if (!pLt || !pRt || !pRb || !pLb) continue;
+
+      const cx = ((pLt.x + pRt.x + pRb.x + pLb.x) / 4) * targetW;
+      const cy = ((pLt.y + pRt.y + pRb.y + pLb.y) / 4) * targetH;
       const dist = Math.hypot(px - cx, py - cy);
 
       if (dist < bestDist) {
@@ -156,9 +163,9 @@ export class SelectionOverlay {
     const selectedChars = this.allChars.slice(s, e + 1);
     if (!selectedChars.length) return;
 
-    // Activate Focus Dimmer
+    // Keep page reading background calm and crisp (zero dark murky overlay)
     if (this.dimmer) {
-      this.dimmer.style.opacity = '1';
+      this.dimmer.style.opacity = '0';
     }
 
     if (!this.highlightGroup) return;
@@ -257,6 +264,11 @@ export class SelectionOverlay {
 
   positionHandle(elem, x, y) {
     if (!elem) return;
+    const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0)));
+    if (!isTouch && !this.isDragging) {
+      elem.style.display = 'none';
+      return;
+    }
     elem.style.display = 'block';
     elem.setAttribute('transform', `translate(${x}, ${y})`);
   }
@@ -270,8 +282,8 @@ export class SelectionOverlay {
     const endX = last.right - pageRect.left;
     const endY = (last.top + last.height / 2) - pageRect.top;
 
-    const sIdx = this.findNearestChar(startX, startY, pageRect.width, pageRect.height, 90);
-    const eIdx = this.findNearestChar(endX, endY, pageRect.width, pageRect.height, 90);
+    const sIdx = this.findNearestChar(startX, startY, pageRect.width, pageRect.height, 140);
+    const eIdx = this.findNearestChar(endX, endY, pageRect.width, pageRect.height, 140);
 
     if (sIdx !== -1 && eIdx !== -1) {
       this.renderSelection(sIdx, eIdx);

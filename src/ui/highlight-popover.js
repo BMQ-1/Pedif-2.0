@@ -40,8 +40,19 @@ export class HighlightPopover {
     });
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.container && this.container.style.display !== 'none') {
+      if (!this.container || this.container.style.display === 'none') return;
+      if (e.key === 'Escape') {
         this.hide();
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && !this.isEditingNote) {
+        const activeInp = document.activeElement;
+        if (activeInp && (activeInp.tagName === 'INPUT' || activeInp.tagName === 'TEXTAREA')) return;
+        if (this.activeAnnotation) {
+          e.preventDefault();
+          const id = this.activeAnnotation.id;
+          highlightManager.removeHighlight(id);
+          showToast('Highlight deleted (Ctrl+Z to undo)', 'trash');
+          this.hide();
+        }
       }
     });
   }
@@ -50,6 +61,12 @@ export class HighlightPopover {
     this.activeAnnotation = ann;
     this.activePageNum = pageNum;
     this.isEditingNote = false;
+
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.permanent-highlight.highlight-selected').forEach(el => el.classList.remove('highlight-selected'));
+      const activeEl = document.querySelector(`.permanent-highlight[data-ann-id="${ann.id}"]`);
+      if (activeEl) activeEl.classList.add('highlight-selected');
+    }
 
     this.updateContent();
     this.container.style.display = 'flex';
@@ -196,6 +213,9 @@ export class HighlightPopover {
   }
 
   hide() {
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.permanent-highlight.highlight-selected').forEach(el => el.classList.remove('highlight-selected'));
+    }
     if (this.container) {
       this.container.style.display = 'none';
     }

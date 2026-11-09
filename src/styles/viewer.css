@@ -94,7 +94,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 16;
+  z-index: 15;
 }
 
 .layer-1-selection .focus-dimmer {
@@ -105,7 +105,7 @@
 }
 
 .layer-1-selection .focus-dimmer.active {
-  opacity: 1;
+  opacity: 0;
 }
 
 .layer-1-selection .active-selection-path {
@@ -117,6 +117,13 @@
   pointer-events: auto !important;
   cursor: pointer;
   transition: opacity 0.15s ease, filter 0.15s ease, transform 0.12s ease;
+}
+
+.layer-1-selection .permanent-highlight.highlight-selected {
+  stroke: var(--ac, #007aff) !important;
+  stroke-width: 2.2px !important;
+  stroke-dasharray: 4 2 !important;
+  filter: drop-shadow(0 0 4px rgba(0, 122, 255, 0.5));
 }
 
 [data-theme="dark"] .layer-1-selection .permanent-highlight,
@@ -154,7 +161,7 @@
   text-size-adjust: none;
   forced-color-adjust: none;
   transform-origin: 0 0;
-  z-index: 15;
+  z-index: 17;
   pointer-events: auto;
   touch-action: pan-x pan-y;
   user-select: text;
