@@ -2190,6 +2190,43 @@ body.zen-mode.show-zen-controls .zen-exit-pill {
   pointer-events: none;
 }
 
+.thumb-action-bm {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--ln);
+  background: var(--gl);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--tx2);
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.16s ease, transform 0.12s ease, background 0.12s ease;
+  z-index: 2;
+}
+
+.thumb-canvas-box:hover .thumb-action-bm,
+.thumb-action-bm.bookmarked {
+  opacity: 1;
+}
+
+.thumb-action-bm.bookmarked {
+  color: #ffcc00;
+  border-color: rgba(255, 204, 0, 0.4);
+}
+
+.thumb-action-bm:hover {
+  transform: scale(1.15);
+  background: var(--fill2);
+}
+
 .thumb-page-num {
   font-size: 13px;
   font-weight: 500;

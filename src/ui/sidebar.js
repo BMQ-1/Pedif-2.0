@@ -331,13 +331,23 @@ export class Sidebar {
 
       item.innerHTML = `
         <div class="thumb-canvas-box ${isCur ? 'active-thumb' : ''}" id="thumb-box-${pageNum}" data-page="${pageNum}">
-          ${isBm ? '<span class="thumb-bm-indicator" title="Bookmarked page">★</span>' : ''}
+          <button type="button" class="thumb-action-bm ${isBm ? 'bookmarked' : ''}" title="${isBm ? 'Remove bookmark' : 'Bookmark page'}" aria-label="Toggle bookmark for page ${pageNum}">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="${isBm ? '#ffcc00' : 'none'}" stroke="${isBm ? '#ffcc00' : 'currentColor'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
           <span class="thumb-page-num">${pageNum}</span>
           <span class="thumb-page-badge">Page ${pageNum}</span>
         </div>
       `;
       const box = item.querySelector('.thumb-canvas-box');
       if (box) observer.observe(box);
+
+      const bmBtn = item.querySelector('.thumb-action-bm');
+      if (bmBtn) {
+        bmBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleBookmark(pageNum);
+        });
+      }
 
       item.addEventListener('click', () => this.jumpTo(pageNum));
       grid.appendChild(item);
@@ -796,6 +806,23 @@ export class Sidebar {
       this.bookmarks.add(pageNum);
     }
     this.updateTabBadges();
+
+    // Synchronize thumbnail star button if rendered
+    if (this.container && typeof this.container.querySelector === 'function') {
+      const bmBtn = this.container.querySelector(`#thumb-box-${pageNum} .thumb-action-bm`);
+      if (bmBtn && bmBtn.classList && typeof bmBtn.classList.toggle === 'function') {
+        const nowBm = this.bookmarks.has(pageNum);
+        bmBtn.classList.toggle('bookmarked', nowBm);
+        if (typeof bmBtn.setAttribute === 'function') {
+          bmBtn.setAttribute('title', nowBm ? 'Remove bookmark' : 'Bookmark page');
+        }
+        const svg = typeof bmBtn.querySelector === 'function' ? bmBtn.querySelector('svg') : null;
+        if (svg && typeof svg.setAttribute === 'function') {
+          svg.setAttribute('fill', nowBm ? '#ffcc00' : 'none');
+          svg.setAttribute('stroke', nowBm ? '#ffcc00' : 'currentColor');
+        }
+      }
+    }
   }
 
   updateTabBadges() {
