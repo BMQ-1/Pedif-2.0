@@ -393,9 +393,33 @@ export class VirtualViewer {
         }
       });
 
+      // Click hit-testing on textLayer for instant highlight inspection & deletion
+      textLayerDiv.addEventListener('click', (e) => {
+        if (this.activeTool !== 'select') return;
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && String(sel).trim().length > 0) return;
+
+        const rect = pageEl.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        const metrics = this.pageMetrics.get(pageNum);
+        const w = metrics ? metrics.width : rect.width;
+        const h = metrics ? metrics.height : rect.height;
+
+        const hit = highlightManager.findHighlightAt(pageNum, clickX, clickY, 10, w, h);
+        if (hit) {
+          e.stopPropagation();
+          highlightPopover.showForHighlight(hit, pageNum, e);
+        }
+      });
+
       // Lazy Scanned Page OCR: If page has no digital text, trigger OCR
       if (textData.isScanned) {
-        this.runLazyOcrOnPage(pageNum, canvas0, overlay);
+        if (textData.lines && textData.lines.length) {
+          this.injectOcrTextLayer(textLayerDiv, textData, canvas0.width || targetWidth, canvas0.height || targetHeight, this.pageMetrics.get(pageNum));
+        } else {
+          this.runLazyOcrOnPage(pageNum, canvas0, overlay);
+        }
       }
 
       // Replay strokes, permanent highlights, and search hits
@@ -413,6 +437,67 @@ export class VirtualViewer {
     }
   }
 
+  injectOcrTextLayer(textLayerDiv, ocrResult, canvasW, canvasH, metrics) {
+    if (!textLayerDiv || !ocrResult || !ocrResult.lines || !ocrResult.lines.length) return;
+
+    // Clear old OCR spans if any
+    const oldSpans = textLayerDiv.querySelectorAll('.ocr-text-span');
+    oldSpans.forEach(s => s.remove());
+
+    const targetW = metrics ? metrics.width : (textLayerDiv.clientWidth || 800);
+    const targetH = metrics ? metrics.height : (textLayerDiv.clientHeight || 1000);
+
+    const scaleX = targetW / (canvasW || targetW);
+    const scaleY = targetH / (canvasH || targetH);
+
+    const frag = document.createDocumentFragment();
+
+    ocrResult.lines.forEach((line) => {
+      if (!line || !line.text) return;
+      const q = line.quad;
+      if (!q) return;
+
+      const pLt = q.lt || q.p1 || { x: 0, y: 0 };
+      const pRt = q.rt || q.p2 || { x: 0, y: 0 };
+      const pRb = q.rb || q.p3 || { x: 0, y: 0 };
+      const pLb = q.lb || q.p4 || { x: 0, y: 0 };
+
+      const isNorm = q.isNormalized || (pLt.x <= 1.0 && pLt.y <= 1.0 && pRt.x <= 1.0);
+      const sx = isNorm ? targetW : scaleX;
+      const sy = isNorm ? targetH : scaleY;
+
+      const minX = Math.min(pLt.x, pLb.x) * sx;
+      const maxX = Math.max(pRt.x, pRb.x) * sx;
+      const minY = Math.min(pLt.y, pRt.y) * sy;
+      const maxY = Math.max(pLb.y, pRb.y) * sy;
+
+      const boxW = Math.max(8, maxX - minX);
+      const boxH = Math.max(12, maxY - minY);
+
+      const span = document.createElement('span');
+      span.className = 'ocr-text-span';
+      span.textContent = line.text;
+      span.style.position = 'absolute';
+      span.style.left = `${Math.round(minX)}px`;
+      span.style.top = `${Math.round(minY)}px`;
+      span.style.width = `${Math.round(boxW)}px`;
+      span.style.height = `${Math.round(boxH)}px`;
+      span.style.fontSize = `${Math.max(10, Math.round(boxH * 0.82))}px`;
+      span.style.lineHeight = `${Math.round(boxH)}px`;
+      span.style.color = 'transparent';
+      span.style.whiteSpace = 'pre';
+      span.style.cursor = 'text';
+      span.style.userSelect = 'text';
+      span.style.webkitUserSelect = 'text';
+      span.style.transformOrigin = '0% 0%';
+
+      frag.appendChild(span);
+    });
+
+    textLayerDiv.appendChild(frag);
+    textLayerDiv.style.pointerEvents = 'auto';
+  }
+
   async runLazyOcrOnPage(pageNum, canvas0, overlay) {
     try {
       const ocrResult = await ocrManager.processPageCanvas(canvas0, pageNum);
@@ -420,6 +505,10 @@ export class VirtualViewer {
         this.pageTextData.set(pageNum, ocrResult);
         if (overlay) {
           overlay.updateLines(ocrResult.lines);
+        }
+        const record = this.renderedPages.get(pageNum);
+        if (record && record.textLayer) {
+          this.injectOcrTextLayer(record.textLayer, ocrResult, canvas0.width, canvas0.height, this.pageMetrics.get(pageNum));
         }
       }
       return ocrResult;
