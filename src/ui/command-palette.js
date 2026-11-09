@@ -29,6 +29,8 @@ export class CommandPalette {
       el.id = 'command-palette-modal';
       el.className = 'craft-palette-overlay';
       el.hidden = true;
+      el.style.display = 'none';
+      el.classList.remove('open');
       el.innerHTML = `
         <div class="craft-palette-box" role="dialog" aria-modal="true" aria-label="Command Palette">
           <div class="craft-palette-header">
@@ -354,6 +356,13 @@ export class CommandPalette {
       }
     });
 
+    // Close button / ESC badge click
+    const escBadge = this.container.querySelector('.craft-palette-esc-kbd');
+    if (escBadge) {
+      escBadge.style.cursor = 'pointer';
+      escBadge.addEventListener('click', () => this.close());
+    }
+
     // Search filter input
     this.input.addEventListener('input', () => {
       this.filter(this.input.value);
@@ -363,6 +372,8 @@ export class CommandPalette {
   open() {
     this.isOpen = true;
     this.container.hidden = false;
+    this.container.style.display = 'flex';
+    this.container.classList.add('open');
     this.input.value = '';
     this.filter('');
     requestAnimationFrame(() => {
@@ -373,6 +384,8 @@ export class CommandPalette {
   close() {
     this.isOpen = false;
     this.container.hidden = true;
+    this.container.style.display = 'none';
+    this.container.classList.remove('open');
   }
 
   toggle() {

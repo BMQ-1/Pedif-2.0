@@ -2013,6 +2013,10 @@
   transition: box-shadow var(--d-fast) ease, opacity var(--d-fast) ease;
 }
 
+body:not(.open) .craft-hotbar {
+  display: none !important;
+}
+
 .craft-hotbar.dragging {
   cursor: grabbing;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
@@ -2116,6 +2120,11 @@
   padding-top: 14vh;
   box-sizing: border-box;
   animation: craftFadeIn 0.16s ease-out;
+}
+
+.craft-palette-overlay[hidden],
+.craft-palette-overlay:not(.open) {
+  display: none !important;
 }
 
 @keyframes craftFadeIn {
@@ -2299,6 +2308,11 @@
   flex-direction: column;
   overflow: hidden;
   animation: craftFadeIn 0.2s ease-out;
+}
+
+.craft-alltools-overlay[hidden],
+.craft-alltools-overlay:not(.open) {
+  display: none !important;
 }
 
 .craft-alltools-container {

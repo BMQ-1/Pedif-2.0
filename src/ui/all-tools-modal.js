@@ -209,6 +209,8 @@ export class AllToolsModal {
       el.id = 'all-tools-catalog-modal';
       el.className = 'craft-alltools-overlay';
       el.hidden = true;
+      el.style.display = 'none';
+      el.classList.remove('open');
       el.innerHTML = `
         <div class="craft-alltools-container" role="dialog" aria-modal="true" aria-label="All Tools">
           <header class="craft-alltools-header">
@@ -281,6 +283,8 @@ export class AllToolsModal {
   open() {
     this.isOpen = true;
     this.container.hidden = false;
+    this.container.style.display = 'flex';
+    this.container.classList.add('open');
     this.searchInput.value = '';
     this.renderCategories('');
     requestAnimationFrame(() => {
@@ -291,6 +295,8 @@ export class AllToolsModal {
   close() {
     this.isOpen = false;
     this.container.hidden = true;
+    this.container.style.display = 'none';
+    this.container.classList.remove('open');
   }
 
   toggle() {

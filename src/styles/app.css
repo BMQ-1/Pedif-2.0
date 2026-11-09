@@ -1,5 +1,10 @@
 @import './variables.css';
 
+/* Universal HTML5 Hidden Guard — prevents any class specificity from overriding hidden */
+[hidden] {
+  display: none !important;
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
