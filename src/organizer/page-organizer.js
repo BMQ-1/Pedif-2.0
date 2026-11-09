@@ -42,6 +42,14 @@ export class PageOrganizer {
     this.isOpen = true;
     const numPages = pdfEngine.numPages;
 
+    if (this._keyHandler) window.removeEventListener('keydown', this._keyHandler);
+    this._keyHandler = (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        this.hide();
+      }
+    };
+    window.addEventListener('keydown', this._keyHandler);
+
     // Initialize page list
     this.pageItems = [];
     for (let i = 0; i < numPages; i++) {
@@ -335,6 +343,10 @@ export class PageOrganizer {
 
   hide() {
     this.isOpen = false;
+    if (this._keyHandler) {
+      window.removeEventListener('keydown', this._keyHandler);
+      this._keyHandler = null;
+    }
     if (this.modalEl) {
       this.modalEl.classList.remove('on', 'visible');
       this.modalEl.hidden = true;
