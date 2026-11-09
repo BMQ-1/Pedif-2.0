@@ -1141,6 +1141,11 @@ class PedifApp {
         } else {
           showToast('Please open a PDF document first', 'alert');
         }
+      } else if (e.key === 'b' || e.key === 'B') {
+        if (this.sidebar && this.viewer) {
+          e.preventDefault();
+          this.sidebar.toggleBookmark(this.viewer.currentPage || 1);
+        }
       } else if (e.key === 'd') {
         this.toggleTheme();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {

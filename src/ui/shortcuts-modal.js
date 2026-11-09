@@ -65,6 +65,7 @@ export class ShortcutsModal {
             <div class="shortcut-row"><kbd>R</kbd><span>Rotate View (90°)</span></div>
             <div class="shortcut-row"><kbd>A</kbd><span>Read Page Aloud (TTS)</span></div>
             <div class="shortcut-row"><kbd>S</kbd><span>Reading Statistics</span></div>
+            <div class="shortcut-row"><kbd>B</kbd><span>Bookmark Current Page</span></div>
             <div class="shortcut-row"><kbd>D</kbd><span>Toggle Theme</span></div>
             <div class="shortcut-row"><kbd>?</kbd><span>Show Shortcuts</span></div>
           </div>
