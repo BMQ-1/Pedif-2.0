@@ -36,6 +36,7 @@ import { LassoTool } from './inking/lasso-tool.js';
 import { ExtractDialog } from './ui/extract-dialog.js';
 import { StatsModal } from './ui/stats-modal.js';
 import { SignatureDialog } from './tools/signature-dialog.js';
+import { StampDialog } from './tools/stamp-dialog.js';
 
 // Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
 if (typeof window !== 'undefined') {
@@ -73,6 +74,7 @@ class PedifApp {
     this.numberingDialog = null;
     this.metadataDialog = null;
     this.signatureDialog = null;
+    this.stampDialog = null;
 
     this.init();
   }
@@ -231,6 +233,13 @@ class PedifApp {
         if (this.currentDoc) {
           this.currentDoc.currentPage = pageNum;
         }
+      },
+    });
+
+    this.stampDialog = new StampDialog({
+      onApplied: async (stampedBytes) => {
+        showToast('Applying rubber stamp...', 'check');
+        await this.loadPdfBuffer(stampedBytes, this.currentDoc?.name || 'stamped.pdf');
       },
     });
 
@@ -789,6 +798,15 @@ class PedifApp {
         this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
       }
     });
+    bindMenuAction('app-menu-stamp', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.stampDialog) {
+        this.stampDialog.show(this.currentDoc.buffer, this.viewer?.currentPage || 1, this.currentDoc.pageCount || 1);
+      }
+    });
     bindMenuAction('app-menu-ocr', async () => {
       if (!this.currentDoc || !this.currentDoc.buffer) {
         showToast('Please open a PDF document first', 'alert');
@@ -905,6 +923,20 @@ class PedifApp {
         }
         if (this.signatureDialog) {
           this.signatureDialog.show(this.currentDoc.pageCount || 1, this.viewer?.currentPage || 1);
+        }
+      });
+    }
+
+    const wbItemStamp = document.getElementById('wb-item-stamp');
+    if (wbItemStamp) {
+      wbItemStamp.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.stampDialog) {
+          this.stampDialog.show(this.currentDoc.buffer, this.viewer?.currentPage || 1, this.currentDoc.pageCount || 1);
         }
       });
     }

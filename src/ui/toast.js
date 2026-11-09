@@ -3,6 +3,9 @@
  */
 
 export function showToast(message, icon = 'check', duration = 2200) {
+  if (typeof document === 'undefined' || typeof document.getElementById !== 'function') {
+    return;
+  }
   let toastEl = document.getElementById('toast');
   if (!toastEl) {
     toastEl = document.createElement('div');
