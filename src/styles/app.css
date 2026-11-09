@@ -1579,6 +1579,71 @@ body.drag .drop {
   font-weight: 600;
 }
 
+/* Sidebar Dynamic Badges & Search Bars */
+.tab-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  background: var(--ac, #0a84ff);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb-bm-indicator {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  font-size: 13px;
+  color: #ffcc00;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sidebar-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  background: var(--fill2);
+  border: 1px solid var(--ln2);
+  border-radius: 8px;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sidebar-search-box:focus-within {
+  border-color: var(--ac);
+  background: var(--fill);
+}
+
+.sidebar-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--tx);
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.sidebar-search-input::placeholder {
+  color: var(--tx3);
+}
+
 .sidebar-body {
   flex: 1;
   overflow-y: auto;

@@ -560,7 +560,6 @@
    Studio Top Navigation Bar & Action Controls
    ============================================================ */
 
-.acrobat-menu-btn,
 .studio-menu-btn {
   display: inline-flex;
   align-items: center;
@@ -577,25 +576,21 @@
   transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
 }
 
-.acrobat-menu-btn:hover,
 .studio-menu-btn:hover {
   background: var(--fill);
   border-color: var(--ln);
 }
 
-.acrobat-menu-btn:active,
 .studio-menu-btn:active {
   transform: scale(0.97);
 }
 
-.acrobat-menu-text,
 .studio-menu-text {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-.acrobat-tools-pill,
 .studio-tools-pill {
   display: inline-flex;
   align-items: center;
@@ -612,44 +607,36 @@
   transition: all 0.15s ease;
 }
 
-.acrobat-tools-pill:hover,
 .studio-tools-pill:hover {
   background: var(--fill);
   border-color: var(--ac);
   color: var(--ac);
 }
 
-.acrobat-tools-pill:active,
 .studio-tools-pill:active {
   transform: scale(0.97);
 }
 
-.acrobat-tools-text,
 .studio-tools-text {
   font-size: 13px;
   font-weight: 600;
 }
 
 @media (max-width: 640px) {
-  .acrobat-menu-text,
   .studio-menu-text,
-  .acrobat-tools-text,
   .studio-tools-text {
     display: none;
   }
-  .acrobat-menu-btn,
   .studio-menu-btn,
-  .acrobat-tools-pill,
   .studio-tools-pill {
     padding: 0 8px;
   }
 }
 
 /* ============================================================
-   Acrobat / Studio Desktop Application Menu Dropdown (File / Edit / View / Tools)
+   Studio Desktop Application Menu Dropdown (File / Edit / View / Tools)
    ============================================================ */
 
-.acrobat-app-menu,
 .studio-app-menu {
   position: fixed;
   top: 54px;
@@ -787,7 +774,6 @@
   letter-spacing: -0.01em;
 }
 
-.acrobat-brand-dot,
 .studio-brand-dot {
   width: 8px;
   height: 8px;
@@ -985,9 +971,7 @@
 
 /* RTL Layout Adjustments */
 [dir="rtl"] .studio-app-menu,
-.rtl-mode .studio-app-menu,
-[dir="rtl"] .acrobat-app-menu,
-.rtl-mode .acrobat-app-menu {
+.rtl-mode .studio-app-menu {
   left: auto;
   right: 16px;
 }

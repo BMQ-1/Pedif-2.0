@@ -58,6 +58,7 @@ export class Sidebar {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
+            <span class="tab-badge" id="tab-badge-bookmarks" style="display:none">0</span>
           </button>
           <button class="tab-btn" data-tab="annotations" role="tab" aria-selected="false" title="Highlights & Notes" aria-label="Highlights and Notes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -67,6 +68,7 @@ export class Sidebar {
               <line x1="16" y1="17" x2="8" y2="17"></line>
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
+            <span class="tab-badge" id="tab-badge-annotations" style="display:none">0</span>
           </button>
           <button class="tab-btn" data-tab="view" role="tab" aria-selected="false" title="Display & Margins" aria-label="Display and Margins">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -115,10 +117,13 @@ export class Sidebar {
 
     // Listen to highlight updates to refresh Annotations tab dynamically
     highlightManager.onChange(() => {
+      this.updateTabBadges();
       if (this.isOpen && this.activeTab === 'annotations') {
         this.renderAnnotations();
       }
     });
+
+    this.updateTabBadges();
   }
 
   switchTab(tab) {
@@ -262,8 +267,36 @@ export class Sidebar {
     };
 
     pane.innerHTML = '';
+    const filterBox = document.createElement('div');
+    filterBox.className = 'sidebar-search-box';
+    filterBox.innerHTML = `
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="sidebar-search-input" id="outline-filter-input" placeholder="Filter contents..." aria-label="Filter table of contents">
+    `;
+    pane.appendChild(filterBox);
+
     const tree = await buildTree(outline);
     pane.appendChild(tree);
+
+    const filterInp = filterBox.querySelector('#outline-filter-input');
+    if (filterInp) {
+      filterInp.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        const items = pane.querySelectorAll('.outline-item');
+        items.forEach(item => {
+          const title = (item.querySelector('.toc-title')?.textContent || '').toLowerCase();
+          const match = !q || title.includes(q);
+          item.style.display = match ? '' : 'none';
+          if (match && q) {
+            let parent = item.parentElement;
+            while (parent && parent !== pane) {
+              if (parent.classList.contains('outline-list')) parent.classList.remove('collapsed');
+              parent = parent.parentElement;
+            }
+          }
+        });
+      });
+    }
   }
 
   async renderThumbnails() {
@@ -294,9 +327,11 @@ export class Sidebar {
       const item = document.createElement('div');
       item.className = 'thumbnail-item';
       const isCur = pageNum === this.currentPage;
+      const isBm = this.bookmarks && this.bookmarks.has(pageNum);
 
       item.innerHTML = `
         <div class="thumb-canvas-box ${isCur ? 'active-thumb' : ''}" id="thumb-box-${pageNum}" data-page="${pageNum}">
+          ${isBm ? '<span class="thumb-bm-indicator" title="Bookmarked page">★</span>' : ''}
           <span class="thumb-page-num">${pageNum}</span>
           <span class="thumb-page-badge">Page ${pageNum}</span>
         </div>
@@ -445,6 +480,18 @@ export class Sidebar {
     });
 
     pane.appendChild(list);
+
+    const annSearchInp = searchWrap.querySelector('#ann-search-input');
+    if (annSearchInp) {
+      annSearchInp.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        const cards = list.querySelectorAll('.annotation-card');
+        cards.forEach(card => {
+          const text = (card.textContent || '').toLowerCase();
+          card.style.display = !q || text.includes(q) ? '' : 'none';
+        });
+      });
+    }
   }
 
   renderAnnotations() {
@@ -465,6 +512,16 @@ export class Sidebar {
       `;
       return;
     }
+
+    // Annotations search bar
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'sidebar-search-box';
+    searchWrap.style.marginBottom = '8px';
+    searchWrap.innerHTML = `
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="sidebar-search-input" id="ann-search-input" placeholder="Search highlights & notes..." aria-label="Search highlights and notes">
+    `;
+    pane.appendChild(searchWrap);
 
     // Filter toolbar
     const filterBar = document.createElement('div');
@@ -544,6 +601,18 @@ export class Sidebar {
     });
 
     pane.appendChild(list);
+
+    const annSearchInp = searchWrap.querySelector('#ann-search-input');
+    if (annSearchInp) {
+      annSearchInp.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        const cards = list.querySelectorAll('.annotation-card');
+        cards.forEach(card => {
+          const text = (card.textContent || '').toLowerCase();
+          card.style.display = !q || text.includes(q) ? '' : 'none';
+        });
+      });
+    }
   }
 
   renderViewSettings() {
@@ -662,6 +731,31 @@ export class Sidebar {
     } else {
       this.bookmarks.add(pageNum);
     }
+    this.updateTabBadges();
+  }
+
+  updateTabBadges() {
+    if (!this.container || typeof this.container.querySelector !== 'function') return;
+    const bmBadge = this.container.querySelector('#tab-badge-bookmarks');
+    if (bmBadge) {
+      const count = this.bookmarks ? this.bookmarks.size : 0;
+      bmBadge.textContent = count > 99 ? '99+' : `${count}`;
+      if (bmBadge.style) {
+        bmBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+      }
+    }
+
+    const annBadge = this.container.querySelector('#tab-badge-annotations');
+    if (annBadge) {
+      const allAnn = (highlightManager && typeof highlightManager.getAllAnnotations === 'function')
+        ? highlightManager.getAllAnnotations()
+        : [];
+      const count = allAnn.length;
+      annBadge.textContent = count > 99 ? '99+' : `${count}`;
+      if (annBadge.style) {
+        annBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+      }
+    }
   }
 
   jumpTo(pageNum) {
@@ -678,6 +772,7 @@ export class Sidebar {
     this.container.classList.add('open');
     if (this.backdrop) this.backdrop.classList.add('open');
     this.isOpen = true;
+    this.updateTabBadges();
     this.switchTab(this.activeTab);
   }
 
