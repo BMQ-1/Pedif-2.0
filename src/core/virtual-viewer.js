@@ -17,6 +17,7 @@ import { SelectionOverlay } from '../selection/selection-overlay.js';
 import { highlightManager } from '../annotations/highlight-manager.js';
 import { highlightPopover } from '../ui/highlight-popover.js';
 import { ocrManager } from '../ocr/ocr-manager.js';
+import { interactiveAnnotations } from '../annotations/interactive-annotations.js';
 
 export class VirtualViewer {
   constructor(options = {}) {
@@ -391,6 +392,17 @@ export class VirtualViewer {
         if (err && err.name !== 'RenderingCancelledException') {
           console.warn(`[VirtualViewer] textLayer render error on page ${pageNum}:`, err);
         }
+      });
+
+      // Render interactive hyperlinks & AcroForms
+      interactiveAnnotations.renderPageAnnotations(
+        page,
+        pageNum,
+        pageEl,
+        targetViewport,
+        (targetPage) => this.scrollToPage(targetPage)
+      ).catch((err) => {
+        console.warn(`[VirtualViewer] Annotations render error on page ${pageNum}:`, err);
       });
 
       // Click hit-testing on textLayer for instant highlight inspection & deletion

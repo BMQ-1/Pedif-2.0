@@ -11,6 +11,7 @@
 
 import { PDFDocument, PDFName, PDFArray, PDFNumber, PDFString, rgb } from 'pdf-lib';
 import { highlightManager, PALETTE } from './highlight-manager.js';
+import { interactiveAnnotations } from './interactive-annotations.js';
 
 export class PdfExporter {
   static getSubtypeName(ann) {
@@ -24,9 +25,10 @@ export class PdfExporter {
    * @param {ArrayBuffer} originalPdfBytes
    * @param {Map<number, Stroke[]>} pageStrokesMap - pageNum -> Stroke[]
    * @param {Map<number, Object>} pageMetricsMap - pageNum -> { width, height, scale }
+   * @param {Object} [options={}] - Additional export options (e.g. flattenForms)
    * @returns {Promise<Uint8Array>} modifiedPdfBytes
    */
-  static async exportAnnotatedPdf(originalPdfBytes, pageStrokesMap, pageMetricsMap) {
+  static async exportAnnotatedPdf(originalPdfBytes, pageStrokesMap, pageMetricsMap, options = {}) {
     if (!originalPdfBytes) throw new Error('No PDF bytes provided for export');
 
     const pdfDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true });
@@ -187,6 +189,11 @@ export class PdfExporter {
         annotsArray.push(inkRef);
       }
     }
+
+    // Apply any interactive AcroForm field values & optional flattening
+    interactiveAnnotations.applyFormValuesToPdf(pdfDoc, {
+      flatten: Boolean(options && options.flattenForms),
+    });
 
     return await pdfDoc.save({ useObjectStreams: true });
   }

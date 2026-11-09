@@ -1538,3 +1538,92 @@
 #stamp-preview-canvas {
   display: block;
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Interactive Hyperlinks & AcroForms Layer
+   ───────────────────────────────────────────────────────────────────────── */
+.layer-annotations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.pdf-interactive-link {
+  position: absolute;
+  pointer-events: auto;
+  border-radius: 3px;
+  background-color: transparent;
+  border-bottom: 1.5px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  z-index: 5;
+}
+
+.pdf-interactive-link:hover {
+  background-color: rgba(59, 130, 246, 0.14);
+  border-bottom-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.pdf-link-goto {
+  cursor: pointer;
+}
+
+.pdf-link-goto:hover {
+  background-color: rgba(16, 185, 129, 0.14);
+  border-bottom-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.pdf-form-widget {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--tx, #111827);
+  background: rgba(240, 245, 255, 0.85);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 3px;
+  padding: 2px 4px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  z-index: 6;
+}
+
+.pdf-form-widget:focus {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.pdf-form-checkbox {
+  appearance: auto;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.pdf-form-select {
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+/* Disable interactive layer when using drawing tools */
+.page-container[data-tool="pen"] .layer-annotations,
+.page-container[data-tool="highlighter"] .layer-annotations,
+.page-container[data-tool="eraser"] .layer-annotations {
+  pointer-events: none !important;
+}
+
+.page-container[data-tool="pen"] .layer-annotations *,
+.page-container[data-tool="highlighter"] .layer-annotations *,
+.page-container[data-tool="eraser"] .layer-annotations * {
+  pointer-events: none !important;
+}
