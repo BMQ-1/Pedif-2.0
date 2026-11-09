@@ -69,12 +69,38 @@ async function initializeOcr(config = {}) {
 
   try {
     detSession = await ort.InferenceSession.create(detPath, sessionOptions);
-    recSession = await ort.InferenceSession.create(recPath, sessionOptions);
-    isInitialized = true;
-    console.log('[OCR Worker] ONNX InferenceSessions initialized on WebGPU/WASM');
   } catch (err) {
-    console.warn('[OCR Worker] Using lightweight fallback processor:', err.message);
+    console.warn('[OCR Worker] WebGPU det session failed, falling back to WASM:', err.message);
+    try {
+      detSession = await ort.InferenceSession.create(detPath, {
+        executionProviders: ['wasm'],
+        graphOptimizationLevel: 'all',
+      });
+    } catch (e2) {
+      console.warn('[OCR Worker] WASM det session failed:', e2.message);
+    }
+  }
+
+  try {
+    recSession = await ort.InferenceSession.create(recPath, sessionOptions);
+  } catch (err) {
+    console.warn('[OCR Worker] WebGPU rec session failed, falling back to WASM:', err.message);
+    try {
+      recSession = await ort.InferenceSession.create(recPath, {
+        executionProviders: ['wasm'],
+        graphOptimizationLevel: 'all',
+      });
+    } catch (e2) {
+      console.warn('[OCR Worker] WASM rec session failed:', e2.message);
+    }
+  }
+
+  if (detSession && recSession) {
+    isInitialized = true;
+    console.log('[OCR Worker] PP-OCRv4 ONNX InferenceSessions initialized successfully');
+  } else {
     isInitialized = false;
+    console.warn('[OCR Worker] Running in heuristic fallback mode');
   }
 }
 
@@ -113,9 +139,14 @@ async function processPageImage({ imageData, pageNum }) {
 
     for (let i = 0; i < quads.length; i++) {
       const q = quads[i];
-      // Compute bounding box around quadrilateral
-      const xs = [q[0], q[2], q[4], q[6]];
-      const ys = [q[1], q[3], q[5], q[7]];
+      // Compute bounding box around quadrilateral (supports Quad instance, array, or p1..p4)
+      const pLt = q.lt || (q[0] !== undefined ? { x: q[0], y: q[1] } : (q.p1 || { x: 0, y: 0 }));
+      const pRt = q.rt || (q[2] !== undefined ? { x: q[2], y: q[3] } : (q.p2 || { x: 0, y: 0 }));
+      const pRb = q.rb || (q[4] !== undefined ? { x: q[4], y: q[5] } : (q.p3 || { x: 0, y: 0 }));
+      const pLb = q.lb || (q[6] !== undefined ? { x: q[6], y: q[7] } : (q.p4 || { x: 0, y: 0 }));
+
+      const xs = [pLt.x, pRt.x, pRb.x, pLb.x];
+      const ys = [pLt.y, pRt.y, pRb.y, pLb.y];
       const minX = Math.max(0, Math.floor(Math.min(...xs)));
       const maxX = Math.min(width, Math.ceil(Math.max(...xs)));
       const minY = Math.max(0, Math.floor(Math.min(...ys)));
@@ -146,23 +177,45 @@ async function processPageImage({ imageData, pageNum }) {
           for (let c = 0; c < numChars; c++) {
             const t0 = c / numChars;
             const t1 = (c + 1) / numChars;
+            const cLt = { x: pLt.x + (pRt.x - pLt.x) * t0, y: pLt.y + (pRt.y - pLt.y) * t0 };
+            const cRt = { x: pLt.x + (pRt.x - pLt.x) * t1, y: pLt.y + (pRt.y - pLt.y) * t1 };
+            const cRb = { x: pLb.x + (pRb.x - pLb.x) * t1, y: pLb.y + (pRb.y - pLb.y) * t1 };
+            const cLb = { x: pLb.x + (pRb.x - pLb.x) * t0, y: pLb.y + (pRb.y - pLb.y) * t0 };
+
             chars.push({
               char: cleanText[c],
               quad: {
-                p1: { x: q.p1.x + (q.p2.x - q.p1.x) * t0, y: q.p1.y + (q.p2.y - q.p1.y) * t0 },
-                p2: { x: q.p1.x + (q.p2.x - q.p1.x) * t1, y: q.p1.y + (q.p2.y - q.p1.y) * t1 },
-                p3: { x: q.p4.x + (q.p3.x - q.p4.x) * t1, y: q.p4.y + (q.p3.y - q.p4.y) * t1 },
-                p4: { x: q.p4.x + (q.p3.x - q.p4.x) * t0, y: q.p4.y + (q.p3.y - q.p4.y) * t0 },
+                lt: cLt,
+                rt: cRt,
+                rb: cRb,
+                lb: cLb,
+                p1: cLt,
+                p2: cRt,
+                p3: cRb,
+                p4: cLb,
+                isNormalized: false,
               },
             });
           }
+
+          const lineQuad = {
+            lt: pLt,
+            rt: pRt,
+            rb: pRb,
+            lb: pLb,
+            p1: pLt,
+            p2: pRt,
+            p3: pRb,
+            p4: pLb,
+            isNormalized: false,
+          };
 
           recognizedLines.push({
             lineIdx: recognizedLines.length,
             text: cleanText,
             confidence,
-            quad: q,
-            words: [{ text: cleanText, quad: q, chars }],
+            quad: lineQuad,
+            words: [{ text: cleanText, quad: lineQuad, chars }],
           });
         }
       }
