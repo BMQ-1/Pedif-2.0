@@ -37,6 +37,7 @@ import { ExtractDialog } from './ui/extract-dialog.js';
 import { StatsModal } from './ui/stats-modal.js';
 import { SignatureDialog } from './tools/signature-dialog.js';
 import { StampDialog } from './tools/stamp-dialog.js';
+import { SanitizerDialog } from './tools/sanitizer-dialog.js';
 
 // Sovereign UI Guard: Intercept any accidental browser modal alerts and route to non-blocking studio toast
 if (typeof window !== 'undefined') {
@@ -240,6 +241,13 @@ class PedifApp {
       onApplied: async (stampedBytes) => {
         showToast('Applying rubber stamp...', 'check');
         await this.loadPdfBuffer(stampedBytes, this.currentDoc?.name || 'stamped.pdf');
+      },
+    });
+
+    this.sanitizerDialog = new SanitizerDialog({
+      onApplied: async (sanitizedBytes) => {
+        showToast('Loading sanitized document...', 'check');
+        await this.loadPdfBuffer(sanitizedBytes, this.currentDoc?.name || 'sanitized.pdf');
       },
     });
 
@@ -827,6 +835,15 @@ class PedifApp {
         showToast('Failed to flatten form fields', 'alert');
       }
     });
+    bindMenuAction('app-menu-sanitize', () => {
+      if (!this.currentDoc || !this.currentDoc.buffer) {
+        showToast('Please open a PDF document first', 'alert');
+        return;
+      }
+      if (this.sanitizerDialog) {
+        this.sanitizerDialog.show(this.currentDoc.buffer);
+      }
+    });
     bindMenuAction('app-menu-ocr', async () => {
       if (!this.currentDoc || !this.currentDoc.buffer) {
         showToast('Please open a PDF document first', 'alert');
@@ -982,6 +999,20 @@ class PedifApp {
         } catch (err) {
           console.error('[Forms] Flatten error:', err);
           showToast('Failed to flatten form fields', 'alert');
+        }
+      });
+    }
+
+    const wbItemSanitize = document.getElementById('wb-item-sanitize');
+    if (wbItemSanitize) {
+      wbItemSanitize.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (!this.currentDoc || !this.currentDoc.buffer) {
+          showToast('Please open a PDF document first', 'alert');
+          return;
+        }
+        if (this.sanitizerDialog) {
+          this.sanitizerDialog.show(this.currentDoc.buffer);
         }
       });
     }
