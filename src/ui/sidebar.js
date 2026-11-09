@@ -449,6 +449,27 @@ export class Sidebar {
       return;
     }
 
+    if (this.bookmarks.size >= 3) {
+      const toolRow = document.createElement('div');
+      toolRow.className = 'bm-toolbar-row';
+      toolRow.style.display = 'flex';
+      toolRow.style.justifyContent = 'space-between';
+      toolRow.style.alignItems = 'center';
+      toolRow.style.padding = '0 4px 8px 4px';
+      toolRow.innerHTML = `
+        <span style="font-size: 11px; font-weight: 600; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.05em;">${this.bookmarks.size} Bookmarks</span>
+        <button type="button" class="b sm btn-bm-clear-all" style="font-size: 11px; padding: 2px 8px; border-radius: 6px; color: var(--tx2);" title="Clear all bookmarks">Clear All</button>
+      `;
+      toolRow.querySelector('.btn-bm-clear-all')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.bookmarks.clear();
+        this.updateTabBadges();
+        this.renderBookmarks();
+        showToast('All bookmarks cleared', 'check');
+      });
+      pane.appendChild(toolRow);
+    }
+
     const list = document.createElement('div');
     list.className = 'bookmarks-list';
 
