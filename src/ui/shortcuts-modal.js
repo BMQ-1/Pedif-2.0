@@ -53,6 +53,7 @@ export class ShortcutsModal {
 
           <div class="shortcut-group">
             <h4>Actions & Utilities</h4>
+            <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>O</kbd><span>Open Document</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Find in document</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>P</kbd><span>Print document</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Export PDF</span></div>
