@@ -698,6 +698,13 @@ class PedifApp {
         showToast(`Rotated ${rot}°`, 'check');
       }
     });
+    bindMenuAction('app-menu-spread', () => {
+      if (this.viewer) {
+        const nextMode = this.viewer.mode === 'spread' ? 'continuous' : 'spread';
+        this.viewer.setMode(nextMode);
+        showToast(nextMode === 'spread' ? 'Two-page book spread enabled' : 'Continuous reading enabled', 'check');
+      }
+    });
     bindMenuAction('app-menu-theme', () => this.toggleTheme());
     bindMenuAction('app-menu-stats', () => {
       if (!this.currentDoc) {
@@ -862,6 +869,18 @@ class PedifApp {
           showToast(`OCR Success: Found ${res.lines.length} lines on Page ${curPage}. Text is now selectable!`, 'check');
         } else {
           showToast('OCR scan completed', 'check');
+        }
+      });
+    }
+
+    const wbItemSpread = document.getElementById('wb-item-spread');
+    if (wbItemSpread) {
+      wbItemSpread.addEventListener('click', () => {
+        if (popover) popover.hidden = true;
+        if (this.viewer) {
+          const nextMode = this.viewer.mode === 'spread' ? 'continuous' : 'spread';
+          this.viewer.setMode(nextMode);
+          showToast(nextMode === 'spread' ? 'Two-page book spread enabled' : 'Continuous reading enabled', 'check');
         }
       });
     }

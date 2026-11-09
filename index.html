@@ -413,6 +413,10 @@
             <span data-i18n="rotateView">Rotate View</span>
             <kbd class="menu-kbd">R</kbd>
           </button>
+          <button type="button" class="app-menu-item" id="app-menu-spread">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+            <span>Toggle Two-Page Spread</span>
+          </button>
           <button type="button" class="app-menu-item" id="app-menu-theme">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <span data-i18n="toggleTheme">Toggle Theme</span>
@@ -569,6 +573,16 @@
               <div class="wb-card-text">
                 <strong>Recognize Text (OCR)</strong>
                 <small>Run on-device WebGPU PP-OCRv4 AI text extraction</small>
+              </div>
+            </button>
+
+            <button type="button" class="wb-card-item wb-menu-item" id="wb-item-spread">
+              <div class="wb-card-icon cat-cyan">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+              </div>
+              <div class="wb-card-text">
+                <strong>Two-Page Spread</strong>
+                <small>Switch between continuous scroll and dual-page book view</small>
               </div>
             </button>
           </div>
